@@ -25,6 +25,7 @@ import {
   initialMarketingCampaigns,
   initialReferralData
 } from '../data/mockData';
+import { translations } from '../data/translations';
 import { AstrologyEngine } from '../data/astrologyEngine';
 
 const initialUserProfile: UserProfile = {
@@ -131,7 +132,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const t = (key: string): string => {
-    const dict = (window as any).__astraTranslations?.[language] || {};
+    const dict = translations[language] || translations.EN || {};
     return dict[key] || key;
   };
 
