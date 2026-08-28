@@ -83,7 +83,7 @@ class AstraViewModel(application: Application) : AndroidViewModel(application) {
             ),
             ChatMessage(
                 id = "ai_2",
-                senderName = "Rahul",
+                senderName = "Aarav",
                 message = "What is my Nakshatra? I was born in Bengaluru at 10:30 AM.",
                 timestamp = "Just now",
                 isFromUser = true

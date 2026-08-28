@@ -1,0 +1,76 @@
+/* Ultra-Premium Dating & Matchmaking Palette for Astra */
+
+:root {
+  /* Default Dark Mode Color Tokens - Deep Celestial Plum & Midnight Indigo */
+  --bg-primary: #0F0C1B;
+  --bg-secondary: #161226;
+  --bg-card: #1E1836;
+  --bg-wine: #2A0E1A;
+  --bg-indigo: #161B33;
+  
+  --border-color: rgba(255, 255, 255, 0.12);
+  --border-glow: rgba(245, 158, 11, 0.35);
+  
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  
+  --accent-amber: #F59E0B;
+  --accent-amber-light: #FCD34D;
+  --accent-indigo: #818CF8;
+  --accent-indigo-dark: #4F46E5;
+  --accent-gold: #D4AF37;
+  --accent-rose: #F43F5E;
+  --accent-emerald: #10B981;
+
+  --guna-bar-bg: rgba(255, 255, 255, 0.08);
+  
+  --glass-bg: rgba(26, 20, 46, 0.85);
+  --glass-backdrop: blur(18px);
+  --shadow-cosmic: 0 12px 35px -8px rgba(245, 158, 11, 0.3);
+  --shadow-card: 0 16px 40px rgba(0, 0, 0, 0.5);
+
+  /* AI Chat Bubble Tokens */
+  --ai-bubble-bg: linear-gradient(135deg, rgba(42, 14, 26, 0.95) 0%, rgba(30, 24, 54, 0.95) 100%);
+  --ai-bubble-text: #F8FAFC;
+  --ai-bubble-border: var(--accent-amber);
+  --ai-header-bg: linear-gradient(135deg, #2A0E1A 0%, #1E1836 100%);
+
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Outfit', 'Inter', sans-serif;
+}
+
+[data-theme="light"] {
+  --bg-primary: #F8FAFC;
+  --bg-secondary: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-wine: #FEF2F2;
+  --bg-indigo: #EEF2FF;
+  --border-color: #E2E8F0;
+  --border-glow: rgba(217, 119, 6, 0.3);
+
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
+
+  --accent-amber: #D97706;
+  --accent-amber-light: #B45309;
+  --accent-indigo: #4F46E5;
+  --accent-indigo-dark: #3730A3;
+  --accent-gold: #B45309;
+  --accent-rose: #E11D48;
+  --accent-emerald: #059669;
+
+  --guna-bar-bg: rgba(15, 23, 42, 0.08);
+
+  --glass-bg: rgba(255, 255, 255, 0.92);
+  --glass-backdrop: blur(14px);
+  --shadow-cosmic: 0 10px 25px -5px rgba(217, 119, 6, 0.25);
+  --shadow-card: 0 10px 30px rgba(15, 23, 42, 0.08);
+
+  /* AI Chat Bubble Tokens in Light Theme */
+  --ai-bubble-bg: linear-gradient(135deg, #FEF3C7 0%, #EEF2FF 100%);
+  --ai-bubble-text: #0F172A;
+  --ai-bubble-border: var(--accent-amber);
+  --ai-header-bg: linear-gradient(135deg, #FEF3C7 0%, #EEF2FF 100%);
+}

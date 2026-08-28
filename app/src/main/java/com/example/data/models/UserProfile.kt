@@ -1,7 +1,7 @@
 package com.example.data.models
 
 data class UserProfile(
-    val name: String = "Rahul",
+    val name: String = "Aarav",
     val age: Int = 24,
     val profession: String = "Software Engineer",
     val education: String = "IIT Bombay · B.Tech",

@@ -242,7 +242,7 @@ object MockData {
             timestamp = "1h ago",
             unreadCount = 1,
             messages = listOf(
-                ChatMessage("1", "Siddharth", "Hey Rahul! Love your taste in vinyl records and coffee brewing.", "09:00 AM", false),
+                ChatMessage("1", "Siddharth", "Hey Aarav! Love your taste in vinyl records and coffee brewing.", "09:00 AM", false),
                 ChatMessage("2", "User", "Thanks Siddharth! Always great to connect with fellow design minds.", "09:15 AM", true),
                 ChatMessage("3", "Siddharth", "What does your Nakshatra say about our match?", "09:30 AM", false)
             )

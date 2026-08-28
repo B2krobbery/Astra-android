@@ -1,0 +1,6 @@
+{
+  "appId": "com.aistudio.astra.vedicmatch",
+  "appName": "Astra",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}
