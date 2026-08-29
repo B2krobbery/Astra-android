@@ -20,10 +20,29 @@ export const UserProfilePage: React.FC = () => {
     verifyPoliceForUser,
     openReferralModal,
     uploadUserProfilePhoto,
+    updateProfileInfo,
     language,
     setLanguage,
     t
   } = useAstra();
+
+  const [isEditingName, setIsEditingName] = React.useState(false);
+  const [editedName, setEditedName] = React.useState(userProfile.name);
+
+  const handleSaveName = () => {
+    if (editedName.trim()) {
+      updateProfileInfo(
+        editedName.trim(),
+        userProfile.profession,
+        userProfile.education,
+        userProfile.location,
+        userProfile.lookingFor,
+        userProfile.interests,
+        userProfile.regionalPreference
+      );
+    }
+    setIsEditingName(false);
+  };
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -109,9 +128,45 @@ export const UserProfilePage: React.FC = () => {
           </div>
 
           <div style={{ flex: 1 }}>
-            <h2 className="heading-font" style={{ fontSize: '1.35rem', fontWeight: 800 }}>
-              {userProfile.name}, {userProfile.age}
-            </h2>
+            {isEditingName ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                <input
+                  type="text"
+                  value={editedName}
+                  onChange={e => setEditedName(e.target.value)}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: '1px solid var(--accent-amber)',
+                    borderRadius: '8px',
+                    padding: '4px 8px',
+                    color: '#FFF',
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    width: '120px'
+                  }}
+                  autoFocus
+                />
+                <button
+                  onClick={handleSaveName}
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: '8px',
+                    background: 'var(--accent-amber)',
+                    color: '#0F0C1B',
+                    border: 'none',
+                    fontWeight: 800,
+                    fontSize: '0.75rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Save
+                </button>
+              </div>
+            ) : (
+              <h2 className="heading-font" style={{ fontSize: '1.35rem', fontWeight: 800 }}>
+                {userProfile.name}, {userProfile.age}
+              </h2>
+            )}
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
               {userProfile.profession}
             </p>
@@ -137,7 +192,14 @@ export const UserProfilePage: React.FC = () => {
           </div>
 
           <button
-            onClick={() => navigate('/onboarding-typeform')}
+            onClick={() => {
+              if (!isEditingName) {
+                setEditedName(userProfile.name);
+                setIsEditingName(true);
+              } else {
+                handleSaveName();
+              }
+            }}
             style={{
               width: 38,
               height: 38,
@@ -150,6 +212,7 @@ export const UserProfilePage: React.FC = () => {
               justifyContent: 'center',
               cursor: 'pointer'
             }}
+            title="Edit Name"
           >
             <Edit size={18} />
           </button>

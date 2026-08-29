@@ -14,7 +14,7 @@ export const ProfileOnboardingPage: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateProfileInfo(profession, education, city, userProfile.lookingFor, userProfile.interests);
+    updateProfileInfo(userProfile.name, profession, education, city, userProfile.lookingFor, userProfile.interests);
     navigate('/onboarding-astrology');
   };
 

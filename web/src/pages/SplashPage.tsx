@@ -4,6 +4,7 @@ import { CelestialLogo } from '../components/CelestialLogo';
 import { PrimaryButton, SecondaryOutlineButton } from '../components/AstraButtons';
 import { Sparkles, ShieldCheck, ArrowRight } from 'lucide-react';
 import { CosmicBackgroundCanvas } from '../components/CosmicBackgroundCanvas';
+import { FloatingHeartsBackground } from '../components/FloatingHeartsBackground';
 
 export const SplashPage: React.FC = () => {
   const navigate = useNavigate();
@@ -18,11 +19,14 @@ export const SplashPage: React.FC = () => {
         flexDirection: 'column',
         justifyContent: 'space-between',
         alignItems: 'center',
-        background: 'radial-gradient(circle at 50% 30%, rgba(42, 14, 26, 0.75) 0%, var(--bg-primary) 70%)',
+        background: '#0F0C1B',
         position: 'relative',
         overflow: 'hidden'
       }}
     >
+      {/* Floating Hearts & Orbs Background */}
+      <FloatingHeartsBackground />
+
       {/* Interactive Background Starfield Canvas */}
       <CosmicBackgroundCanvas />
 
@@ -34,7 +38,7 @@ export const SplashPage: React.FC = () => {
             maxWidth: '300px',
             marginTop: '20px',
             fontSize: '0.95rem',
-            color: 'var(--text-secondary)',
+            color: 'rgba(248, 250, 252, 0.85)',
             lineHeight: 1.5
           }}
         >
@@ -57,8 +61,8 @@ export const SplashPage: React.FC = () => {
           </span>
         </SecondaryOutlineButton>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px' }}>
-          <ShieldCheck size={14} color="var(--accent-amber)" /> 100% Verified Profiles & DigiLocker Gateway
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.75rem', color: 'rgba(248, 250, 252, 0.6)', marginTop: '8px' }}>
+          <ShieldCheck size={14} color="var(--accent-amber)" /> DigiLocker & Background Check Verified Profiles
         </div>
       </div>
     </div>

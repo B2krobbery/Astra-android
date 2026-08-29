@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, User, Briefcase, GraduationCap, MapPin, Calendar
 import { AstrologyEngine } from '../data/astrologyEngine';
 import { RegionalPreference } from '../types';
 import { KundaliWheelIllustration } from '../components/Illustrations';
+import { FloatingHeartsBackground } from '../components/FloatingHeartsBackground';
 
 export const TypeformOnboardingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -46,7 +47,7 @@ export const TypeformOnboardingPage: React.FC = () => {
   };
 
   const handleComplete = () => {
-    updateProfileInfo(profession, education, city, selectedGoals, userProfile.interests, regionalPref);
+    updateProfileInfo(name, profession, education, city, selectedGoals, userProfile.interests, regionalPref);
     updateBirthDetails(dob, birthTime, birthCity);
     navigate('/discover');
   };
@@ -78,9 +79,13 @@ export const TypeformOnboardingPage: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        transition: 'background 0.5s ease'
+        transition: 'background 0.5s ease',
+        position: 'relative',
+        overflow: 'hidden'
       }}
     >
+      {/* Floating Celestial Hearts & Orbs Background */}
+      <FloatingHeartsBackground />
       {/* Hidden File Input */}
       <input
         type="file"
@@ -91,7 +96,7 @@ export const TypeformOnboardingPage: React.FC = () => {
       />
 
       {/* Top Header & Progress Bar */}
-      <div>
+      <div style={{ position: 'relative', zIndex: 5 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <button
             onClick={prevStep}
@@ -150,7 +155,7 @@ export const TypeformOnboardingPage: React.FC = () => {
       </div>
 
       {/* Main Question Body */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', margin: '32px 0' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', margin: '32px 0', position: 'relative', zIndex: 5 }}>
         {/* STEP 1: Name & Identity */}
         {step === 1 && (
           <div style={{ animation: 'floatOrb 0.3s ease-out' }}>
@@ -540,7 +545,9 @@ export const TypeformOnboardingPage: React.FC = () => {
           justifyContent: 'center',
           gap: '8px',
           cursor: 'pointer',
-          boxShadow: 'var(--shadow-cosmic)'
+          boxShadow: 'var(--shadow-cosmic)',
+          position: 'relative',
+          zIndex: 5
         }}
       >
         {step === totalSteps ? t('btn_complete') : t('btn_continue')} <ArrowRight size={18} />

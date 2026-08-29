@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Mic, Square, Play, Pause, Trash2, CheckCircle2, Volume2, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Mic, Square, Play, Pause, Trash2, CheckCircle2, Volume2, Sparkles, AlertCircle } from 'lucide-react';
 import { useAstra } from '../context/AstraContext';
 
 const samplePrompts = [
@@ -11,7 +11,7 @@ const samplePrompts = [
 
 export const UserVoiceRecorderCard: React.FC = () => {
   const { userProfile, updateProfileInfo, t } = useAstra();
-  
+
   const [selectedPrompt, setSelectedPrompt] = useState(
     userProfile.voiceNotePrompt || samplePrompts[0]
   );
@@ -20,6 +20,23 @@ export const UserVoiceRecorderCard: React.FC = () => {
   const [hasVoiceNote, setHasVoiceNote] = useState(!!userProfile.hasVoiceNote);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playProgress, setPlayProgress] = useState(0);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+
+  // Clean up audio URL on unmount
+  useEffect(() => {
+    return () => {
+      if (audioUrl) URL.revokeObjectURL(audioUrl);
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [audioUrl]);
 
   // Recording Timer Effect
   useEffect(() => {
@@ -28,8 +45,7 @@ export const UserVoiceRecorderCard: React.FC = () => {
       interval = setInterval(() => {
         setRecordTime(prev => {
           if (prev >= 15) {
-            setIsRecording(false);
-            setHasVoiceNote(true);
+            handleStopRecord();
             return 15;
           }
           return prev + 1;
@@ -41,37 +57,93 @@ export const UserVoiceRecorderCard: React.FC = () => {
     return () => clearInterval(interval);
   }, [isRecording]);
 
-  // Playback Timer Effect
-  useEffect(() => {
-    let interval: any;
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setPlayProgress(prev => {
-          if (prev >= 100) {
-            setIsPlaying(false);
-            return 0;
-          }
-          return prev + (100 / (recordTime || 12) / 10);
-        });
-      }, 100);
-    } else {
-      clearInterval(interval);
+  // Real Audio Playback Handling
+  const handleTogglePlay = () => {
+    if (!audioRef.current && audioUrl) {
+      audioRef.current = new Audio(audioUrl);
+      audioRef.current.onended = () => {
+        setIsPlaying(false);
+        setPlayProgress(0);
+      };
+      audioRef.current.ontimeupdate = () => {
+        if (audioRef.current) {
+          const progress = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+          setPlayProgress(progress || 0);
+        }
+      };
     }
-    return () => clearInterval(interval);
-  }, [isPlaying, recordTime]);
 
-  const handleStartRecord = () => {
-    setRecordTime(0);
-    setIsRecording(true);
-    setHasVoiceNote(false);
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        audioRef.current.play().catch(() => setIsPlaying(false));
+        setIsPlaying(true);
+      }
+    } else {
+      // Fallback timer playback simulation if audio blob URL not supported
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleStartRecord = async () => {
+    setPermissionError(null);
+    audioChunksRef.current = [];
+
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Audio recording is not supported in this browser environment.');
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = e => {
+        if (e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const url = URL.createObjectURL(audioBlob);
+        setAudioUrl(url);
+        setHasVoiceNote(true);
+        if (mediaStreamRef.current) {
+          mediaStreamRef.current.getTracks().forEach(track => track.stop());
+        }
+      };
+
+      mediaRecorder.start();
+      setRecordTime(0);
+      setIsRecording(true);
+      setHasVoiceNote(false);
+    } catch (err: any) {
+      console.error('Microphone Access Error:', err);
+      setPermissionError('Microphone permission required. Please allow microphone access in your device settings.');
+    }
   };
 
   const handleStopRecord = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
     setIsRecording(false);
-    setHasVoiceNote(true);
   };
 
   const handleDeleteVoiceNote = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl);
+      setAudioUrl(null);
+    }
     setHasVoiceNote(false);
     setIsPlaying(false);
     setRecordTime(0);
@@ -104,6 +176,26 @@ export const UserVoiceRecorderCard: React.FC = () => {
           </span>
         )}
       </div>
+
+      {/* Permission Error Banner */}
+      {permissionError && (
+        <div
+          style={{
+            padding: '10px 14px',
+            borderRadius: '12px',
+            background: 'rgba(239, 68, 68, 0.2)',
+            border: '1px solid #EF4444',
+            color: '#FCA5A5',
+            fontSize: '0.75rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          <AlertCircle size={16} color="#EF4444" style={{ flexShrink: 0 }} />
+          <span>{permissionError}</span>
+        </div>
+      )}
 
       {/* Voice Prompt Dropdown Selector */}
       <div>
@@ -186,7 +278,7 @@ export const UserVoiceRecorderCard: React.FC = () => {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button
-              onClick={() => setIsPlaying(!isPlaying)}
+              onClick={handleTogglePlay}
               style={{
                 width: 36,
                 height: 36,

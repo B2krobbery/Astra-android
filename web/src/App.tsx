@@ -18,12 +18,16 @@ import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AdminMarketingPage } from './pages/AdminMarketingPage';
 import { VerificationModal } from './components/VerificationModal';
 import { ReferralModal } from './components/ReferralModal';
+import { SplashScreenOverlay } from './components/SplashScreenOverlay';
 
 const AppRoutes: React.FC = () => {
   const { activeVerificationDetail, dismissVerification, verifyPoliceForUser } = useAstra();
 
   return (
     <div className="app-container">
+      {/* Animated Celestial Splash Screen Overlay on Initial App Load */}
+      <SplashScreenOverlay />
+
       <Routes>
         <Route path="/splash" element={<SplashPage />} />
         <Route path="/onboarding-typeform" element={<TypeformOnboardingPage />} />

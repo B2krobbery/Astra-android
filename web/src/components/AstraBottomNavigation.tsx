@@ -7,7 +7,7 @@ import { useAstra } from '../context/AstraContext';
 export const AstraBottomNavigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useAstra();
+  const { t, themeMode } = useAstra();
 
   const tabs = [
     { key: AstraTab.DISCOVER, label: t('tab_discover'), icon: Flame, path: '/discover' },
@@ -26,16 +26,16 @@ export const AstraBottomNavigation: React.FC = () => {
         maxWidth: '480px',
         margin: '0 auto',
         height: '72px',
-        background: 'var(--glass-bg)',
-        backdropFilter: 'var(--glass-backdrop)',
-        WebkitBackdropFilter: 'var(--glass-backdrop)',
-        borderTop: '1px solid var(--border-color)',
+        background: themeMode === 'LIGHT' ? 'rgba(255, 245, 247, 0.82)' : 'rgba(15, 12, 27, 0.82)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        borderTop: '1px solid rgba(245, 158, 11, 0.25)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-around',
         zIndex: 50,
         paddingBottom: 'calc(4px + env(safe-area-inset-bottom, 0px))',
-        boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.4)'
+        boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.08)'
       }}
     >
       {tabs.map(tab => {

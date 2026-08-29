@@ -60,6 +60,7 @@ interface AstraContextType {
 
   userProfile: UserProfile;
   updateProfileInfo: (
+    name: string,
     profession: string,
     education: string,
     city: string,
@@ -223,6 +224,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const updateProfileInfo = (
+    name: string,
     profession: string,
     education: string,
     city: string,
@@ -232,6 +234,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   ) => {
     setUserProfile(prev => ({
       ...prev,
+      name: name || prev.name,
       profession: profession || prev.profession,
       education: education || prev.education,
       location: city || prev.location,

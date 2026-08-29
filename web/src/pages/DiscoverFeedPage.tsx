@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAstra } from '../context/AstraContext';
 import { CandidateCardView } from '../components/CandidateCardView';
 import { AstraBottomNavigation } from '../components/AstraBottomNavigation';
+import { FloatingHeartsBackground } from '../components/FloatingHeartsBackground';
 import { Sparkles, Moon, Sun, ShieldCheck, Share2, Bot, Globe } from 'lucide-react';
 import { RegionalPreference } from '../types';
 
@@ -47,9 +48,12 @@ export const DiscoverFeedPage: React.FC = () => {
         margin: '0 auto',
         position: 'relative',
         overflow: 'hidden',
-        background: 'var(--bg-primary)'
+        background: themeMode === 'LIGHT' ? '#FFF5F7' : '#0F0C1B'
       }}
     >
+      {/* Floating Celestial Hearts & Orbs Background */}
+      <FloatingHeartsBackground />
+
       {/* FIXED TOP HEADER CONTAINER */}
       <div
         style={{
@@ -60,9 +64,11 @@ export const DiscoverFeedPage: React.FC = () => {
           maxWidth: '480px',
           margin: '0 auto',
           zIndex: 40,
-          background: 'var(--bg-primary)',
-          borderBottom: '1px solid var(--border-color)',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+          background: themeMode === 'LIGHT' ? 'rgba(255, 245, 247, 0.78)' : 'rgba(15, 12, 27, 0.78)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          borderBottom: '1px solid rgba(245, 158, 11, 0.25)',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)'
         }}
       >
         {/* Top Header Bar */}
@@ -72,7 +78,7 @@ export const DiscoverFeedPage: React.FC = () => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            background: 'var(--bg-secondary)'
+            background: 'transparent'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -194,7 +200,7 @@ export const DiscoverFeedPage: React.FC = () => {
         <div
           style={{
             padding: '6px 16px',
-            background: 'var(--bg-secondary)',
+            background: 'transparent',
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
