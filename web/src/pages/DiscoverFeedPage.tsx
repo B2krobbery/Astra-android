@@ -245,21 +245,29 @@ export const DiscoverFeedPage: React.FC = () => {
       <main
         style={{
           paddingTop: userProfile.completionPercentage < 100 ? '132px' : '96px',
-          paddingBottom: '76px',
+          paddingBottom: '72px',
           paddingLeft: '16px',
           paddingRight: '16px',
           height: '100vh',
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          WebkitOverflowScrolling: 'touch',
+          overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: currentCandidate ? 'flex-start' : 'center'
+          justifyContent: currentCandidate ? 'center' : 'center'
         }}
       >
         {currentCandidate ? (
-          <div style={{ width: '100%', marginTop: '12px' }}>
+          <div
+            style={{
+              width: '100%',
+              height: userProfile.completionPercentage < 100 ? 'calc(100vh - 215px)' : 'calc(100vh - 175px)',
+              maxHeight: '720px',
+              minHeight: '520px',
+              marginTop: '4px',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+          >
             <CandidateCardView
               key={currentCandidate.id}
               candidate={currentCandidate}

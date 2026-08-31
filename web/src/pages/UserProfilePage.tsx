@@ -135,14 +135,15 @@ export const UserProfilePage: React.FC = () => {
                   value={editedName}
                   onChange={e => setEditedName(e.target.value)}
                   style={{
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    border: '1px solid var(--accent-amber)',
-                    borderRadius: '8px',
-                    padding: '4px 8px',
-                    color: '#FFF',
+                    background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0F0C1B',
+                    border: '1.5px solid var(--accent-amber)',
+                    borderRadius: '10px',
+                    padding: '6px 10px',
+                    color: themeMode === 'LIGHT' ? '#0F0C1B' : '#FFFFFF',
                     fontSize: '1rem',
                     fontWeight: 700,
-                    width: '120px'
+                    width: '140px',
+                    outline: 'none'
                   }}
                   autoFocus
                 />
