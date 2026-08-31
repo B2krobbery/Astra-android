@@ -239,6 +239,29 @@ export const DiscoverFeedPage: React.FC = () => {
             );
           })}
         </div>
+
+        {/* Daily Shubh Muhurat & Reward Streak Ticker */}
+        <div
+          style={{
+            padding: '6px 16px',
+            background: 'rgba(245, 158, 11, 0.12)',
+            borderTop: '1px solid rgba(245, 158, 11, 0.2)',
+            borderBottom: '1px solid rgba(245, 158, 11, 0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: '0.7rem',
+            color: 'var(--accent-amber-light)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Sparkles size={12} color="var(--accent-amber)" />
+            <span><strong>Today's Shubh Muhurat:</strong> Abhijit 11:48 AM – 12:36 PM</span>
+          </div>
+          <span style={{ fontWeight: 800, background: 'rgba(245, 158, 11, 0.25)', padding: '2px 8px', borderRadius: '9999px', fontSize: '0.65rem' }}>
+            🔥 7-Day Streak (+350 pts)
+          </span>
+        </div>
       </div>
 
       {/* MIDDLE CANDIDATE CARD VIEWPORT (Single Clean Card) */}

@@ -16,6 +16,7 @@ import { UserProfilePage } from './pages/UserProfilePage';
 import { AdminAiPanelPage } from './pages/AdminAiPanelPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AdminMarketingPage } from './pages/AdminMarketingPage';
+import { DigitalWeddingCardPage } from './pages/DigitalWeddingCardPage';
 import { VerificationModal } from './components/VerificationModal';
 import { ReferralModal } from './components/ReferralModal';
 import { SplashScreenOverlay } from './components/SplashScreenOverlay';
@@ -41,6 +42,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/chat-detail" element={<ChatDetailPage />} />
         <Route path="/astro-ai" element={<AstroAiAssistantPage />} />
         <Route path="/profile" element={<UserProfilePage />} />
+        <Route path="/wedding-cards" element={<DigitalWeddingCardPage />} />
         <Route path="/admin/ai-agents" element={<AdminAiPanelPage />} />
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
         <Route path="/admin/marketing" element={<AdminMarketingPage />} />
