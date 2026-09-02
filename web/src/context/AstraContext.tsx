@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+
 import {
   UserProfile,
   Candidate,
@@ -15,42 +16,26 @@ import {
   MarketingCampaign,
   ReferralData
 } from '../types';
-import {
-  mockCandidates,
-  initialConversations,
-  initialAiMessages,
-  getVerificationDetail,
-  initialAiAgents,
-  initialAdminMetrics,
-  initialMarketingCampaigns,
-  initialReferralData
-} from '../data/mockData';
+import { mockCandidates } from '../data/mockData';
+
+import { getVerificationDetail, initialAiAgents, initialAdminMetrics, initialMarketingCampaigns, initialReferralData, astroAiKnowledge, suggestedQuestions, initialAiMessages } from '../data/mockData';
 import { translations } from '../data/translations';
 import { AstrologyEngine } from '../data/astrologyEngine';
 
-const initialUserProfile: UserProfile = {
-  name: 'Aarav',
-  age: 26,
-  gender: 'Male',
-  profession: 'Product Architect',
-  education: 'IIT Bombay · M.Tech',
-  location: 'Bengaluru',
-  regionalPreference: 'ALL',
-  dateOfBirth: '14 July 1998',
-  birthTime: '08:45 AM',
-  birthCity: 'Bengaluru',
-  nakshatra: 'Rohini',
-  rashi: 'Vrishabha (Taurus)',
-  photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&auto=format&fit=crop',
-  educationVerified: true,
-  policeVerified: false,
-  creditVerified: true,
-  lookingFor: ['Long-term Relationship', 'Vedic Alignment', 'Shared Values'],
-  interests: ['Vedic Astrology', 'Product Design', 'Filter Coffee', 'Classical Music'],
-  completionPercentage: 75
-};
+import { supabase } from '../lib/supabase';
+import { AuthService } from '../services/auth';
+import { ProfileService } from '../services/profiles';
+import { DiscoveryService } from '../services/discovery';
+
+
+const initialUserProfile: UserProfile = {} as UserProfile;
 
 interface AstraContextType {
+  sessionUser: any | null;
+  signInWithOtp: (phone: string) => Promise<any>;
+  verifyOtp: (phone: string, token: string) => Promise<any>;
+  signOut: () => Promise<any>;
+
   language: AppLanguage;
   setLanguage: (lang: AppLanguage) => void;
   t: (key: string) => string;
@@ -122,6 +107,42 @@ interface AstraContextType {
 const AstraContext = createContext<AstraContextType | undefined>(undefined);
 
 export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Supabase Phase 1 State
+  const [sessionUser, setSessionUser] = useState<any | null>(null);
+  
+  
+  const loadBackendData = async () => {
+    if (!sessionUser) return;
+    try {
+      const dbProfile = await ProfileService.getProfile(sessionUser.id);
+      if (dbProfile) {
+         setUserProfile(dbProfile as any);
+      }
+      const dbCandidates = await DiscoveryService.getCandidates();
+      if (dbCandidates) {
+         setCandidates(dbCandidates as any);
+         
+         
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    if (sessionUser) loadBackendData();
+  }, [sessionUser]);
+
+  useEffect(() => {
+    AuthService.getSession().then(({ data: { session } }) => {
+      setSessionUser(session?.user ?? null);
+    });
+    const { data: authListener } = AuthService.onAuthStateChange((session) => {
+      setSessionUser(session?.user ?? null);
+    });
+    return () => authListener.subscription.unsubscribe();
+  }, []);
+
   // Language & Translation
   const [language, setLanguageState] = useState<AppLanguage>(() => {
     return (localStorage.getItem('astra_language') as AppLanguage) || 'EN';
@@ -160,13 +181,13 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [themeMode]);
 
   // User Profile
-  const [userProfile, setUserProfile] = useState<UserProfile>(initialUserProfile);
+  const [userProfile, setUserProfile] = useState<UserProfile>({} as UserProfile);
 
   const uploadUserProfilePhoto = (file: File) => {
     const reader = new FileReader();
     reader.onloadend = () => {
       if (typeof reader.result === 'string') {
-        setUserProfile(prev => ({
+        setUserProfile((prev: any) => ({
           ...prev,
           photoUrl: reader.result as string,
           completionPercentage: Math.min(100, prev.completionPercentage + 5)
@@ -177,12 +198,12 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Candidates & Regional Filtering
-  const [candidates, setCandidates] = useState<Candidate[]>(mockCandidates);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [candidateIndex] = useState(0);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate>(mockCandidates[0]);
   const [lastMatchedCandidate, setLastMatchedCandidate] = useState<Candidate | null>(null);
 
-  const filteredCandidates = candidates.filter(c => {
+  const filteredCandidates = candidates.filter((c: any) => {
     if (userProfile.gender === 'Male' && c.gender === 'Male') return false;
     if (userProfile.gender === 'Female' && c.gender === 'Female') return false;
     if (userProfile.regionalPreference === 'ALL') return true;
@@ -199,8 +220,8 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 
   // Messaging & Conversations
-  const [conversations, setConversations] = useState<MatchConversation[]>(initialConversations);
-  const [activeConversation, setActiveConversation] = useState<MatchConversation | null>(initialConversations[0]);
+  const [conversations, setConversations] = useState<MatchConversation[]>([]);
+  const [activeConversation, setActiveConversation] = useState<MatchConversation | null>(null);
   const [isChatTyping, setIsChatTyping] = useState(false);
 
   // Astro AI
@@ -220,7 +241,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [marketingCampaigns, setMarketingCampaigns] = useState<MarketingCampaign[]>(initialMarketingCampaigns);
 
   const setRegionalPreference = (pref: RegionalPreference) => {
-    setUserProfile(prev => ({ ...prev, regionalPreference: pref }));
+    setUserProfile((prev: any) => ({ ...prev, regionalPreference: pref }));
   };
 
   const updateProfileInfo = (
@@ -232,7 +253,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     interests: string[],
     regionalPref?: RegionalPreference
   ) => {
-    setUserProfile(prev => ({
+    setUserProfile((prev: any) => ({
       ...prev,
       name: name || prev.name,
       profession: profession || prev.profession,
@@ -248,7 +269,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const nakshatra = AstrologyEngine.calculateNakshatra(dob, birthTime, birthCity);
     const rashi = AstrologyEngine.calculateRashi(dob, birthTime, birthCity);
 
-    setUserProfile(prev => ({
+    setUserProfile((prev: any) => ({
       ...prev,
       dateOfBirth: dob,
       birthTime,
@@ -283,14 +304,14 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           }
         ]
       };
-      setConversations(prev => [newConvo, ...prev]);
+      setConversations((prev: any) => [newConvo, ...prev]);
       setActiveConversation(newConvo);
     } else {
       setActiveConversation(existing);
     }
 
-    setCandidates(prev => {
-      const remaining = prev.filter(c => c.id !== candidate.id);
+    setCandidates((prev: any) => {
+      const remaining = prev.filter((c: any) => c.id !== candidate.id);
       return remaining.length > 0 ? remaining : mockCandidates;
     });
 
@@ -300,8 +321,8 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const passCandidate = (candidate: Candidate) => {
-    setCandidates(prev => {
-      const remaining = prev.filter(c => c.id !== candidate.id);
+    setCandidates((prev: any) => {
+      const remaining = prev.filter((c: any) => c.id !== candidate.id);
       return remaining.length > 0 ? remaining : mockCandidates;
     });
   };
@@ -328,7 +349,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         unreadCount: 0,
         messages: []
       };
-      setConversations(prev => [newConvo, ...prev]);
+      setConversations((prev: any) => [newConvo, ...prev]);
       setActiveConversation(newConvo);
     }
   };
@@ -344,8 +365,8 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       isFromUser: true
     };
 
-    setConversations(prev =>
-      prev.map(c => {
+    setConversations((prev: any) =>
+      prev.map((c: any) => {
         if (c.candidate.id === activeConversation.candidate.id) {
           return {
             ...c,
@@ -358,7 +379,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       })
     );
 
-    setActiveConversation(prev => (prev ? { ...prev, messages: [...prev.messages, userMsg] } : null));
+    setActiveConversation((prev: any) => (prev ? { ...prev, messages: [...prev.messages, userMsg] } : null));
     setIsChatTyping(true);
 
     setTimeout(() => {
@@ -370,8 +391,8 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         isFromUser: false
       };
 
-      setConversations(prev =>
-        prev.map(c => {
+      setConversations((prev: any) =>
+        prev.map((c: any) => {
           if (c.candidate.id === activeConversation.candidate.id) {
             return {
               ...c,
@@ -384,7 +405,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         })
       );
 
-      setActiveConversation(prev => (prev ? { ...prev, messages: [...prev.messages, aiReply] } : null));
+      setActiveConversation((prev: any) => (prev ? { ...prev, messages: [...prev.messages, aiReply] } : null));
       setIsChatTyping(false);
     }, 1800);
   };
@@ -398,7 +419,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       isFromUser: true
     };
 
-    setAstroAiMessages(prev => [...prev, userMsg]);
+    setAstroAiMessages((prev: any) => [...prev, userMsg]);
     setIsAstroAiTyping(true);
 
     setTimeout(() => {
@@ -410,7 +431,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         isFromUser: false
       };
-      setAstroAiMessages(prev => [...prev, aiMsg]);
+      setAstroAiMessages((prev: any) => [...prev, aiMsg]);
       setIsAstroAiTyping(false);
     }, 1600);
   };
@@ -445,7 +466,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const verifyPoliceForUser = () => {
-    setUserProfile(prev => ({
+    setUserProfile((prev: any) => ({
       ...prev,
       policeVerified: true,
       completionPercentage: 100
@@ -457,8 +478,8 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const closeReferralModal = () => setIsReferralModalOpen(false);
 
   const runAiAgent = (agentId: string) => {
-    setAiAgents(prev =>
-      prev.map(agent => {
+    setAiAgents((prev: any) =>
+      prev.map((agent: any) => {
         if (agent.id === agentId) {
           return {
             ...agent,
@@ -472,8 +493,8 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 
     setTimeout(() => {
-      setAiAgents(prev =>
-        prev.map(agent => {
+      setAiAgents((prev: any) =>
+        prev.map((agent: any) => {
           if (agent.id === agentId) {
             return {
               ...agent,
@@ -494,18 +515,18 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       conversions: 0,
       ...campaignData
     };
-    setMarketingCampaigns(prev => [newCamp, ...prev]);
+    setMarketingCampaigns((prev: any) => [newCamp, ...prev]);
   };
 
   const toggleCampaignStatus = (campaignId: string) => {
-    setMarketingCampaigns(prev =>
-      prev.map(c => (c.id === campaignId ? { ...c, status: c.status === 'ACTIVE' ? 'COMPLETED' : 'ACTIVE' } : c))
+    setMarketingCampaigns((prev: any) =>
+      prev.map((c: any) => (c.id === campaignId ? { ...c, status: c.status === 'ACTIVE' ? 'COMPLETED' : 'ACTIVE' } : c))
     );
   };
 
   return (
     <AstraContext.Provider
-      value={{
+      value={{sessionUser, signInWithOtp: AuthService.signInWithOtp, verifyOtp: AuthService.verifyOtp, signOut: AuthService.signOut, 
         language,
         setLanguage,
         t,
