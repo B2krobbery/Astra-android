@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, Moon } from 'lucide-react';
+import { useAstra } from '../context/AstraContext';
 
 const STATUS_MESSAGES = [
   '💫 Calculating planetary transits...',
@@ -8,6 +9,7 @@ const STATUS_MESSAGES = [
 ];
 
 export const SplashScreenOverlay: React.FC = () => {
+  const { t } = useAstra();
   const [progress, setProgress] = useState(0);
   const [statusIndex, setStatusIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
@@ -119,7 +121,7 @@ export const SplashScreenOverlay: React.FC = () => {
           textAlign: 'center'
         }}
       >
-        ASTRA
+        {t('app_name')}
       </h1>
 
       {/* Tagline */}

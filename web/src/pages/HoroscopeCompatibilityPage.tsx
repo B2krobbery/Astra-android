@@ -39,7 +39,7 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
       {/* Fixed Top Bar */}
       <header
         style={{
-          padding: '16px 20px',
+          padding: 'calc(16px + env(safe-area-inset-top, 0px)) 20px 16px 20px',
           display: 'flex',
           alignItems: 'center',
           gap: '12px',

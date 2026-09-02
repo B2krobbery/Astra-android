@@ -27,14 +27,14 @@ export const AstroAiAssistantPage: React.FC = () => {
         height: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        paddingBottom: '76px',
+        paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))',
         background: 'var(--bg-primary)'
       }}
     >
       {/* Top Header Bar */}
       <header
         style={{
-          padding: '16px 20px',
+          padding: 'calc(16px + env(safe-area-inset-top, 0px)) 20px 16px 20px',
           background: 'var(--ai-header-bg)',
           borderBottom: '1px solid var(--accent-amber)',
           display: 'flex',

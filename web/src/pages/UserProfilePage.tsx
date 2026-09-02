@@ -55,7 +55,8 @@ export const UserProfilePage: React.FC = () => {
       style={{
         minHeight: '100vh',
         background: 'var(--bg-primary)',
-        paddingBottom: '88px'
+        paddingBottom: 'calc(110px + env(safe-area-inset-bottom, 0px))',
+        overflowY: 'auto'
       }}
     >
       {/* Hidden File Input */}
@@ -70,7 +71,7 @@ export const UserProfilePage: React.FC = () => {
       {/* Top Bar */}
       <header
         style={{
-          padding: '16px 20px',
+          padding: 'calc(16px + env(safe-area-inset-top, 0px)) 20px 16px 20px',
           background: 'var(--bg-secondary)',
           borderBottom: '1px solid var(--border-color)',
           display: 'flex',

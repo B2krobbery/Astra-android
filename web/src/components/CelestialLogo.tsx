@@ -1,5 +1,6 @@
 import React from 'react';
 import { Sparkles, Moon } from 'lucide-react';
+import { useAstra } from '../context/AstraContext';
 
 interface CelestialLogoProps {
   size?: 'small' | 'medium' | 'large';
@@ -7,8 +8,9 @@ interface CelestialLogoProps {
 }
 
 export const CelestialLogo: React.FC<CelestialLogoProps> = ({ size = 'medium', showSubtitle = true }) => {
+  const { t } = useAstra();
   const iconSize = size === 'small' ? 24 : size === 'large' ? 56 : 36;
-  
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
       <div
@@ -46,7 +48,7 @@ export const CelestialLogo: React.FC<CelestialLogoProps> = ({ size = 'medium', s
           letterSpacing: '1px'
         }}
       >
-        ASTRA
+        {t('app_name')}
       </h1>
       {showSubtitle && (
         <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', letterSpacing: '0.5px', marginTop: '2px' }}>

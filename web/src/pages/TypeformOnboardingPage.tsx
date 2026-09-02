@@ -73,15 +73,14 @@ export const TypeformOnboardingPage: React.FC = () => {
     <div
       style={{
         minHeight: '100vh',
-        background: getStageTheme(),
-        color: '#F8FAFC',
-        padding: '24px 20px',
+        padding: 'calc(16px + env(safe-area-inset-top, 0px)) 24px calc(32px + env(safe-area-inset-bottom, 0px)) 24px',
+        background: 'linear-gradient(180deg, #181236 0%, #0F0C1B 100%)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
         transition: 'background 0.5s ease',
         position: 'relative',
-        overflow: 'hidden'
+        overflowY: 'auto'
       }}
     >
       {/* Floating Celestial Hearts & Orbs Background */}

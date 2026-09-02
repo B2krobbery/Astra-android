@@ -25,8 +25,8 @@ export const AstraBottomNavigation: React.FC = () => {
         right: 0,
         maxWidth: '480px',
         margin: '0 auto',
-        height: '72px',
-        background: themeMode === 'LIGHT' ? 'rgba(255, 245, 247, 0.82)' : 'rgba(15, 12, 27, 0.82)',
+        padding: '8px 0 calc(12px + env(safe-area-inset-bottom, 0px)) 0',
+        background: themeMode === 'LIGHT' ? 'rgba(255, 245, 247, 0.88)' : 'rgba(15, 12, 27, 0.88)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
         borderTop: '1px solid rgba(245, 158, 11, 0.25)',
@@ -34,7 +34,6 @@ export const AstraBottomNavigation: React.FC = () => {
         alignItems: 'center',
         justifyContent: 'space-around',
         zIndex: 50,
-        paddingBottom: 'calc(4px + env(safe-area-inset-bottom, 0px))',
         boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.08)'
       }}
     >

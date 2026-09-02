@@ -47,7 +47,8 @@ export const DiscoverFeedPage: React.FC = () => {
         maxWidth: '480px',
         margin: '0 auto',
         position: 'relative',
-        overflow: 'hidden',
+        minHeight: '100vh',
+        overflowY: 'auto',
         background: themeMode === 'LIGHT' ? '#FFF5F7' : '#0F0C1B'
       }}
     >
@@ -74,7 +75,7 @@ export const DiscoverFeedPage: React.FC = () => {
         {/* Top Header Bar */}
         <header
           style={{
-            padding: '12px 16px',
+            padding: 'calc(12px + env(safe-area-inset-top, 0px)) 16px 12px 16px',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -84,69 +85,72 @@ export const DiscoverFeedPage: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Sparkles size={20} color="var(--accent-amber)" className="spin-slow" />
             <h1 className="heading-font" style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--accent-amber-light)' }}>
-              ASTRA
+              {t('app_name')}
             </h1>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             {/* Language Switcher Button */}
             <button
               onClick={toggleLanguage}
               style={{
-                padding: '5px 9px',
+                padding: '4px 8px',
                 borderRadius: '9999px',
                 background: 'rgba(255, 255, 255, 0.08)',
                 border: '1px solid var(--border-color)',
                 color: 'var(--accent-amber-light)',
-                fontSize: '0.75rem',
+                fontSize: '0.7rem',
                 fontWeight: 700,
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px',
-                cursor: 'pointer'
+                gap: '3px',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
               }}
             >
-              <Globe size={12} /> {language === 'EN' ? 'മലയാളം' : language === 'ML' ? 'हिंदी' : 'English'}
+              <Globe size={11} /> {language === 'EN' ? 'മലയാളം' : language === 'ML' ? 'हिंदी' : 'EN'}
             </button>
 
             {/* Admin Panel Link */}
             <button
               onClick={() => navigate('/admin/ai-agents')}
               style={{
-                padding: '5px 9px',
+                padding: '4px 8px',
                 borderRadius: '9999px',
                 background: 'rgba(79, 70, 229, 0.2)',
                 border: '1px solid var(--accent-indigo)',
                 color: 'var(--accent-indigo)',
-                fontSize: '0.75rem',
+                fontSize: '0.7rem',
                 fontWeight: 700,
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px',
-                cursor: 'pointer'
+                gap: '3px',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
               }}
             >
-              <Bot size={13} /> {t('btn_admin')}
+              <Bot size={12} /> {t('btn_admin')}
             </button>
 
             {/* Referral Modal Button */}
             <button
               onClick={openReferralModal}
+              title="Invite Friends"
               style={{
-                padding: '5px 9px',
-                borderRadius: '9999px',
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
                 background: 'rgba(245, 158, 11, 0.15)',
                 border: '1px solid var(--accent-amber)',
                 color: 'var(--accent-amber-light)',
-                fontSize: '0.75rem',
-                fontWeight: 700,
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px',
-                cursor: 'pointer'
+                justifyContent: 'center',
+                cursor: 'pointer',
+                flexShrink: 0
               }}
             >
-              <Share2 size={12} /> Invite
+              <Share2 size={13} />
             </button>
 
             <button
@@ -155,17 +159,17 @@ export const DiscoverFeedPage: React.FC = () => {
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border-color)',
                 borderRadius: '50%',
-                width: 32,
-                height: 32,
+                width: 28,
+                height: 28,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'var(--text-primary)',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                flexShrink: 0
               }}
-              title="Toggle Theme"
             >
-              {themeMode === 'DARK' ? <Sun size={15} color="#FCD34D" /> : <Moon size={15} color="#4F46E5" />}
+              {themeMode === 'DARK' ? <Sun size={13} color="var(--accent-amber)" /> : <Moon size={13} />}
             </button>
           </div>
         </header>
@@ -267,26 +271,25 @@ export const DiscoverFeedPage: React.FC = () => {
       {/* MIDDLE CANDIDATE CARD VIEWPORT (Single Clean Card) */}
       <main
         style={{
-          paddingTop: userProfile.completionPercentage < 100 ? '132px' : '96px',
-          paddingBottom: '72px',
+          paddingTop: userProfile.completionPercentage < 100 ? '136px' : '98px',
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
           paddingLeft: '16px',
           paddingRight: '16px',
-          height: '100vh',
-          overflow: 'hidden',
+          minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: currentCandidate ? 'center' : 'center'
+          justifyContent: 'center'
         }}
       >
         {currentCandidate ? (
           <div
             style={{
               width: '100%',
-              height: userProfile.completionPercentage < 100 ? 'calc(100vh - 215px)' : 'calc(100vh - 175px)',
-              maxHeight: '720px',
-              minHeight: '520px',
-              marginTop: '4px',
+              height: userProfile.completionPercentage < 100 ? 'calc(100vh - 225px)' : 'calc(100vh - 185px)',
+              maxHeight: '660px',
+              minHeight: '460px',
+              margin: 'auto 0',
               display: 'flex',
               flexDirection: 'column'
             }}
