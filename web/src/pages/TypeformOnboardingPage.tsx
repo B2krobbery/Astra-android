@@ -16,16 +16,16 @@ export const TypeformOnboardingPage: React.FC = () => {
   const totalSteps = 8;
 
   // Form State
-  const [name, setName] = useState(userProfile.name);
+  const [name, setName] = useState(userProfile.name || '');
   const [gender, setGender] = useState(userProfile.gender || 'Male');
-  const [profession, setProfession] = useState(userProfile.profession);
-  const [education, setEducation] = useState(userProfile.education);
-  const [city, setCity] = useState(userProfile.location);
+  const [profession, setProfession] = useState(userProfile.profession || '');
+  const [education, setEducation] = useState(userProfile.education || '');
+  const [city, setCity] = useState(userProfile.location || '');
   const [regionalPref, setRegionalPref] = useState<RegionalPreference>(userProfile.regionalPreference || 'ALL');
-  const [dob, setDob] = useState(userProfile.dateOfBirth);
-  const [birthTime, setBirthTime] = useState(userProfile.birthTime);
-  const [birthCity, setBirthCity] = useState(userProfile.birthCity);
-  const [selectedGoals, setSelectedGoals] = useState<string[]>(userProfile.lookingFor);
+  const [dob, setDob] = useState(userProfile.dateOfBirth || '');
+  const [birthTime, setBirthTime] = useState(userProfile.birthTime || '');
+  const [birthCity, setBirthCity] = useState(userProfile.birthCity || '');
+  const [selectedGoals, setSelectedGoals] = useState<string[]>(userProfile.lookingFor || []);
 
   const previewNakshatra = AstrologyEngine.calculateNakshatra(dob, birthTime, birthCity);
   const previewRashi = AstrologyEngine.calculateRashi(dob, birthTime, birthCity);

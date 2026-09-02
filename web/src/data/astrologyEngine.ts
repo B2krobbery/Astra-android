@@ -15,9 +15,11 @@ export const RASHIS = [
 ];
 
 function stringHashCode(str: string): number {
+  if (!str) return 0;
+  const s = String(str);
   let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
+  for (let i = 0; i < s.length; i++) {
+    const char = s.charCodeAt(i);
     hash = (hash << 5) - hash + char;
     hash |= 0;
   }
