@@ -51,7 +51,8 @@ export const DiscoverFeedPage: React.FC = () => {
         maxWidth: '480px',
         margin: '0 auto',
         position: 'relative',
-        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         overflowY: 'auto',
         background: themeMode === 'LIGHT' ? '#FFF5F7' : '#0F0C1B'
       }}
@@ -342,11 +343,11 @@ export const DiscoverFeedPage: React.FC = () => {
       {/* MIDDLE CANDIDATE CARD VIEWPORT (Single Clean Card) */}
       <main
         style={{
-          paddingTop: userProfile.completionPercentage < 100 ? '136px' : '98px',
+          paddingTop: userProfile.completionPercentage < 100 ? '184px' : '152px',
           paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
           paddingLeft: '16px',
           paddingRight: '16px',
-          minHeight: '100vh',
+          flex: 1,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',

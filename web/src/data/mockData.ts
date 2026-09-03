@@ -180,6 +180,7 @@ export const newMatches: Candidate[] = [
 
 export const initialConversations: MatchConversation[] = [
   {
+    id: 'convo_001',
     candidate: mockCandidates[0],
     lastMessage: 'The stars were right about that cafe!',
     timestamp: '2m ago',
@@ -194,6 +195,7 @@ export const initialConversations: MatchConversation[] = [
     ]
   },
   {
+    id: 'convo_002',
     candidate: mockCandidates[1],
     lastMessage: 'What does your Nakshatra say about...',
     timestamp: '1h ago',

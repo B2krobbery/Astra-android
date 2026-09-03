@@ -9,6 +9,7 @@ export const MatchCelebrationPage: React.FC = () => {
   const navigate = useNavigate();
   const { userProfile, lastMatchedCandidate, selectedCandidate, openConversationForCandidate } = useAstra();
   const candidate = lastMatchedCandidate || selectedCandidate;
+  if (!candidate) return null;
 
   const handleStartChatting = () => {
     openConversationForCandidate(candidate);

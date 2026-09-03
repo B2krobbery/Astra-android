@@ -26,6 +26,7 @@ import { supabase } from '../lib/supabase';
 import { AuthService } from '../services/auth';
 import { ProfileService } from '../services/profiles';
 import { DiscoveryService } from '../services/discovery';
+import { ChatService } from '../services/chat';
 
 
 const initialUserProfile: UserProfile = {} as UserProfile;
@@ -35,6 +36,7 @@ interface AstraContextType {
   signInWithOtp: (phone: string) => Promise<any>;
   verifyOtp: (phone: string, token: string) => Promise<any>;
   signOut: () => Promise<any>;
+  deleteAccount: () => Promise<any>;
 
   language: AppLanguage;
   setLanguage: (lang: AppLanguage) => void;
@@ -52,7 +54,8 @@ interface AstraContextType {
     city: string,
     lookingFor: string[],
     interests: string[],
-    regionalPref?: RegionalPreference
+    regionalPref?: RegionalPreference,
+    bio?: string
   ) => void;
   updateBirthDetails: (dob: string, birthTime: string, birthCity: string, manglik?: string, nadi?: string) => void;
   updatePartnerPreferences: (religion: string, caste: string) => void;
@@ -60,6 +63,8 @@ interface AstraContextType {
   isPreferenceStrictFilterOn: boolean;
   setIsPreferenceStrictFilterOn: (val: boolean) => void;
   uploadUserProfilePhoto: (file: File) => void;
+  uploadVoiceNote: (blob: Blob, prompt: string) => Promise<void>;
+  deleteVoiceNote: () => Promise<void>;
 
   regionalPreference: RegionalPreference;
   setRegionalPreference: (pref: RegionalPreference) => void;
@@ -70,9 +75,11 @@ interface AstraContextType {
   currentCandidate: Candidate | null;
   selectedCandidate: Candidate | null;
   selectCandidate: (candidate: Candidate) => void;
-  likeCandidate: (candidate: Candidate, onMatch: () => void) => void;
+  likeCandidate: (candidate: Candidate, onMatch?: () => void, onNotMatch?: () => void) => void;
   passCandidate: (candidate: Candidate) => void;
   passedCandidatesHistory: Candidate[];
+  pendingRequests: Candidate[];
+  sentRequests: Candidate[];
   rewindCandidate: () => void;
   lastMatchedCandidate: Candidate | null;
 
@@ -123,12 +130,60 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const dbProfile = await ProfileService.getProfile(sessionUser.id);
       if (dbProfile) {
-         setUserProfile(dbProfile as any);
+         let photoUrl = undefined;
+         const { data: photoData } = await supabase.from('profile_photos').select('storage_path').eq('user_id', sessionUser.id).eq('is_primary', true).maybeSingle();
+         if (photoData && photoData.storage_path) {
+           photoUrl = photoData.storage_path.startsWith('http') 
+             ? photoData.storage_path 
+             : supabase.storage.from('avatars').getPublicUrl(photoData.storage_path).data.publicUrl;
+         }
+
+         setUserProfile({
+           ...dbProfile,
+           name: dbProfile.display_name || '',
+           dateOfBirth: dbProfile.date_of_birth,
+           birthLocation: dbProfile.birth_location,
+           bloodGroup: dbProfile.blood_group,
+           motherTongue: dbProfile.mother_tongue,
+           subCaste: dbProfile.sub_caste,
+           education10th: dbProfile.education_10th,
+           education12th: dbProfile.education_12th,
+           higherEducation: dbProfile.higher_education,
+           annualIncome: dbProfile.annual_income,
+           healthInfo: dbProfile.health_info,
+           healthPrivacy: dbProfile.health_privacy,
+           maritalStatus: dbProfile.marital_status,
+           previousMarriage: dbProfile.previous_marriage,
+           childrenStatus: dbProfile.children_status,
+           photoPrivacy: dbProfile.photo_privacy,
+           lookingFor: dbProfile.looking_for || [],
+           regionalPreference: dbProfile.regional_preference,
+           bio: dbProfile.bio,
+           photoUrl: photoUrl,
+           hasVoiceNote: !!dbProfile.voice_note_url,
+           voiceNoteUrl: dbProfile.voice_note_url,
+           voiceNotePrompt: dbProfile.voice_note_prompt
+         } as any);
       }
       
       const dbCandidates = await DiscoveryService.getCandidates();
       if (dbCandidates) {
          setCandidates(dbCandidates as any);
+      }
+      
+      const dbConversations = await ChatService.getConversations();
+      if (dbConversations) {
+        setConversations(dbConversations as any);
+      }
+
+      const dbPending = await DiscoveryService.getPendingRequests();
+      if (dbPending) {
+        setPendingRequests(dbPending as any);
+      }
+      
+      const dbSent = await DiscoveryService.getSentRequests();
+      if (dbSent) {
+        setSentRequests(dbSent as any);
       }
     } catch (e) {
       console.error(e);
@@ -188,27 +243,132 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // User Profile
   const [userProfile, setUserProfile] = useState<UserProfile>({} as UserProfile);
 
-  const setUserIntent = (intent: 'Dating' | 'Marriage') => {
+  const setUserIntent = async (intent: 'Dating' | 'Marriage') => {
     setUserProfile((prev: any) => ({ ...prev, intent }));
+    if (sessionUser) {
+      try {
+        await supabase.from('preferences').update({ intent }).eq('user_id', sessionUser.id);
+      } catch (e) {
+        console.error('Failed to update intent:', e);
+      }
+    }
   };
 
-  const uploadUserProfilePhoto = (file: File) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (typeof reader.result === 'string') {
-        setUserProfile((prev: any) => ({
-          ...prev,
-          photoUrl: reader.result as string,
-          completionPercentage: Math.min(100, prev.completionPercentage + 5)
-        }));
+  const uploadUserProfilePhoto = async (file: File) => {
+    // Optimistic UI update
+    const objectUrl = URL.createObjectURL(file);
+    setUserProfile((prev: any) => ({
+      ...prev,
+      photoUrl: objectUrl,
+      completionPercentage: Math.min(100, prev.completionPercentage + 5)
+    }));
+
+    if (!sessionUser) return;
+
+    try {
+      // 1. Upload to Supabase Storage (avatars bucket)
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${sessionUser.id}/avatar_${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        console.error('Error uploading photo:', uploadError);
+        return;
       }
-    };
-    reader.readAsDataURL(file);
+
+      // 2. Get public URL
+      const { data } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      const publicUrl = data.publicUrl;
+
+      // The profiles table doesn't have a photo_url column. 
+      // We only use profile_photos table for photos.
+      // Remove existing photos (since we only support 1 primary photo currently)
+      await supabase.from('profile_photos').delete().eq('user_id', sessionUser.id);
+      
+      // Insert the new photo
+      await supabase.from('profile_photos').insert({
+        user_id: sessionUser.id,
+        storage_path: publicUrl,
+        is_primary: true
+      });
+
+      // Update local state with the actual public URL
+      setUserProfile((prev: any) => ({
+        ...prev,
+        photoUrl: publicUrl
+      }));
+    } catch (e) {
+      console.error('Failed to upload user photo to Supabase', e);
+    }
+  };
+
+  const uploadVoiceNote = async (blob: Blob, prompt: string) => {
+    if (!sessionUser) return;
+    try {
+      const filePath = `${sessionUser.id}/voice_note_${Date.now()}.webm`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('voice_notes')
+        .upload(filePath, blob, { upsert: true, contentType: 'audio/webm' });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('voice_notes')
+        .getPublicUrl(filePath);
+
+      const publicUrl = data.publicUrl;
+
+      await supabase.from('profiles').update({
+        voice_note_url: publicUrl,
+        voice_note_prompt: prompt,
+        updated_at: new Date().toISOString()
+      }).eq('id', sessionUser.id);
+
+      setUserProfile((prev: any) => ({
+        ...prev,
+        hasVoiceNote: true,
+        voiceNoteUrl: publicUrl,
+        voiceNotePrompt: prompt
+      }));
+    } catch (e) {
+      console.error('Failed to upload voice note:', e);
+      throw e;
+    }
+  };
+
+  const deleteVoiceNote = async () => {
+    if (!sessionUser) return;
+    try {
+      await supabase.from('profiles').update({
+        voice_note_url: null,
+        voice_note_prompt: null,
+        updated_at: new Date().toISOString()
+      }).eq('id', sessionUser.id);
+
+      setUserProfile((prev: any) => ({
+        ...prev,
+        hasVoiceNote: false,
+        voiceNoteUrl: undefined,
+        voiceNotePrompt: undefined
+      }));
+    } catch (e) {
+      console.error('Failed to delete voice note:', e);
+      throw e;
+    }
   };
 
   // Candidates & Regional Filtering
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [passedCandidatesHistory, setPassedCandidatesHistory] = useState<Candidate[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<Candidate[]>([]);
+  const [sentRequests, setSentRequests] = useState<Candidate[]>([]);
   const [candidateIndex] = useState(0);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [lastMatchedCandidate, setLastMatchedCandidate] = useState<Candidate | null>(null);
@@ -275,25 +435,53 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setUserProfile((prev: any) => ({ ...prev, regionalPreference: pref }));
   };
 
-  const updateProfileInfo = (
+  const updateProfileInfo = async (
     name: string,
     profession: string,
     education: string,
     city: string,
     lookingFor: string[],
     interests: string[],
-    regionalPref?: RegionalPreference
+    regionalPref?: RegionalPreference,
+    bio?: string
   ) => {
+    const finalName = name || userProfile.name;
+    const finalProfession = profession || userProfile.profession;
+    const finalEducation = education || userProfile.education;
+    const finalLocation = city || userProfile.location;
+    const finalLookingFor = lookingFor?.length ? lookingFor : userProfile.lookingFor;
+    const finalRegionalPref = regionalPref || userProfile.regionalPreference;
+    const finalInterests = interests?.length ? interests : userProfile.interests;
+    const finalBio = bio !== undefined ? bio : userProfile.bio;
+
     setUserProfile((prev: any) => ({
       ...prev,
-      name: name || prev.name,
-      profession: profession || prev.profession,
-      education: education || prev.education,
-      location: city || prev.location,
-      lookingFor: lookingFor?.length ? lookingFor : prev.lookingFor,
-      interests: interests?.length ? interests : prev.interests,
-      regionalPreference: regionalPref || prev.regionalPreference
+      name: finalName,
+      profession: finalProfession,
+      education: finalEducation,
+      location: finalLocation,
+      lookingFor: finalLookingFor,
+      interests: finalInterests,
+      regionalPreference: finalRegionalPref,
+      bio: finalBio
     }));
+
+    if (sessionUser) {
+      try {
+        await supabase.from('profiles').update({
+          display_name: finalName,
+          profession: finalProfession,
+          higher_education: finalEducation,
+          location: finalLocation,
+          looking_for: finalLookingFor,
+          regional_preference: finalRegionalPref,
+          bio: finalBio,
+          updated_at: new Date().toISOString()
+        }).eq('id', sessionUser.id);
+      } catch (e) {
+        console.error('Failed to update profile in DB', e);
+      }
+    }
   };
 
   const updateBirthDetails = (dob: string, birthTime: string, birthCity: string, manglik?: string, nadi?: string) => {
@@ -340,41 +528,64 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCurrentCompatibility(AstrologyEngine.calculateCompatibility(userProfile, candidate));
   };
 
-  const likeCandidate = (candidate: Candidate, onMatch: () => void) => {
-    setLastMatchedCandidate(candidate);
-
-    const existing = conversations.find(c => c.candidate.id === candidate.id);
-    if (!existing) {
-      const newConvo: MatchConversation = {
-        candidate,
-        lastMessage: `You both matched with ${candidate.compatibilityScore}% compatibility ✨`,
-        timestamp: 'Just now',
-        unreadCount: 1,
-        messages: [
-          {
-            id: `welcome_${Date.now()}`,
-            senderName: candidate.name,
-            message: `Hi! Our stars have aligned (${candidate.compatibilityScore}% compatibility) 😊`,
-            timestamp: 'Just now',
-            isFromUser: false
-          }
-        ]
-      };
-      setConversations((prev: any) => [newConvo, ...prev]);
-      setActiveConversation(newConvo);
-    } else {
-      setActiveConversation(existing);
-    }
-
-    // Save to backend
-    DiscoveryService.interact(candidate.id, 'LIKE').catch(console.error);
-
+  const likeCandidate = async (candidate: Candidate, onMatch?: () => void, onNotMatch?: () => void) => {
+    // Remove from UI immediately for snappy feel
     setCandidates((prev: any) => {
       return prev.filter((c: any) => c.id !== candidate.id);
     });
 
-    if (onMatch && candidate.compatibilityScore > 85) {
-      onMatch();
+    try {
+      // Save to backend
+      const { isMatch } = await DiscoveryService.interact(candidate.id, 'LIKE');
+
+      if (isMatch) {
+        setLastMatchedCandidate(candidate);
+        
+        // Wait a small moment for the DB trigger to finish creating the conversation
+        setTimeout(async () => {
+          try {
+            const [dbConversations, dbCandidates, dbPending, dbSent] = await Promise.all([
+              ChatService.getConversations(),
+              DiscoveryService.getCandidates(),
+              DiscoveryService.getPendingRequests(),
+              DiscoveryService.getSentRequests()
+            ]);
+            
+            if (dbConversations) {
+              setConversations(dbConversations as any);
+            }
+            if (dbCandidates) {
+              setCandidates(dbCandidates);
+            }
+            if (dbPending) {
+              setPendingRequests(dbPending);
+            }
+            if (dbSent) {
+              setSentRequests(dbSent);
+            }
+            const match = dbConversations.find(c => c.candidate.id === candidate.id);
+            if (match) {
+                 setActiveConversation(match as any);
+            }
+          } catch (e) {
+            console.error('Failed to load new conversation:', e);
+          }
+        }, 500);
+
+        if (onMatch) {
+          onMatch();
+        }
+      } else {
+        if (onNotMatch) {
+          onNotMatch();
+        }
+      }
+    } catch (e) {
+      console.error('Failed to like candidate:', e);
+      if (onNotMatch) {
+        onNotMatch();
+      }
+      // Optionally put them back in the feed if it failed
     }
   };
 
@@ -410,28 +621,83 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, 1400);
   };
 
-  const openConversationForCandidate = (candidate: Candidate) => {
-    const convo = conversations.find(c => c.candidate.id === candidate.id);
-    if (convo) {
-      setActiveConversation(convo);
-    } else {
-      const newConvo: MatchConversation = {
+  const openConversationForCandidate = async (candidate: Candidate) => {
+    // 1. Try to see if the backend has a REAL conversation for this candidate
+    let realConvoId = null;
+    try {
+      const dbConversations = await ChatService.getConversations();
+      if (dbConversations) {
+        setConversations(dbConversations as any);
+        const match = dbConversations.find(c => c.candidate.id === candidate.id);
+        if (match) {
+          realConvoId = match.id;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to sync conversations before opening:', e);
+    }
+
+    // 2. Find or create the conversation object
+    let convo = conversations.find(c => c.candidate.id === candidate.id);
+    if (!convo || (realConvoId && convo.id.startsWith('mock_'))) {
+      // If we found a real one, but local was mock, update local.
+      convo = {
+        id: realConvoId || `temp_${Date.now()}`,
         candidate,
-        lastMessage: `Matched based on ${candidate.nakshatra} harmony`,
+        lastMessage: '',
         timestamp: 'Just now',
         unreadCount: 0,
         messages: []
       };
-      setConversations((prev: any) => [newConvo, ...prev]);
-      setActiveConversation(newConvo);
+      setConversations((prev: any) => {
+        const filtered = prev.filter((p: any) => p.candidate.id !== candidate.id);
+        return [convo, ...filtered];
+      });
+    }
+
+    // If we have a real convo ID that isn't attached to convo yet (e.g. from state closure)
+    if (realConvoId && convo.id !== realConvoId) {
+       convo.id = realConvoId;
+    }
+
+    setActiveConversation(convo as any);
+
+    if (convo && !convo.id.startsWith('temp_') && !convo.id.startsWith('mock_')) {
+      // Fetch messages from backend
+      const msgs = await ChatService.getMessages(convo.id);
+      setActiveConversation(prev => prev ? { ...prev, messages: msgs } : null);
+
+      // Set up real-time subscription
+      const sub = ChatService.subscribeToMessages(convo.id, (newMsg) => {
+        setActiveConversation(prev => {
+          if (!prev) return prev;
+          // Avoid duplicates (since we also insert optimistically)
+          if (prev.messages.some(m => m.id === newMsg.id)) return prev;
+          return { ...prev, messages: [...prev.messages, newMsg] };
+        });
+        
+        setConversations(prevConvos => prevConvos.map(c => {
+          if (c.id === convo.id) {
+            return {
+              ...c,
+              lastMessage: newMsg.message,
+              timestamp: 'Just now'
+            };
+          }
+          return c;
+        }));
+      });
+      
+      // Cleanup previous subscription? Handled globally or on unmount ideally, 
+      // but for now we rely on Supabase handling channel duplication.
     }
   };
 
-  const sendChatMessage = (text: string) => {
+  const sendChatMessage = async (text: string) => {
     if (!activeConversation || !text.trim()) return;
 
     const userMsg = {
-      id: `msg_${Date.now()}`,
+      id: `temp_${Date.now()}`,
       senderName: userProfile.name,
       message: text,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -453,34 +719,22 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 
     setActiveConversation((prev: any) => (prev ? { ...prev, messages: [...prev.messages, userMsg] } : null));
-    setIsChatTyping(true);
+    
+    if (activeConversation) {
+      if (activeConversation.id.startsWith('temp_') || activeConversation.id.startsWith('mock_')) {
+        alert("You can't send messages until you both match!");
+        // Revert optimistic UI update
+        setActiveConversation((prev: any) => (prev ? { ...prev, messages: prev.messages.filter((m: any) => m.id !== userMsg.id) } : null));
+        return;
+      }
 
-    setTimeout(() => {
-      const aiReply = {
-        id: `msg_reply_${Date.now()}`,
-        senderName: activeConversation.candidate.name,
-        message: `That aligns wonderfully with my ${activeConversation.candidate.nakshatra} energy! Tell me more ✨`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isFromUser: false
-      };
-
-      setConversations((prev: any) =>
-        prev.map((c: any) => {
-          if (c.candidate.id === activeConversation.candidate.id) {
-            return {
-              ...c,
-              lastMessage: aiReply.message,
-              timestamp: 'Just now',
-              messages: [...c.messages, aiReply]
-            };
-          }
-          return c;
-        })
-      );
-
-      setActiveConversation((prev: any) => (prev ? { ...prev, messages: [...prev.messages, aiReply] } : null));
-      setIsChatTyping(false);
-    }, 1800);
+      try {
+        await ChatService.sendMessage(activeConversation.id, text);
+      } catch (error) {
+        console.error('Failed to send message:', error);
+        alert("Failed to send message. Please try again.");
+      }
+    }
   };
 
   const askAstroAi = (question: string) => {
@@ -599,7 +853,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   return (
     <AstraContext.Provider
-      value={{sessionUser, signInWithOtp: AuthService.signInWithOtp, verifyOtp: AuthService.verifyOtp, signOut: AuthService.signOut, 
+      value={{sessionUser, signInWithOtp: AuthService.signInWithOtp, verifyOtp: AuthService.verifyOtp, signOut: AuthService.signOut, deleteAccount: AuthService.deleteAccount,
         language,
         setLanguage,
         t,
@@ -608,6 +862,8 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         userProfile,
         setUserIntent,
         updateProfileInfo,
+        uploadVoiceNote,
+        deleteVoiceNote,
         updateBirthDetails,
         updatePartnerPreferences,
         updateDatingPreferences,
@@ -625,6 +881,8 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         likeCandidate,
         passCandidate,
         passedCandidatesHistory,
+        pendingRequests,
+        sentRequests,
         rewindCandidate,
         lastMatchedCandidate,
         isAnalyzingCompatibility,

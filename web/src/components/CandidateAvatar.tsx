@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ShieldCheck } from 'lucide-react';
 
 interface CandidateAvatarProps {
@@ -16,6 +16,8 @@ export const CandidateAvatar: React.FC<CandidateAvatarProps> = ({
   isVerified = true,
   onClick
 }) => {
+  const [imgError, setImgError] = useState(false);
+
   return (
     <div
       onClick={onClick}
@@ -33,19 +35,43 @@ export const CandidateAvatar: React.FC<CandidateAvatarProps> = ({
           height: '100%',
           borderRadius: '50%',
           padding: '2px',
-          background: 'linear-gradient(135deg, var(--accent-amber) 0%, var(--accent-indigo) 100%)'
+          background: 'linear-gradient(135deg, var(--accent-amber) 0%, var(--accent-indigo) 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}
       >
-        <img
-          src={src}
-          alt={name}
-          style={{
-            width: '100%',
-            height: '100%',
-            borderRadius: '50%',
-            objectFit: 'cover'
-          }}
-        />
+        {src && !imgError ? (
+          <img
+            src={src}
+            alt={name}
+            onError={() => setImgError(true)}
+            style={{
+              width: '100%',
+              height: '100%',
+              borderRadius: '50%',
+              objectFit: 'cover'
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: '100%',
+              height: '100%',
+              borderRadius: '50%',
+              background: '#0F0C1B',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--accent-amber)',
+              fontSize: size * 0.4,
+              fontWeight: 800,
+              textTransform: 'uppercase'
+            }}
+          >
+            {name ? name.charAt(0) : '?'}
+          </div>
+        )}
       </div>
       {isVerified && (
         <div

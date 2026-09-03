@@ -6,7 +6,7 @@ import { AstrologyEngine } from '../data/astrologyEngine';
 import { RegionalPreference } from '../types';
 import { KundaliWheelIllustration } from '../components/Illustrations';
 import { FloatingHeartsBackground } from '../components/FloatingHeartsBackground';
-
+import { supabase } from '../lib/supabase';
 export const TypeformOnboardingPage: React.FC = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -48,11 +48,55 @@ export const TypeformOnboardingPage: React.FC = () => {
     else navigate('/splash');
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     updateProfileInfo(name, profession, education, city, selectedGoals, userProfile.interests, regionalPref);
     updateBirthDetails(dob, birthTime, birthCity);
     updateDatingPreferences(preferredEducation, preferredLocation);
-    navigate('/discover');
+
+    try {
+      const { data } = await supabase.auth.getSession();
+      const user = data?.session?.user;
+      if (!user) throw new Error("No user session");
+
+      const updates = {
+        display_name: name,
+        gender,
+        profession,
+        higher_education: education,
+        location: city,
+        date_of_birth: dob,
+        looking_for: userProfile.interests,
+        onboarding_completed: true,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id);
+
+      if (error) throw error;
+      
+      // Update private profiles table for sensitive birth data
+      await supabase
+        .from('private_profiles')
+        .upsert({ id: user.id, birth_time: birthTime, updated_at: new Date().toISOString() });
+
+      // Save match preferences
+      await supabase
+        .from('preferences')
+        .upsert({ 
+          user_id: user.id, 
+          intent: 'Dating',
+          gender_preference: gender === 'Male' ? 'Female' : gender === 'Female' ? 'Male' : 'Everyone',
+          updated_at: new Date().toISOString()
+        });
+
+      window.location.href = '/discover';
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      alert('Failed to save profile. Please try again.');
+    }
   };
 
   const getStageTheme = () => {

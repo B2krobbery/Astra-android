@@ -7,7 +7,7 @@ import { Sparkles, MessageCircle, Bot } from 'lucide-react';
 
 export const MatchesConversationsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { conversations, candidates, openConversationForCandidate, selectCandidate, t } = useAstra();
+  const { conversations, candidates, pendingRequests, sentRequests, openConversationForCandidate, selectCandidate, t } = useAstra();
 
   return (
     <div
@@ -34,7 +34,7 @@ export const MatchesConversationsPage: React.FC = () => {
         {/* Horizontal Matches Scroll Strip */}
         <div>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            {t('celestial_matches')} ({candidates.length})
+            Pending Requests ({pendingRequests.length})
           </span>
 
           <div
@@ -46,7 +46,12 @@ export const MatchesConversationsPage: React.FC = () => {
               paddingBottom: '8px'
             }}
           >
-            {candidates.map(candidate => (
+            {pendingRequests.length === 0 && (
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic', padding: '10px 0' }}>
+                No pending requests right now. Keep exploring!
+              </div>
+            )}
+            {pendingRequests.map(candidate => (
               <div
                 key={candidate.id}
                 onClick={() => {
@@ -67,18 +72,62 @@ export const MatchesConversationsPage: React.FC = () => {
                   <div
                     style={{
                       position: 'absolute',
-                      bottom: '-4px',
-                      right: '-4px',
-                      padding: '2px 6px',
-                      borderRadius: '9999px',
-                      background: 'var(--accent-amber)',
-                      color: '#0F0C1B',
-                      fontSize: '0.65rem',
-                      fontWeight: 800
+                      top: '-2px',
+                      right: '-2px',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      background: 'var(--accent-rose)',
+                      border: '2px solid var(--bg-primary)',
                     }}
-                  >
-                    {candidate.compatibilityScore}%
-                  </div>
+                  />
+                </div>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)', maxWidth: '64px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {candidate.name}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Horizontal Sent Requests Scroll Strip */}
+        <div>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            Sent Requests ({sentRequests.length})
+          </span>
+
+          <div
+            style={{
+              display: 'flex',
+              gap: '16px',
+              overflowX: 'auto',
+              marginTop: '12px',
+              paddingBottom: '8px'
+            }}
+          >
+            {sentRequests.length === 0 && (
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic', padding: '10px 0' }}>
+                You haven't sent any likes yet!
+              </div>
+            )}
+            {sentRequests.map(candidate => (
+              <div
+                key={candidate.id}
+                onClick={() => {
+                  selectCandidate(candidate);
+                  navigate('/candidate-detail');
+                }}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '6px',
+                  cursor: 'pointer',
+                  flexShrink: 0
+                }}
+              >
+                <div style={{ position: 'relative' }}>
+                  <CandidateAvatar src={candidate.photoUrls[0]} name={candidate.name} size={64} isVerified={candidate.isVerified} />
                 </div>
                 <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)', maxWidth: '64px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {candidate.name}

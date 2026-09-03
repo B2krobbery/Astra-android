@@ -5,6 +5,22 @@ export const DiscoveryService = {
   async getCandidates(): Promise<Candidate[]> {
     const { data: profiles, error } = await supabase.rpc('get_discovery_candidates');
     if (error) throw error;
+    return DiscoveryService.mapProfilesToCandidates(profiles || []);
+  },
+
+  async getPendingRequests(): Promise<Candidate[]> {
+    const { data: profiles, error } = await supabase.rpc('get_pending_requests');
+    if (error) throw error;
+    return DiscoveryService.mapProfilesToCandidates(profiles || []);
+  },
+
+  async getSentRequests(): Promise<Candidate[]> {
+    const { data: profiles, error } = await supabase.rpc('get_sent_requests');
+    if (error) throw error;
+    return DiscoveryService.mapProfilesToCandidates(profiles || []);
+  },
+
+  async mapProfilesToCandidates(profiles: any[]): Promise<Candidate[]> {
     if (!profiles || profiles.length === 0) return [];
 
     // Fetch photos for all candidates
@@ -24,7 +40,7 @@ export const DiscoveryService = {
             }
             return supabase.storage.from('avatars').getPublicUrl(photo.storage_path).data.publicUrl;
           })
-        : ['https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&q=80']; // Fallback
+        : [`https://ui-avatars.com/api/?name=${encodeURIComponent(p.display_name || 'User')}&background=1E1836&color=F59E0B&size=800`]; // Fallback
 
       // Calculate age from date_of_birth
       let age = 25;
@@ -64,14 +80,33 @@ export const DiscoveryService = {
     const actorId = userData?.user?.id;
     if (!actorId) throw new Error('Not authenticated');
 
-    const { data, error } = await supabase.from('interactions').insert([
-      { 
-        actor_id: actorId,
-        target_id: targetId, 
-        action_type: actionType 
-      }
-    ]);
+    const { error } = await supabase.from('interactions').upsert({
+      actor_id: actorId,
+      target_id: targetId,
+      action_type: actionType
+    }, {
+      onConflict: 'actor_id, target_id'
+    });
+    
     if (error) throw error;
-    return data;
+    
+    // Check if it's a mutual match (if we just liked them)
+    if (actionType === 'LIKE') {
+      const { data: mutual, error: mutualError } = await supabase
+        .from('interactions')
+        .select('id')
+        .eq('actor_id', targetId)
+        .eq('target_id', actorId)
+        .eq('action_type', 'LIKE')
+        .maybeSingle();
+        
+      if (mutualError) {
+        console.error('Error checking mutual match:', mutualError);
+      }
+        
+      return { isMatch: !!mutual };
+    }
+    
+    return { isMatch: false };
   }
 };

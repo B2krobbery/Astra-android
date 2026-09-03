@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAstra } from '../context/AstraContext';
+import { supabase } from '../lib/supabase';
 import { AstraBottomNavigation } from '../components/AstraBottomNavigation';
 import { CandidateAvatar } from '../components/CandidateAvatar';
 import { VerificationBadge } from '../components/VerificationBadge';
@@ -21,27 +22,33 @@ export const UserProfilePage: React.FC = () => {
     openReferralModal,
     uploadUserProfilePhoto,
     updateProfileInfo,
+    deleteAccount,
     language,
     setLanguage,
     t
   } = useAstra();
 
-  const [isEditingName, setIsEditingName] = React.useState(false);
+  const [isEditingProfile, setIsEditingProfile] = React.useState(false);
   const [editedName, setEditedName] = React.useState(userProfile.name);
+  const [editedProfession, setEditedProfession] = React.useState(userProfile.profession);
+  const [editedEducation, setEditedEducation] = React.useState(userProfile.education);
+  const [editedLocation, setEditedLocation] = React.useState(userProfile.location);
+  const [editedBio, setEditedBio] = React.useState(userProfile.bio || '');
 
-  const handleSaveName = () => {
+  const handleSaveProfile = () => {
     if (editedName.trim()) {
       updateProfileInfo(
         editedName.trim(),
-        userProfile.profession,
-        userProfile.education,
-        userProfile.location,
+        editedProfession.trim(),
+        editedEducation.trim(),
+        editedLocation.trim(),
         userProfile.lookingFor,
         userProfile.interests,
-        userProfile.regionalPreference
+        userProfile.regionalPreference,
+        editedBio.trim()
       );
     }
-    setIsEditingName(false);
+    setIsEditingProfile(false);
   };
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,6 +56,21 @@ export const UserProfilePage: React.FC = () => {
       uploadUserProfilePhoto(e.target.files[0]);
     }
   };
+
+  const handleDeleteAccount = async () => {
+    const isConfirmed = window.confirm("Are you sure you want to permanently delete your account? This action cannot be undone.");
+    if (isConfirmed) {
+      try {
+        await deleteAccount();
+        navigate('/');
+      } catch (e) {
+        console.error("Failed to delete account:", e);
+        alert("Failed to delete account. Please try again.");
+      }
+    }
+  };
+
+
 
   return (
     <div
@@ -83,7 +105,10 @@ export const UserProfilePage: React.FC = () => {
           {t('profile_title')} ✨
         </h1>
         <button
-          onClick={() => navigate('/splash')}
+          onClick={async () => {
+            await supabase.auth.signOut();
+            navigate('/splash');
+          }}
           style={{ background: 'none', border: 'none', color: 'var(--accent-rose)', cursor: 'pointer' }}
           title="Sign Out"
         >
@@ -100,7 +125,7 @@ export const UserProfilePage: React.FC = () => {
             background: 'var(--bg-card)',
             border: '1px solid var(--border-color)',
             display: 'flex',
-            alignItems: 'center',
+            alignItems: isEditingProfile ? 'flex-start' : 'center',
             gap: '16px',
             boxShadow: 'var(--shadow-card)'
           }}
@@ -129,96 +154,176 @@ export const UserProfilePage: React.FC = () => {
           </div>
 
           <div style={{ flex: 1 }}>
-            {isEditingName ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+            {isEditingProfile ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <input
                   type="text"
                   value={editedName}
                   onChange={e => setEditedName(e.target.value)}
+                  placeholder="Name"
                   style={{
                     background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0F0C1B',
                     border: '1.5px solid var(--accent-amber)',
                     borderRadius: '10px',
-                    padding: '6px 10px',
+                    padding: '8px 12px',
                     color: themeMode === 'LIGHT' ? '#0F0C1B' : '#FFFFFF',
                     fontSize: '1rem',
                     fontWeight: 700,
-                    width: '140px',
+                    width: '100%',
                     outline: 'none'
                   }}
                   autoFocus
                 />
-                <button
-                  onClick={handleSaveName}
+                <input
+                  type="text"
+                  value={editedProfession}
+                  onChange={e => setEditedProfession(e.target.value)}
+                  placeholder="Profession"
                   style={{
-                    padding: '4px 10px',
+                    background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0F0C1B',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '8px',
+                    padding: '6px 10px',
+                    color: themeMode === 'LIGHT' ? '#0F0C1B' : '#FFFFFF',
+                    fontSize: '0.9rem',
+                    width: '100%',
+                    outline: 'none'
+                  }}
+                />
+                <input
+                  type="text"
+                  value={editedEducation}
+                  onChange={e => setEditedEducation(e.target.value)}
+                  placeholder="Education"
+                  style={{
+                    background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0F0C1B',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '8px',
+                    padding: '6px 10px',
+                    color: themeMode === 'LIGHT' ? '#0F0C1B' : '#FFFFFF',
+                    fontSize: '0.9rem',
+                    width: '100%',
+                    outline: 'none'
+                  }}
+                />
+                <input
+                  type="text"
+                  value={editedLocation}
+                  onChange={e => setEditedLocation(e.target.value)}
+                  placeholder="Location"
+                  style={{
+                    background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0F0C1B',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '8px',
+                    padding: '6px 10px',
+                    color: themeMode === 'LIGHT' ? '#0F0C1B' : '#FFFFFF',
+                    fontSize: '0.9rem',
+                    width: '100%',
+                    outline: 'none'
+                  }}
+                />
+                <textarea
+                  value={editedBio}
+                  onChange={e => setEditedBio(e.target.value)}
+                  placeholder="Write a short bio or 'Voice Note' text here..."
+                  style={{
+                    background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0F0C1B',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '8px',
+                    padding: '8px 10px',
+                    color: themeMode === 'LIGHT' ? '#0F0C1B' : '#FFFFFF',
+                    fontSize: '0.9rem',
+                    width: '100%',
+                    minHeight: '60px',
+                    outline: 'none',
+                    resize: 'vertical'
+                  }}
+                />
+                <button
+                  onClick={handleSaveProfile}
+                  style={{
+                    padding: '8px',
                     borderRadius: '8px',
                     background: 'var(--accent-amber)',
                     color: '#0F0C1B',
                     border: 'none',
                     fontWeight: 800,
-                    fontSize: '0.75rem',
-                    cursor: 'pointer'
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    marginTop: '4px'
                   }}
                 >
-                  Save
+                  Save Profile
                 </button>
               </div>
             ) : (
-              <h2 className="heading-font" style={{ fontSize: '1.35rem', fontWeight: 800 }}>
-                {userProfile.name}, {userProfile.age}
-              </h2>
+              <>
+                <h2 className="heading-font" style={{ fontSize: '1.35rem', fontWeight: 800 }}>
+                  {userProfile.name}, {userProfile.age}
+                </h2>
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '4px', fontWeight: 600 }}>
+                  {userProfile.profession}
+                </p>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                  {userProfile.education} • {userProfile.location}
+                </p>
+              </>
             )}
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-              {userProfile.profession}
-            </p>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              style={{
-                marginTop: '6px',
-                padding: '3px 10px',
-                borderRadius: '9999px',
-                background: 'rgba(245, 158, 11, 0.15)',
-                border: '1px solid var(--accent-amber)',
-                color: 'var(--accent-amber-light)',
-                fontSize: '0.7rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-            >
-              <Camera size={12} /> {t('btn_upload_photo')}
-            </button>
           </div>
 
-          <button
-            onClick={() => {
-              if (!isEditingName) {
+          {!isEditingProfile && (
+            <button
+              onClick={() => {
                 setEditedName(userProfile.name);
-                setIsEditingName(true);
-              } else {
-                handleSaveName();
-              }
-            }}
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: '50%',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid var(--border-color)',
-              color: 'var(--text-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer'
-            }}
-            title="Edit Name"
-          >
-            <Edit size={18} />
-          </button>
+                setEditedProfession(userProfile.profession);
+                setEditedEducation(userProfile.education);
+                setEditedLocation(userProfile.location);
+                setEditedBio(userProfile.bio || '');
+                setIsEditingProfile(true);
+              }}
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: '50%',
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer'
+              }}
+              title="Edit Profile"
+            >
+              <Edit size={18} />
+            </button>
+          )}
         </div>
+
+        <button
+          onClick={() => {
+            if (userProfile.intent === 'Marriage') navigate('/marriage-onboarding');
+            else navigate('/onboarding-typeform');
+          }}
+          style={{
+            padding: '12px',
+            borderRadius: '12px',
+            background: 'rgba(245, 158, 11, 0.1)',
+            border: '1px solid var(--accent-amber)',
+            color: 'var(--accent-amber-light)',
+            fontWeight: 800,
+            fontSize: '1rem',
+            cursor: 'pointer',
+            textAlign: 'center',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px'
+          }}
+        >
+          <Edit size={18} />
+          Edit Full Profile (Re-take Onboarding)
+        </button>
 
         {/* User Voice Note Recorder */}
         <UserVoiceRecorderCard />
@@ -488,6 +593,28 @@ export const UserProfilePage: React.FC = () => {
           }}
         >
           <Sparkles size={16} /> {t('edit_kundali')}
+        </button>
+
+        {/* Delete Account */}
+        <button
+          onClick={handleDeleteAccount}
+          style={{
+            marginTop: '16px',
+            width: '100%',
+            padding: '14px',
+            borderRadius: '16px',
+            background: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            color: '#EF4444',
+            fontWeight: 600,
+            fontSize: '0.85rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer'
+          }}
+        >
+          Delete Account
         </button>
       </main>
 

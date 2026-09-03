@@ -10,6 +10,7 @@ export const CandidateDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { selectedCandidate, likeCandidate, passCandidate, checkCompatibility, showVerification, t } = useAstra();
   const candidate = selectedCandidate;
+  if (!candidate) return null;
 
   return (
     <div
@@ -258,7 +259,7 @@ export const CandidateDetailPage: React.FC = () => {
         />
         <LikeCircleButton
           onClick={() => {
-            likeCandidate(candidate, () => navigate('/match-celebration'));
+            likeCandidate(candidate, () => navigate('/match-celebration'), () => navigate(-1));
           }}
           size={64}
         />

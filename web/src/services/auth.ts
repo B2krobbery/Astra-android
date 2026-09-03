@@ -20,5 +20,10 @@ export const AuthService = {
     return supabase.auth.onAuthStateChange((_event, session) => {
       callback(session);
     });
+  },
+  async deleteAccount() {
+    const { error } = await supabase.rpc('delete_user');
+    if (error) throw error;
+    return supabase.auth.signOut();
   }
 };

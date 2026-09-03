@@ -13,6 +13,8 @@ export const ChatDetailPage: React.FC = () => {
 
   const candidate = activeConversation?.candidate || selectedCandidate;
   const messages = activeConversation?.messages || [];
+  
+  if (!candidate) return null;
 
   const handleSend = (textToSend?: string) => {
     const text = textToSend || inputText;

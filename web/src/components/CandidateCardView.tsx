@@ -312,7 +312,7 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
         )}
 
         {/* Voice Intro Card */}
-        <VoiceIntroCard candidateName={candidate.name} />
+        <VoiceIntroCard candidateName={candidate.name} promptText={candidate.bio || "Hi, I'd love to connect and see where this goes!"} />
 
         {/* Action Button Bar */}
         <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>

@@ -5,6 +5,14 @@ export const ProfileService = {
   async getProfile(userId: string) {
     const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
     if (error) throw error;
+    
+    // Fetch preferences to get the user's intent
+    const { data: prefData } = await supabase.from('preferences').select('intent').eq('user_id', userId).maybeSingle();
+    
+    if (data && prefData) {
+      data.intent = prefData.intent;
+    }
+    
     return data;
   },
   async updateProfile(userId: string, updates: Partial<UserProfile>) {

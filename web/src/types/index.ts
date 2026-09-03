@@ -76,8 +76,10 @@ export interface UserProfile {
   interests: string[];
   completionPercentage: number;
   hasVoiceNote?: boolean;
+  voiceNoteUrl?: string;
   voiceNotePrompt?: string;
   voiceNoteDuration?: number;
+  bio?: string;
   
   // Marriage specific fields
   birthLocation?: string;
@@ -131,6 +133,7 @@ export interface ChatMessage {
 }
 
 export interface MatchConversation {
+  id: string; // The backend UUID
   candidate: Candidate;
   lastMessage: string;
   timestamp: string;

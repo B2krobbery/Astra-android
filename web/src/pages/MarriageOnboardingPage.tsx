@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PrimaryButton, SecondaryOutlineButton } from '../components/AstraButtons';
-import { ChevronLeft, ChevronRight, CheckCircle, Upload, Shield, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, Upload, Shield, Sparkles, Camera } from 'lucide-react';
 import { useAstra } from '../context/AstraContext';
 import { supabase } from '../lib/supabase';
 import { indianReligions, Religion, Caste } from '../data/indianCastes';
 import { commonSubcastes, commonGotras } from '../data/indianSubcastesGotras';
+import { CandidateAvatar } from '../components/CandidateAvatar';
 
 const SECTIONS = [
   'About You',
@@ -23,10 +24,17 @@ const SECTIONS = [
 
 export const MarriageOnboardingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { userProfile, updateBirthDetails, updatePartnerPreferences } = useAstra();
+  const { userProfile, updateBirthDetails, updatePartnerPreferences, uploadUserProfilePhoto } = useAstra();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   const [currentStep, setCurrentStep] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+  
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      uploadUserProfilePhoto(e.target.files[0]);
+    }
+  };
   
   // -- Form State --
   // Step 0: About You
@@ -124,10 +132,6 @@ export const MarriageOnboardingPage: React.FC = () => {
     updatePartnerPreferences(preferredReligion, preferredCaste);
     
     try {
-      // TEMPORARY BYPASS FOR TESTING
-      navigate('/discover');
-      return;
-
       const { data } = await supabase.auth.getSession();
       const user = data?.session?.user;
       if (!user) throw new Error("No user session");
@@ -160,20 +164,32 @@ export const MarriageOnboardingPage: React.FC = () => {
         children_status: childrenStatus,
         photo_privacy: photoPrivacy,
         onboarding_completed: true,
+        intent: 'Marriage',
         updated_at: new Date().toISOString()
       };
 
       const { error } = await supabase
         .from('profiles')
         .update(updates)
-        .eq('id', user!.id);
+        .eq('id', user.id);
 
       if (error) throw error;
       
       // Update private profiles table for sensitive birth data
       await supabase
         .from('private_profiles')
-        .upsert({ id: user!.id, birth_time: birthTime, updated_at: new Date().toISOString() });
+        .upsert({ id: user.id, birth_time: birthTime, updated_at: new Date().toISOString() });
+
+      // Save match preferences
+      await supabase
+        .from('preferences')
+        .upsert({ 
+          user_id: user.id, 
+          preferred_religion: preferredReligion,
+          preferred_caste: preferredCaste,
+          gender_preference: gender === 'Male' ? 'Female' : gender === 'Female' ? 'Male' : 'Everyone',
+          updated_at: new Date().toISOString()
+        });
 
       window.location.href = '/discover';
 
@@ -510,7 +526,36 @@ export const MarriageOnboardingPage: React.FC = () => {
       case 9:
         return (
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <Shield size={48} color="#A78BFA" style={{ marginBottom: '16px' }} />
+            <div style={{ position: 'relative', cursor: 'pointer', display: 'inline-block', marginBottom: '24px' }} onClick={() => fileInputRef.current?.click()}>
+              <CandidateAvatar src={userProfile?.photoUrl} name={userProfile?.name || 'User'} size={96} isVerified={userProfile?.policeVerified} />
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  right: 0,
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  background: 'var(--accent-amber)',
+                  color: '#0F0C1B',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.4)'
+                }}
+              >
+                <Camera size={16} />
+              </div>
+            </div>
+            
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handlePhotoSelect}
+              accept="image/*"
+              style={{ display: 'none' }}
+            />
+
             <h4 style={{ color: 'white', marginBottom: '16px' }}>Photo Privacy</h4>
             <p style={{ color: '#94A3B8', marginBottom: '24px' }}>How would you like your photos to be displayed?</p>
             

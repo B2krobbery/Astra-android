@@ -91,6 +91,14 @@ body {
   animation: pulseGlow 3s ease-in-out infinite;
 }
 
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translate(-50%, -40%) scale(0.8); }
+  15% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+  30% { transform: translate(-50%, -50%) scale(1); }
+  85% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -60%) scale(0.8); }
+}
+
 .float-orb {
   animation: floatOrb 4s ease-in-out infinite;
 }

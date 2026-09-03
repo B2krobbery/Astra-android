@@ -10,7 +10,7 @@ interface VoiceIntroCardProps {
 export const VoiceIntroCard: React.FC<VoiceIntroCardProps> = ({
   candidateName,
   durationSeconds = 15,
-  promptText = "My ideal Sunday in Indiranagar & favorite filter coffee spots..."
+  promptText = "Hi, I'd love to connect and see where this goes!"
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);

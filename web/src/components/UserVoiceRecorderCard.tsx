@@ -10,7 +10,7 @@ const samplePrompts = [
 ];
 
 export const UserVoiceRecorderCard: React.FC = () => {
-  const { userProfile, updateProfileInfo, t } = useAstra();
+  const { userProfile, uploadVoiceNote, deleteVoiceNote, t } = useAstra();
 
   const [selectedPrompt, setSelectedPrompt] = useState(
     userProfile.voiceNotePrompt || samplePrompts[0]
@@ -21,7 +21,8 @@ export const UserVoiceRecorderCard: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [playProgress, setPlayProgress] = useState(0);
   const [permissionError, setPermissionError] = useState<string | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(userProfile.voiceNoteUrl || null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -108,13 +109,23 @@ export const UserVoiceRecorderCard: React.FC = () => {
         }
       };
 
-      mediaRecorder.onstop = () => {
+      mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const url = URL.createObjectURL(audioBlob);
         setAudioUrl(url);
-        setHasVoiceNote(true);
         if (mediaStreamRef.current) {
           mediaStreamRef.current.getTracks().forEach(track => track.stop());
+        }
+
+        setIsUploading(true);
+        try {
+          await uploadVoiceNote(audioBlob, selectedPrompt);
+          setHasVoiceNote(true);
+        } catch (e) {
+          console.error(e);
+          setPermissionError('Failed to upload voice note. Please try again.');
+        } finally {
+          setIsUploading(false);
         }
       };
 
@@ -135,7 +146,7 @@ export const UserVoiceRecorderCard: React.FC = () => {
     setIsRecording(false);
   };
 
-  const handleDeleteVoiceNote = () => {
+  const handleDeleteVoiceNote = async () => {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
@@ -144,10 +155,20 @@ export const UserVoiceRecorderCard: React.FC = () => {
       URL.revokeObjectURL(audioUrl);
       setAudioUrl(null);
     }
-    setHasVoiceNote(false);
-    setIsPlaying(false);
-    setRecordTime(0);
-    setPlayProgress(0);
+    
+    setIsUploading(true);
+    try {
+      await deleteVoiceNote();
+      setHasVoiceNote(false);
+      setIsPlaying(false);
+      setRecordTime(0);
+      setPlayProgress(0);
+    } catch (e) {
+      console.error(e);
+      setPermissionError('Failed to delete voice note.');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -276,27 +297,28 @@ export const UserVoiceRecorderCard: React.FC = () => {
             "{selectedPrompt}"
           </p>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <button
               onClick={handleTogglePlay}
+              disabled={isUploading}
               style={{
                 width: 36,
                 height: 36,
                 borderRadius: '50%',
+                background: isUploading ? '#333' : 'var(--accent-amber)',
                 border: 'none',
-                background: 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
-                color: '#0F0C1B',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                cursor: 'pointer'
+                color: '#0F0C1B',
+                cursor: isUploading ? 'not-allowed' : 'pointer'
               }}
             >
-              {isPlaying ? <Pause size={16} fill="#0F0C1B" /> : <Play size={16} fill="#0F0C1B" style={{ marginLeft: 2 }} />}
+              {isPlaying ? <Pause size={18} fill="#0F0C1B" /> : <Play size={18} fill="#0F0C1B" style={{ marginLeft: 2 }} />}
             </button>
 
             {/* Waveform Visualization */}
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '3px', height: '24px' }}>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '4px', height: 24 }}>
               {[40, 70, 90, 50, 80, 60, 95, 45, 85, 65, 35, 75, 55, 90, 40].map((h, idx) => {
                 const isActive = (idx / 15) * 100 <= playProgress;
                 return (
@@ -316,11 +338,12 @@ export const UserVoiceRecorderCard: React.FC = () => {
 
             <button
               onClick={handleDeleteVoiceNote}
+              disabled={isUploading}
               style={{
                 background: 'none',
                 border: 'none',
-                color: 'var(--text-muted)',
-                cursor: 'pointer'
+                color: isUploading ? '#333' : 'var(--text-muted)',
+                cursor: isUploading ? 'not-allowed' : 'pointer'
               }}
               title="Delete Voice Note"
             >
@@ -331,24 +354,25 @@ export const UserVoiceRecorderCard: React.FC = () => {
       ) : (
         <button
           onClick={handleStartRecord}
+          disabled={isUploading}
           style={{
             width: '100%',
             padding: '14px',
             borderRadius: '16px',
-            background: 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
+            background: isUploading ? '#333' : 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
             border: 'none',
-            color: '#0F0C1B',
+            color: isUploading ? '#666' : '#0F0C1B',
             fontWeight: 800,
             fontSize: '0.88rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '8px',
-            cursor: 'pointer',
+            cursor: isUploading ? 'not-allowed' : 'pointer',
             boxShadow: 'var(--shadow-cosmic)'
           }}
         >
-          <Mic size={18} /> Record 15s Voice Intro Note
+          <Mic size={18} /> {isUploading ? 'Uploading...' : 'Record 15s Voice Intro Note'}
         </button>
       )}
     </div>
