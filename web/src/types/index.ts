@@ -10,8 +10,16 @@ export enum VerificationType {
 
 export type RegionalPreference = 'ALL' | 'KERALA' | 'NORTH_INDIA' | 'SOUTH_INDIA' | 'WEST_INDIA' | 'NRI';
 
+export interface PartnerPreferences {
+  preferredReligion?: string;
+  preferredCaste?: string;
+  preferredEducation?: string;
+  preferredLocation?: string;
+}
+
 export interface Candidate {
   id: string;
+  intent?: 'Dating' | 'Marriage';
   name: string;
   age: number;
   gender?: string;
@@ -31,8 +39,12 @@ export interface Candidate {
   policeDetails?: string;
   creditDetails?: string;
   interests: string[];
-  nakshatra: string;
-  rashi: string;
+  nakshatra?: string;
+  rashi?: string;
+  nadi?: string;
+  manglik?: string;
+  religion?: string;
+  caste?: string;
   compatibilityScore: number;
   emotionalScore?: number;
   nakshatraScore?: number;
@@ -44,6 +56,7 @@ export interface Candidate {
 
 export interface UserProfile {
   name: string;
+  intent?: 'Dating' | 'Marriage';
   age: number;
   gender: string;
   profession: string;
@@ -67,7 +80,6 @@ export interface UserProfile {
   voiceNoteDuration?: number;
   
   // Marriage specific fields
-  intent?: string;
   birthLocation?: string;
   height?: string;
   bloodGroup?: string;
@@ -90,6 +102,9 @@ export interface UserProfile {
   previousMarriage?: string;
   childrenStatus?: string;
   photoPrivacy?: string;
+  nadi?: string;
+  manglik?: string;
+  partnerPreferences?: PartnerPreferences;
 }
 
 export interface AstrologyCompatibility {
@@ -103,7 +118,7 @@ export interface AstrologyCompatibility {
   reasonTitle: string;
   reasonDescription: string;
   userNakshatra: string;
-  candidateNakshatra: string;
+  candidateNakshatra?: string;
   gunaScore: string;
 }
 

@@ -44,6 +44,7 @@ interface AstraContextType {
   setThemeMode: (mode: ThemeMode) => void;
 
   userProfile: UserProfile;
+  setUserIntent: (intent: 'Dating' | 'Marriage') => void;
   updateProfileInfo: (
     name: string,
     profession: string,
@@ -53,7 +54,11 @@ interface AstraContextType {
     interests: string[],
     regionalPref?: RegionalPreference
   ) => void;
-  updateBirthDetails: (dob: string, birthTime: string, birthCity: string) => void;
+  updateBirthDetails: (dob: string, birthTime: string, birthCity: string, manglik?: string, nadi?: string) => void;
+  updatePartnerPreferences: (religion: string, caste: string) => void;
+  updateDatingPreferences: (education: string, location: string) => void;
+  isPreferenceStrictFilterOn: boolean;
+  setIsPreferenceStrictFilterOn: (val: boolean) => void;
   uploadUserProfilePhoto: (file: File) => void;
 
   regionalPreference: RegionalPreference;
@@ -67,6 +72,8 @@ interface AstraContextType {
   selectCandidate: (candidate: Candidate) => void;
   likeCandidate: (candidate: Candidate, onMatch: () => void) => void;
   passCandidate: (candidate: Candidate) => void;
+  passedCandidatesHistory: Candidate[];
+  rewindCandidate: () => void;
   lastMatchedCandidate: Candidate | null;
 
   isAnalyzingCompatibility: boolean;
@@ -154,8 +161,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const t = (key: string): string => {
-    const dict = translations[language] || translations.EN || {};
-    return dict[key] || key;
+    return (translations as any)[language]?.[key] || (translations as any)['EN']?.[key] || key;
   };
 
   // Theme Mode
@@ -183,6 +189,10 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // User Profile
   const [userProfile, setUserProfile] = useState<UserProfile>({} as UserProfile);
 
+  const setUserIntent = (intent: 'Dating' | 'Marriage') => {
+    setUserProfile((prev: any) => ({ ...prev, intent }));
+  };
+
   const uploadUserProfilePhoto = (file: File) => {
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -198,19 +208,40 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Candidates & Regional Filtering
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [candidates, setCandidates] = useState<Candidate[]>(mockCandidates);
+  const [passedCandidatesHistory, setPassedCandidatesHistory] = useState<Candidate[]>([]);
   const [candidateIndex] = useState(0);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate>(mockCandidates[0]);
   const [lastMatchedCandidate, setLastMatchedCandidate] = useState<Candidate | null>(null);
 
+  const [isPreferenceStrictFilterOn, setIsPreferenceStrictFilterOn] = useState(false);
+
   const filteredCandidates = candidates.filter((c: any) => {
+    // Filter by Intent strictly
+    if (userProfile.intent && c.intent && userProfile.intent !== c.intent) return false;
+
+    // Strict Partner Preferences Check
+    if (isPreferenceStrictFilterOn && userProfile.partnerPreferences) {
+      const prefs = userProfile.partnerPreferences;
+      
+      if (userProfile.intent === 'Marriage') {
+        if (prefs.preferredReligion && prefs.preferredReligion !== 'Any' && c.religion !== prefs.preferredReligion) return false;
+        if (prefs.preferredCaste && prefs.preferredCaste !== 'Any' && c.caste !== prefs.preferredCaste) return false;
+      } else {
+        if (prefs.preferredEducation && prefs.preferredEducation !== 'Any' && !c.education.includes(prefs.preferredEducation)) return false;
+        if (prefs.preferredLocation && prefs.preferredLocation !== 'Any' && c.location !== prefs.preferredLocation) return false;
+      }
+    }
+
     if (userProfile.gender === 'Male' && c.gender === 'Male') return false;
     if (userProfile.gender === 'Female' && c.gender === 'Female') return false;
+    
+    // Regional Prefs
     if (userProfile.regionalPreference === 'ALL') return true;
     return c.regionalCategory === userProfile.regionalPreference;
   });
 
-  const activeCandidateList = filteredCandidates.length ? filteredCandidates : candidates;
+  const activeCandidateList = filteredCandidates;
   const currentCandidate = activeCandidateList[0] || null;
 
   // Compatibility State
@@ -259,15 +290,16 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       profession: profession || prev.profession,
       education: education || prev.education,
       location: city || prev.location,
-      lookingFor: lookingFor.length ? lookingFor : prev.lookingFor,
-      interests: interests.length ? interests : prev.interests,
+      lookingFor: lookingFor?.length ? lookingFor : prev.lookingFor,
+      interests: interests?.length ? interests : prev.interests,
       regionalPreference: regionalPref || prev.regionalPreference
     }));
   };
 
-  const updateBirthDetails = (dob: string, birthTime: string, birthCity: string) => {
+  const updateBirthDetails = (dob: string, birthTime: string, birthCity: string, manglik?: string, nadi?: string) => {
     const nakshatra = AstrologyEngine.calculateNakshatra(dob, birthTime, birthCity);
     const rashi = AstrologyEngine.calculateRashi(dob, birthTime, birthCity);
+    const autoNadi = AstrologyEngine.calculateNadi(nakshatra);
 
     setUserProfile((prev: any) => ({
       ...prev,
@@ -275,7 +307,31 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       birthTime,
       birthCity,
       nakshatra,
-      rashi
+      rashi,
+      manglik: manglik || prev.manglik,
+      nadi: nadi || autoNadi || prev.nadi
+    }));
+  };
+
+  const updatePartnerPreferences = (religion: string, caste: string) => {
+    setUserProfile((prev: any) => ({
+      ...prev,
+      partnerPreferences: {
+        ...prev.partnerPreferences,
+        preferredReligion: religion,
+        preferredCaste: caste
+      }
+    }));
+  };
+
+  const updateDatingPreferences = (education: string, location: string) => {
+    setUserProfile((prev: any) => ({
+      ...prev,
+      partnerPreferences: {
+        ...prev.partnerPreferences,
+        preferredEducation: education,
+        preferredLocation: location
+      }
     }));
   };
 
@@ -321,9 +377,21 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const passCandidate = (candidate: Candidate) => {
+    setPassedCandidatesHistory(prev => [...prev, candidate]);
     setCandidates((prev: any) => {
       const remaining = prev.filter((c: any) => c.id !== candidate.id);
       return remaining.length > 0 ? remaining : mockCandidates;
+    });
+  };
+
+  const rewindCandidate = () => {
+    setPassedCandidatesHistory(prev => {
+      if (prev.length === 0) return prev;
+      const lastPassed = prev[prev.length - 1];
+      
+      setCandidates(currentCandidates => [lastPassed, ...currentCandidates]);
+      
+      return prev.slice(0, prev.length - 1);
     });
   };
 
@@ -533,8 +601,13 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         themeMode,
         setThemeMode,
         userProfile,
+        setUserIntent,
         updateProfileInfo,
         updateBirthDetails,
+        updatePartnerPreferences,
+        updateDatingPreferences,
+        isPreferenceStrictFilterOn,
+        setIsPreferenceStrictFilterOn,
         uploadUserProfilePhoto,
         regionalPreference: userProfile.regionalPreference,
         setRegionalPreference,
@@ -543,9 +616,11 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         candidateIndex,
         currentCandidate,
         selectedCandidate,
-        selectCandidate,
+        selectCandidate: setSelectedCandidate,
         likeCandidate,
         passCandidate,
+        passedCandidatesHistory,
+        rewindCandidate,
         lastMatchedCandidate,
         isAnalyzingCompatibility,
         currentCompatibility,

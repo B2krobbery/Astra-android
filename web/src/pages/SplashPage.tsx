@@ -7,9 +7,11 @@ import { CosmicBackgroundCanvas } from '../components/CosmicBackgroundCanvas';
 import { FloatingHeartsBackground } from '../components/FloatingHeartsBackground';
 import { AuthService } from '../services/auth';
 import { supabase } from '../lib/supabase';
+import { useAstra } from '../context/AstraContext';
 
 export const SplashPage: React.FC = () => {
   const navigate = useNavigate();
+  const { setUserIntent } = useAstra();
 
   // Auth State
   const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
@@ -23,6 +25,17 @@ export const SplashPage: React.FC = () => {
   const [selectedIntent, setSelectedIntent] = useState<'Dating' | 'Marriage' | 'Login'>('Marriage');
 
   const handleSendOtp = async () => {
+    // TEMPORARY BYPASS FOR TESTING
+    if (selectedIntent === 'Marriage' || selectedIntent === 'Dating') {
+      setUserIntent(selectedIntent);
+    }
+    if (selectedIntent === 'Marriage') {
+      navigate('/marriage-onboarding');
+    } else {
+      navigate('/onboarding-typeform');
+    }
+    return;
+
     const rawPhone = phoneNumber.replace(/\D/g, '');
     if (rawPhone.length < 10) return setErrorMsg('Enter a valid 10-digit number');
     

@@ -252,7 +252,7 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
         }}
       >
         <Sparkles size={14} fill="#0F0C1B" />
-        {candidate.compatibilityScore}% Kundali Match
+        {candidate.compatibilityScore}% {candidate.intent === 'Marriage' ? 'Kundali Match' : 'Match'}
       </div>
 
       {/* Bottom Content Card Details */}
@@ -284,25 +284,32 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <MapPin size={15} color="var(--accent-indigo)" /> {candidate.location}
           </div>
+          {candidate.intent === 'Marriage' && candidate.religion && candidate.caste && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Sparkles size={15} color="var(--accent-indigo)" /> {candidate.religion}, {candidate.caste}
+            </div>
+          )}
         </div>
 
-        <div
-          style={{
-            padding: '6px 12px',
-            borderRadius: '9999px',
-            background: 'rgba(245, 158, 11, 0.2)',
-            border: '1px solid var(--accent-amber)',
-            color: 'var(--accent-amber-light)',
-            fontSize: '0.75rem',
-            fontWeight: 700,
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            alignSelf: 'flex-start'
-          }}
-        >
-          ✨ {candidate.nakshatra} ({candidate.rashi.split(' ')[0]})
-        </div>
+        {candidate.nakshatra && candidate.rashi && (
+          <div
+            style={{
+              padding: '6px 12px',
+              borderRadius: '9999px',
+              background: 'rgba(245, 158, 11, 0.2)',
+              border: '1px solid var(--accent-amber)',
+              color: 'var(--accent-amber-light)',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              alignSelf: 'flex-start'
+            }}
+          >
+            ✨ {candidate.nakshatra} ({candidate.rashi.split(' ')[0]})
+          </div>
+        )}
 
         {/* Voice Intro Card */}
         <VoiceIntroCard candidateName={candidate.name} />
@@ -327,7 +334,7 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
               cursor: 'pointer'
             }}
           >
-            <Sparkles size={14} color="var(--accent-amber)" /> Check Kundali Harmony
+            <Sparkles size={14} color="var(--accent-amber)" /> {candidate.intent === 'Marriage' ? 'Check Kundali Harmony' : 'View Compatibility'}
           </button>
 
           <button

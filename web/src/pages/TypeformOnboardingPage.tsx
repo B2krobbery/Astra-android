@@ -10,10 +10,10 @@ import { FloatingHeartsBackground } from '../components/FloatingHeartsBackground
 export const TypeformOnboardingPage: React.FC = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { userProfile, updateProfileInfo, updateBirthDetails, uploadUserProfilePhoto, language, setLanguage, t } = useAstra();
+  const { userProfile, updateProfileInfo, updateBirthDetails, uploadUserProfilePhoto, language, setLanguage, t, updateDatingPreferences } = useAstra();
 
   const [step, setStep] = useState(1);
-  const totalSteps = 8;
+  const totalSteps = 9;
 
   // Form State
   const [name, setName] = useState(userProfile.name || '');
@@ -26,6 +26,8 @@ export const TypeformOnboardingPage: React.FC = () => {
   const [birthTime, setBirthTime] = useState(userProfile.birthTime || '');
   const [birthCity, setBirthCity] = useState(userProfile.birthCity || '');
   const [selectedGoals, setSelectedGoals] = useState<string[]>(userProfile.lookingFor || []);
+  const [preferredEducation, setPreferredEducation] = useState(userProfile.partnerPreferences?.preferredEducation || 'Any');
+  const [preferredLocation, setPreferredLocation] = useState(userProfile.partnerPreferences?.preferredLocation || 'Any');
 
   const previewNakshatra = AstrologyEngine.calculateNakshatra(dob, birthTime, birthCity);
   const previewRashi = AstrologyEngine.calculateRashi(dob, birthTime, birthCity);
@@ -49,6 +51,7 @@ export const TypeformOnboardingPage: React.FC = () => {
   const handleComplete = () => {
     updateProfileInfo(name, profession, education, city, selectedGoals, userProfile.interests, regionalPref);
     updateBirthDetails(dob, birthTime, birthCity);
+    updateDatingPreferences(preferredEducation, preferredLocation);
     navigate('/discover');
   };
 
@@ -522,6 +525,69 @@ export const TypeformOnboardingPage: React.FC = () => {
                   </button>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {/* STEP 9: Dating Partner Preferences */}
+        {step === 9 && (
+          <div style={{ animation: 'floatOrb 0.3s ease-out' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--accent-indigo)', fontWeight: 600, textTransform: 'uppercase' }}>
+              Your Preferences
+            </span>
+            <h2 className="heading-font" style={{ fontSize: '1.6rem', fontWeight: 800, marginTop: '8px', marginBottom: '16px', color: '#FFF' }}>
+              Who are you looking for?
+            </h2>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '20px' }}>
+              Set your preferences so we can find your perfect match.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ fontSize: '0.75rem', color: '#CBD5E1', marginBottom: '6px', display: 'block' }}>Preferred Education</label>
+                <select
+                  value={preferredEducation}
+                  onChange={e => setPreferredEducation(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: '16px',
+                    background: 'rgba(30, 24, 54, 0.95)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    color: '#FFF',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  <option value="Any">Any Education Level</option>
+                  <option value="B.Tech">B.Tech / Engineering</option>
+                  <option value="MBA">MBA / Business</option>
+                  <option value="MBBS">Medical / MBBS</option>
+                  <option value="PhD">PhD / Doctorate</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.75rem', color: '#CBD5E1', marginBottom: '6px', display: 'block' }}>Preferred Location</label>
+                <select
+                  value={preferredLocation}
+                  onChange={e => setPreferredLocation(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: '16px',
+                    background: 'rgba(30, 24, 54, 0.95)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    color: '#FFF',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  <option value="Any">Any Location</option>
+                  <option value="Bangalore, IN">Bangalore</option>
+                  <option value="Mumbai, IN">Mumbai</option>
+                  <option value="Delhi, IN">Delhi</option>
+                  <option value="Pune, IN">Pune</option>
+                </select>
+              </div>
             </div>
           </div>
         )}

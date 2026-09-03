@@ -13,6 +13,7 @@ import {
 export const mockCandidates: Candidate[] = [
   {
     id: 'ananya_1',
+    intent: 'Marriage',
     name: 'Ananya',
     age: 24,
     gender: 'Female',
@@ -35,6 +36,10 @@ export const mockCandidates: Candidate[] = [
     interests: ['Modern Architecture', 'Photography', 'Jazz', 'Trekking', 'Vedic Astrology', 'Filter Coffee'],
     nakshatra: 'Rohini',
     rashi: 'Vrishabha (Taurus)',
+    nadi: 'Antya (Last)',
+    manglik: 'No',
+    religion: 'Hindu',
+    caste: 'Brahmin',
     compatibilityScore: 87,
     emotionalScore: 91,
     nakshatraScore: 88,
@@ -50,6 +55,7 @@ export const mockCandidates: Candidate[] = [
   },
   {
     id: 'sneha_2',
+    intent: 'Marriage',
     name: 'Sneha',
     age: 26,
     gender: 'Female',
@@ -72,7 +78,11 @@ export const mockCandidates: Candidate[] = [
     interests: ['UI/UX Design', 'Vinyl Records', 'Cycling', 'Coffee Brewing', 'Vedic Philosophy'],
     nakshatra: 'Ashwini',
     rashi: 'Mesha (Aries)',
-    compatibilityScore: 91,
+    nadi: 'Aadi (First)',
+    manglik: 'Anshik (Partial)',
+    religion: 'Hindu',
+    caste: 'Brahmin',
+    compatibilityScore: 82,
     emotionalScore: 94,
     nakshatraScore: 89,
     rashiScore: 90,
@@ -86,6 +96,7 @@ export const mockCandidates: Candidate[] = [
   },
   {
     id: 'aditi_3',
+    intent: 'Dating',
     name: 'Aditi',
     age: 25,
     gender: 'Female',
@@ -105,22 +116,16 @@ export const mockCandidates: Candidate[] = [
     policeDetails: 'Cyberabad Police Verification System · Clear',
     creditDetails: 'Equifax Score 795 · Excellent standing',
     interests: ['Machine Learning', 'Classical Dance', 'Hiking', 'Books', 'Stargazing'],
-    nakshatra: 'Hasta',
-    rashi: 'Kanya (Virgo)',
     compatibilityScore: 86,
-    emotionalScore: 88,
-    nakshatraScore: 85,
-    rashiScore: 86,
-    overallScore: 86,
-    compatibilityNote: 'Hasta and your Nakshatra exhibit high intellectual bonding and mutual respect for personal growth and spiritual equilibrium.',
     matchReasons: [
-      '✨ 27/36 Guna Milan Intellectual Alignment',
+      '✨ High Intellectual Alignment',
       '🌴 South Indian / Kerala Heritage Alignment',
       '📚 Both enjoy analytics & deep reading'
     ]
   },
   {
     id: 'kavya_4',
+    intent: 'Dating',
     name: 'Kavya',
     age: 27,
     gender: 'Female',
@@ -139,19 +144,12 @@ export const mockCandidates: Candidate[] = [
     educationDetails: 'IIM Bangalore · MBA in Marketing & Strategy',
     policeDetails: 'Delhi Police Character Verification · Clear',
     creditDetails: 'Experian Verified · 810 Score',
-    interests: ['Acoustic Guitar', 'Tennis', 'Podcasts', 'Philosophy', 'Travel'],
-    nakshatra: 'Svati',
-    rashi: 'Tula (Libra)',
-    compatibilityScore: 92,
-    emotionalScore: 93,
-    nakshatraScore: 91,
-    rashiScore: 92,
-    overallScore: 92,
-    compatibilityNote: 'Svati brings an airy harmony and diplomatic warmth that seamlessly complements your grounded emotional strength.',
+    interests: ['Brand Strategy', 'Acoustic Guitar', 'Tennis', 'Indie Music', 'Art Galleries'],
+    compatibilityScore: 81,
     matchReasons: [
-      '✨ 32/36 Guna Milan Top Match',
-      '🎸 Shared love for Acoustic Guitar & Live Music',
-      '🏰 North Indian Preference Alignment'
+      '✨ Creative and Strategic Mindset Alignment',
+      '🎸 Shared passion for Indie Music & Guitar',
+      '🎾 Both enjoy weekend Tennis'
     ]
   }
 ];
@@ -159,6 +157,7 @@ export const mockCandidates: Candidate[] = [
 export const newMatches: Candidate[] = [
   {
     id: 'ishani_m1',
+    intent: 'Marriage',
     name: 'Ishani',
     age: 24,
     gender: 'Female',

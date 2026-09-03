@@ -4,13 +4,13 @@ import { useAstra } from '../context/AstraContext';
 import { CandidateCardView } from '../components/CandidateCardView';
 import { AstraBottomNavigation } from '../components/AstraBottomNavigation';
 import { FloatingHeartsBackground } from '../components/FloatingHeartsBackground';
-import { Sparkles, Moon, Sun, ShieldCheck, Share2, Bot, Globe } from 'lucide-react';
+import { Sparkles, Moon, Sun, ShieldCheck, Share2, Bot, Globe, RotateCcw } from 'lucide-react';
 import { RegionalPreference } from '../types';
 
 export const DiscoverFeedPage: React.FC = () => {
   const navigate = useNavigate();
   const {
-    candidates,
+    currentCandidate,
     userProfile,
     likeCandidate,
     passCandidate,
@@ -23,7 +23,11 @@ export const DiscoverFeedPage: React.FC = () => {
     setThemeMode,
     language,
     setLanguage,
-    t
+    t,
+    isPreferenceStrictFilterOn,
+    setIsPreferenceStrictFilterOn,
+    passedCandidatesHistory,
+    rewindCandidate
   } = useAstra();
 
   const toggleLanguage = () => {
@@ -37,7 +41,7 @@ export const DiscoverFeedPage: React.FC = () => {
     else setThemeMode('DARK');
   };
 
-  const currentCandidate = candidates[0];
+  // currentCandidate is provided by useAstra context directly now
 
   return (
     <div
@@ -243,6 +247,72 @@ export const DiscoverFeedPage: React.FC = () => {
             );
           })}
         </div>
+
+        {/* Strict Partner Preferences Toggle */}
+        {userProfile.partnerPreferences && (
+          <div
+            style={{
+              padding: '6px 16px',
+              background: 'rgba(236, 72, 153, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '6px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Sparkles size={14} color="var(--accent-amber)" />
+              <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                🎯 For You
+              </span>
+              {passedCandidatesHistory.length > 0 && (
+                <button 
+                  onClick={rewindCandidate} 
+                  style={{ 
+                    background: 'rgba(245, 158, 11, 0.2)', 
+                    border: '1px solid var(--accent-amber)', 
+                    borderRadius: '50%',
+                    color: 'var(--accent-amber)', 
+                    cursor: 'pointer', 
+                    padding: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginLeft: '8px'
+                  }}
+                  title="Rewind last pass"
+                >
+                  <RotateCcw size={12} />
+                </button>
+              )}
+            </div>
+            
+            <button
+              onClick={() => setIsPreferenceStrictFilterOn(!isPreferenceStrictFilterOn)}
+              style={{
+                width: '40px',
+                height: '22px',
+                borderRadius: '11px',
+                background: isPreferenceStrictFilterOn ? 'var(--accent-amber)' : 'rgba(255,255,255,0.2)',
+                position: 'relative',
+                cursor: 'pointer',
+                border: 'none',
+                transition: 'background 0.3s'
+              }}
+            >
+              <div style={{
+                position: 'absolute',
+                top: '2px',
+                left: isPreferenceStrictFilterOn ? '20px' : '2px',
+                width: '18px',
+                height: '18px',
+                borderRadius: '50%',
+                background: '#fff',
+                transition: 'left 0.3s'
+              }} />
+            </button>
+          </div>
+        )}
 
         {/* Daily Shubh Muhurat & Reward Streak Ticker */}
         <div

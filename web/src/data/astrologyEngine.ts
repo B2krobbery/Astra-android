@@ -39,6 +39,27 @@ export class AstrologyEngine {
     return RASHIS[index];
   }
 
+  static calculateNadi(nakshatra: string): string {
+    if (!nakshatra) return 'Unknown';
+    const aadi = ['Ashwini', 'Ardra', 'Punarvasu', 'Uttara Phalguni', 'Hasta', 'Jyeshtha', 'Mula', 'Shatabhisha', 'Purva Bhadrapada'];
+    const madhya = ['Bharani', 'Mrigashira', 'Pushya', 'Purva Phalguni', 'Chitra', 'Anuradha', 'Purva Ashadha', 'Dhanishta', 'Uttara Bhadrapada'];
+    const antya = ['Krittika', 'Rohini', 'Ashlesha', 'Magha', 'Svati', 'Vishakha', 'Uttara Ashadha', 'Shravana', 'Revati'];
+    
+    if (aadi.includes(nakshatra)) return 'Aadi (First)';
+    if (madhya.includes(nakshatra)) return 'Madhya (Middle)';
+    if (antya.includes(nakshatra)) return 'Antya (Last)';
+    return 'Unknown';
+  }
+
+  static calculateManglikDosha(dob: string, time: string, city: string): string {
+    // This is a simulated prototype calculation. Real Manglik Dosha requires complex ephemeris for Mars position.
+    const seed = stringHashCode(dob + time + city);
+    const mod = seed % 100;
+    if (mod < 25) return 'Yes'; // 25% chance High Manglik
+    if (mod < 45) return 'Anshik (Partial)'; // 20% chance Partial
+    return 'No'; // 55% chance Non-Manglik
+  }
+
   static calculateCompatibility(user: UserProfile, candidate: Candidate): AstrologyCompatibility {
     const emotional = candidate.emotionalScore ?? 90;
     const nakshatra = candidate.nakshatraScore ?? 88;

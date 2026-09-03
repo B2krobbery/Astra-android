@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PrimaryButton, SecondaryOutlineButton } from '../components/AstraButtons';
-import { ChevronLeft, ChevronRight, CheckCircle, Upload, Shield } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, Upload, Shield, Sparkles } from 'lucide-react';
 import { useAstra } from '../context/AstraContext';
 import { supabase } from '../lib/supabase';
 import { indianReligions, Religion, Caste } from '../data/indianCastes';
+import { commonSubcastes, commonGotras } from '../data/indianSubcastesGotras';
 
 const SECTIONS = [
   'About You',
@@ -16,12 +17,13 @@ const SECTIONS = [
   'Astrology',
   'Numerology & Nadi',
   'Interests',
-  'Photos & Privacy'
+  'Photos & Privacy',
+  'Partner Preferences'
 ];
 
 export const MarriageOnboardingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { userProfile } = useAstra();
+  const { userProfile, updateBirthDetails, updatePartnerPreferences } = useAstra();
   
   const [currentStep, setCurrentStep] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
@@ -42,7 +44,17 @@ export const MarriageOnboardingPage: React.FC = () => {
   const [religion, setReligion] = useState(userProfile?.religion || '');
   const [caste, setCaste] = useState(userProfile?.caste || '');
   const [subCaste, setSubCaste] = useState(userProfile?.subCaste || '');
+  
+  // Custom Autocomplete State for Caste
+  const [casteSearchQuery, setCasteSearchQuery] = useState('');
+  const [isCasteDropdownOpen, setIsCasteDropdownOpen] = useState(false);
+  
   const [gotra, setGotra] = useState(userProfile?.gotra || '');
+  const [gotraSearchQuery, setGotraSearchQuery] = useState('');
+  const [isGotraDropdownOpen, setIsGotraDropdownOpen] = useState(false);
+
+  const [subCasteSearchQuery, setSubCasteSearchQuery] = useState('');
+  const [isSubCasteDropdownOpen, setIsSubCasteDropdownOpen] = useState(false);
 
   // Step 2: Education & Work
   const [education10th, setEducation10th] = useState(userProfile?.education10th || '');
@@ -66,17 +78,22 @@ export const MarriageOnboardingPage: React.FC = () => {
   const [previousMarriage, setPreviousMarriage] = useState(userProfile?.previousMarriage || '');
   const [childrenStatus, setChildrenStatus] = useState(userProfile?.childrenStatus || 'None');
 
-  // Step 6: Astrology & Numerology (Skipping specific extra fields if they map to dob/time)
-  
+  // Step 6: Astrology & Numerology
+  const [manglik, setManglik] = useState(userProfile?.manglik || 'Don\'t Know');
+  const [nadi, setNadi] = useState(userProfile?.nadi || '');
   // Step 7: Interests
   const [interests, setInterests] = useState<string[]>(userProfile?.lookingFor || []);
 
   // Step 8: Photos & Privacy
   const [photoPrivacy, setPhotoPrivacy] = useState(userProfile?.photoPrivacy || 'public');
 
+  // Step 9: Partner Preferences
+  const [preferredReligion, setPreferredReligion] = useState(userProfile?.partnerPreferences?.preferredReligion || '');
+  const [preferredCaste, setPreferredCaste] = useState(userProfile?.partnerPreferences?.preferredCaste || '');
+
   // -- Cascading Logic --
   const selectedReligionObj = indianReligions.find(r => r.name === religion);
-  const selectedCasteObj = selectedReligionObj?.castes.find(c => c.name === caste);
+
 
   // Completion calculation
   const calculateCompletion = () => {
@@ -93,6 +110,10 @@ export const MarriageOnboardingPage: React.FC = () => {
   };
 
   const handleSaveAndContinue = async () => {
+    if (currentStep === 6) {
+      updateBirthDetails(dateOfBirth, birthTime, birthLocation, manglik, nadi);
+    }
+
     if (currentStep < SECTIONS.length - 1) {
       setCurrentStep(curr => curr + 1);
       return;
@@ -100,9 +121,16 @@ export const MarriageOnboardingPage: React.FC = () => {
 
     // Final Save
     setIsSaving(true);
+    updatePartnerPreferences(preferredReligion, preferredCaste);
+    
     try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session?.user) throw new Error("No user session");
+      // TEMPORARY BYPASS FOR TESTING
+      navigate('/discover');
+      return;
+
+      const { data } = await supabase.auth.getSession();
+      const user = data?.session?.user;
+      if (!user) throw new Error("No user session");
 
       const updates = {
         display_name: name,
@@ -138,14 +166,14 @@ export const MarriageOnboardingPage: React.FC = () => {
       const { error } = await supabase
         .from('profiles')
         .update(updates)
-        .eq('id', session.session.user.id);
+        .eq('id', user!.id);
 
       if (error) throw error;
       
       // Update private profiles table for sensitive birth data
       await supabase
         .from('private_profiles')
-        .upsert({ id: session.session.user.id, birth_time: birthTime, updated_at: new Date().toISOString() });
+        .upsert({ id: user!.id, birth_time: birthTime, updated_at: new Date().toISOString() });
 
       window.location.href = '/discover';
 
@@ -184,6 +212,187 @@ export const MarriageOnboardingPage: React.FC = () => {
     </div>
   );
 
+  const renderCasteSelect = () => {
+    const options = selectedReligionObj?.castes.map(c => c.name) || [];
+    const filteredOptions = options.filter(opt => opt.toLowerCase().includes(casteSearchQuery.toLowerCase()));
+
+    return (
+      <div style={{ marginBottom: '16px', position: 'relative' }}>
+        <label style={{ display: 'block', marginBottom: '8px', color: '#94A3B8', fontSize: '0.9rem' }}>Community / Caste</label>
+        <div style={{ position: 'relative' }}>
+          <input
+            type="text"
+            value={isCasteDropdownOpen ? casteSearchQuery : (caste || '')}
+            onChange={e => {
+              setCasteSearchQuery(e.target.value);
+              setIsCasteDropdownOpen(true);
+            }}
+            onFocus={() => {
+              setCasteSearchQuery('');
+              setIsCasteDropdownOpen(true);
+            }}
+            placeholder={caste || "Search Community / Caste"}
+            style={{ width: '100%', padding: '14px', borderRadius: '12px', background: '#1E1836', border: '1px solid rgba(255,255,255,0.1)', color: '#FFF', fontSize: '1rem', outline: 'none' }}
+          />
+          {isCasteDropdownOpen && (
+            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: '200px', overflowY: 'auto', background: '#1E1836', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', zIndex: 10, marginTop: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
+              {filteredOptions.length > 0 ? filteredOptions.map(opt => (
+                <div 
+                  key={opt}
+                  onClick={() => {
+                    setCaste(opt);
+                    setIsCasteDropdownOpen(false);
+                    setCasteSearchQuery('');
+                  }}
+                  style={{ padding: '12px 14px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: '#FFF', fontSize: '0.95rem' }}
+                >
+                  {opt}
+                </div>
+              )) : (
+                <div style={{ padding: '12px 14px', color: '#94A3B8', fontSize: '0.95rem' }}>No matches found</div>
+              )}
+            </div>
+          )}
+        </div>
+        {/* Transparent overlay to close dropdown when clicking outside */}
+        {isCasteDropdownOpen && (
+          <div 
+            onClick={() => setIsCasteDropdownOpen(false)}
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9 }}
+          />
+        )}
+      </div>
+    );
+  };
+
+  const renderSubCasteSelect = () => {
+    const options = commonSubcastes;
+    const filteredOptions = subCasteSearchQuery.trim() === '' 
+      ? options 
+      : options.filter((c: string) => c.toLowerCase().includes(subCasteSearchQuery.toLowerCase()));
+
+    // Keep whatever the user typed so they can save custom values!
+    const displayValue = isSubCasteDropdownOpen ? subCasteSearchQuery : (subCaste || '');
+
+    return (
+      <div style={{ marginBottom: '16px', position: 'relative' }}>
+        <label style={{ display: 'block', marginBottom: '8px', color: '#94A3B8', fontSize: '0.9rem' }}>Sub-Caste (Optional)</label>
+        <div style={{ position: 'relative' }}>
+          <input
+            type="text"
+            value={displayValue}
+            onChange={e => {
+              setSubCasteSearchQuery(e.target.value);
+              setSubCaste(e.target.value); // Continuously save so custom input works
+              setIsSubCasteDropdownOpen(true);
+            }}
+            onFocus={() => {
+              setSubCasteSearchQuery(subCaste || '');
+              setIsSubCasteDropdownOpen(true);
+            }}
+            placeholder="Search or type Sub-Caste"
+            style={{ width: '100%', padding: '14px', borderRadius: '12px', background: '#1E1836', border: '1px solid rgba(255,255,255,0.1)', color: '#FFF', fontSize: '1rem', outline: 'none' }}
+          />
+          {isSubCasteDropdownOpen && (
+            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: '200px', overflowY: 'auto', background: '#1E1836', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', zIndex: 10, marginTop: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
+              {filteredOptions.length > 0 ? filteredOptions.map((opt: string) => (
+                <div 
+                  key={opt}
+                  onClick={() => {
+                    setSubCaste(opt);
+                    setIsSubCasteDropdownOpen(false);
+                    setSubCasteSearchQuery('');
+                  }}
+                  style={{ padding: '12px 14px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: '#FFF', fontSize: '0.95rem' }}
+                >
+                  {opt}
+                </div>
+              )) : (
+                <div 
+                  onClick={() => {
+                    // It's already in subCaste state, just close dropdown
+                    setIsSubCasteDropdownOpen(false);
+                  }}
+                  style={{ padding: '12px 14px', cursor: 'pointer', color: 'var(--accent-amber)', fontSize: '0.95rem', fontWeight: 600 }}
+                >
+                  Press Enter or Tap here to save "{subCasteSearchQuery}"
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        {isSubCasteDropdownOpen && (
+          <div 
+            onClick={() => setIsSubCasteDropdownOpen(false)}
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9 }}
+          />
+        )}
+      </div>
+    );
+  };
+
+  const renderGotraSelect = () => {
+    const options = commonGotras;
+    const filteredOptions = gotraSearchQuery.trim() === '' 
+      ? options 
+      : options.filter((c: string) => c.toLowerCase().includes(gotraSearchQuery.toLowerCase()));
+
+    const displayValue = isGotraDropdownOpen ? gotraSearchQuery : (gotra || '');
+
+    return (
+      <div style={{ marginBottom: '16px', position: 'relative' }}>
+        <label style={{ display: 'block', marginBottom: '8px', color: '#94A3B8', fontSize: '0.9rem' }}>Gotra (Optional)</label>
+        <div style={{ position: 'relative' }}>
+          <input
+            type="text"
+            value={displayValue}
+            onChange={e => {
+              setGotraSearchQuery(e.target.value);
+              setGotra(e.target.value); // Continuously save for custom input
+              setIsGotraDropdownOpen(true);
+            }}
+            onFocus={() => {
+              setGotraSearchQuery(gotra || '');
+              setIsGotraDropdownOpen(true);
+            }}
+            placeholder="Search or type Gotra"
+            style={{ width: '100%', padding: '14px', borderRadius: '12px', background: '#1E1836', border: '1px solid rgba(255,255,255,0.1)', color: '#FFF', fontSize: '1rem', outline: 'none' }}
+          />
+          {isGotraDropdownOpen && (
+            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: '200px', overflowY: 'auto', background: '#1E1836', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', zIndex: 10, marginTop: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
+              {filteredOptions.length > 0 ? filteredOptions.map((opt: string) => (
+                <div 
+                  key={opt}
+                  onClick={() => {
+                    setGotra(opt);
+                    setIsGotraDropdownOpen(false);
+                    setGotraSearchQuery('');
+                  }}
+                  style={{ padding: '12px 14px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: '#FFF', fontSize: '0.95rem' }}
+                >
+                  {opt}
+                </div>
+              )) : (
+                <div 
+                  onClick={() => setIsGotraDropdownOpen(false)}
+                  style={{ padding: '12px 14px', cursor: 'pointer', color: 'var(--accent-amber)', fontSize: '0.95rem', fontWeight: 600 }}
+                >
+                  Press Enter or Tap here to save "{gotraSearchQuery}"
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        {isGotraDropdownOpen && (
+          <div 
+            onClick={() => setIsGotraDropdownOpen(false)}
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9 }}
+          />
+        )}
+      </div>
+    );
+  };
+
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 0:
@@ -204,9 +413,9 @@ export const MarriageOnboardingPage: React.FC = () => {
         return (
           <>
             {renderSelect('Religion', religion, (val) => { setReligion(val); setCaste(''); setSubCaste(''); }, indianReligions.map(r => r.name))}
-            {religion && renderSelect('Community / Caste', caste, (val) => { setCaste(val); setSubCaste(''); }, selectedReligionObj?.castes.map(c => c.name) || [])}
-            {caste && renderSelect('Sub-Caste', subCaste, setSubCaste, selectedCasteObj?.subCastes || [])}
-            {renderField('Gotra (Optional)', gotra, setGotra, 'Enter Gotra')}
+            {religion && renderCasteSelect()}
+            {caste && renderSubCasteSelect()}
+            {renderGotraSelect()}
           </>
         );
       case 2:
@@ -250,9 +459,38 @@ export const MarriageOnboardingPage: React.FC = () => {
         );
       case 6:
         return (
-          <div style={{ textAlign: 'center', padding: '40px 0' }}>
-            <h4 style={{ color: 'white', marginBottom: '16px' }}>Astrology details are automatically generated!</h4>
-            <p style={{ color: '#94A3B8' }}>We use your Date, Time, and Place of birth to calculate your Kundali, Rashi, and Nakshatra for matching.</p>
+          <div style={{ textAlign: 'left', padding: '10px 0' }}>
+            <h4 style={{ color: 'white', marginBottom: '8px' }}>Vedic Astrology Details</h4>
+            <p style={{ color: '#94A3B8', fontSize: '0.9rem', marginBottom: '24px' }}>
+              Your Rashi and Nakshatra are calculated automatically from your birth details. Please confirm your Manglik and Nadi status.
+            </p>
+            
+            {renderSelect('Manglik (Kuja) Dosha', manglik, setManglik, ['Yes', 'No', 'Anshik (Partial)', 'Don\'t Know'])}
+            {renderSelect('Nadi', nadi, setNadi, ['Aadi (First)', 'Madhya (Middle)', 'Antya (Last)', 'Don\'t Know'])}
+            
+            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
+              <button
+                onClick={() => {
+                  import('../data/astrologyEngine').then(({ AstrologyEngine }) => {
+                    const tempNakshatra = AstrologyEngine.calculateNakshatra(dateOfBirth, birthTime, birthLocation);
+                    setNadi(AstrologyEngine.calculateNadi(tempNakshatra));
+                    setManglik(AstrologyEngine.calculateManglikDosha(dateOfBirth, birthTime, birthLocation));
+                  });
+                }}
+                style={{
+                  background: 'rgba(245, 158, 11, 0.1)',
+                  border: '1px solid var(--accent-amber)',
+                  color: 'var(--accent-amber)',
+                  padding: '10px 16px',
+                  borderRadius: '8px',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                ✨ Auto-Calculate for me
+              </button>
+            </div>
           </div>
         );
       case 7:
@@ -288,9 +526,22 @@ export const MarriageOnboardingPage: React.FC = () => {
               onClick={() => setPhotoPrivacy('private')}
               style={{ border: `2px solid ${photoPrivacy === 'private' ? '#8B5CF6' : 'rgba(255,255,255,0.1)'}`, padding: '16px', borderRadius: '12px', cursor: 'pointer', background: photoPrivacy === 'private' ? 'rgba(139, 92, 246, 0.1)' : 'transparent' }}
             >
-              <h5 style={{ color: 'white', fontSize: '1.1rem', margin: '0 0 8px 0' }}>Private (Secure)</h5>
-              <p style={{ color: '#94A3B8', fontSize: '0.85rem', margin: 0 }}>Photos are hidden. You must manually grant access to specific connections.</p>
+              <h5 style={{ color: 'white', fontSize: '1.1rem', margin: '0 0 8px 0' }}>Private</h5>
+              <p style={{ color: '#94A3B8', fontSize: '0.85rem', margin: 0 }}>Photos are hidden. You must manually reveal them to individual matches.</p>
             </div>
+          </div>
+        );
+      case 10:
+        return (
+          <div style={{ textAlign: 'left', padding: '10px 0' }}>
+            <h4 style={{ color: 'white', marginBottom: '8px' }}>Partner Preferences</h4>
+            <p style={{ color: '#94A3B8', fontSize: '0.9rem', marginBottom: '24px' }}>
+              We'll use this to build a strict 'Preferences' feed for you.
+            </p>
+            {renderSelect('Preferred Religion', preferredReligion, setPreferredReligion, ['Any', ...indianReligions.map(r => r.name)])}
+            {preferredReligion && preferredReligion !== 'Any' && (
+               renderSelect('Preferred Caste', preferredCaste, setPreferredCaste, ['Any', ...(indianReligions.find(r => r.name === preferredReligion)?.castes.map(c => c.name) || [])])
+            )}
           </div>
         );
       default:

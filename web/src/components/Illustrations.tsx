@@ -11,7 +11,7 @@ export const KundaliWheelIllustration: React.FC<{ size?: number }> = ({ size = 1
     <circle cx="100" cy="30" r="4" fill="#818CF8" />
     <circle cx="170" cy="100" r="4" fill="#FCD34D" />
     <circle cx="100" cy="170" r="4" fill="#F43F5E" />
-    <circle cx="30" y1="100" r="4" fill="#818CF8" />
+    <circle cx="30" cy="100" r="4" fill="#818CF8" />
     <defs>
       <linearGradient id="kundaliGradient" x1="0" y1="0" x2="200" y2="200" gradientUnits="userSpaceOnUse">
         <stop stopColor="#F59E0B" />
