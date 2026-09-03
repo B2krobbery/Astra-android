@@ -60,13 +60,13 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
     if (!isDragging || exitDirection) return;
     setIsDragging(false);
 
-    if (dragOffset.x > 90) {
+    if (dragOffset.x > 40) {
       // Smooth Fly-Off Animation to the Right (LIKE)
       setExitDirection('LIKE');
       setTimeout(() => {
         onLikeClick();
       }, 220);
-    } else if (dragOffset.x < -90) {
+    } else if (dragOffset.x < -40) {
       // Smooth Fly-Off Animation to the Left (PASS)
       setExitDirection('PASS');
       setTimeout(() => {

@@ -248,71 +248,72 @@ export const DiscoverFeedPage: React.FC = () => {
           })}
         </div>
 
-        {/* Strict Partner Preferences Toggle */}
-        {userProfile.partnerPreferences && (
-          <div
+        {/* Strict Partner Preferences Toggle & Rewind Bar */}
+        <div
+          style={{
+            padding: '6px 16px',
+            background: 'rgba(236, 72, 153, 0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '6px',
+            margin: '0 16px 16px',
+            borderRadius: '12px',
+            border: '1px solid rgba(236, 72, 153, 0.2)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Sparkles size={14} color="var(--accent-amber)" />
+            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+              🎯 For You
+            </span>
+            {passedCandidatesHistory.length > 0 && (
+              <button 
+                onClick={rewindCandidate} 
+                style={{ 
+                  background: 'rgba(245, 158, 11, 0.2)', 
+                  border: '1px solid var(--accent-amber)', 
+                  borderRadius: '50%',
+                  color: 'var(--accent-amber)', 
+                  cursor: 'pointer', 
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginLeft: '8px'
+                }}
+                title="Rewind last pass"
+              >
+                <RotateCcw size={12} />
+              </button>
+            )}
+          </div>
+          
+          <button
+            onClick={() => setIsPreferenceStrictFilterOn(!isPreferenceStrictFilterOn)}
             style={{
-              padding: '6px 16px',
-              background: 'rgba(236, 72, 153, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '6px',
+              width: '40px',
+              height: '22px',
+              borderRadius: '11px',
+              background: isPreferenceStrictFilterOn ? 'var(--accent-amber)' : 'rgba(255,255,255,0.2)',
+              position: 'relative',
+              cursor: 'pointer',
+              border: 'none',
+              transition: 'background 0.3s'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Sparkles size={14} color="var(--accent-amber)" />
-              <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                🎯 For You
-              </span>
-              {passedCandidatesHistory.length > 0 && (
-                <button 
-                  onClick={rewindCandidate} 
-                  style={{ 
-                    background: 'rgba(245, 158, 11, 0.2)', 
-                    border: '1px solid var(--accent-amber)', 
-                    borderRadius: '50%',
-                    color: 'var(--accent-amber)', 
-                    cursor: 'pointer', 
-                    padding: '4px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginLeft: '8px'
-                  }}
-                  title="Rewind last pass"
-                >
-                  <RotateCcw size={12} />
-                </button>
-              )}
-            </div>
-            
-            <button
-              onClick={() => setIsPreferenceStrictFilterOn(!isPreferenceStrictFilterOn)}
-              style={{
-                width: '40px',
-                height: '22px',
-                borderRadius: '11px',
-                background: isPreferenceStrictFilterOn ? 'var(--accent-amber)' : 'rgba(255,255,255,0.2)',
-                position: 'relative',
-                cursor: 'pointer',
-                border: 'none',
-                transition: 'background 0.3s'
-              }}
-            >
-              <div style={{
-                position: 'absolute',
-                top: '2px',
-                left: isPreferenceStrictFilterOn ? '20px' : '2px',
-                width: '18px',
-                height: '18px',
-                borderRadius: '50%',
-                background: '#fff',
-                transition: 'left 0.3s'
-              }} />
-            </button>
-          </div>
-        )}
+            <div style={{
+              position: 'absolute',
+              top: '2px',
+              left: isPreferenceStrictFilterOn ? '20px' : '2px',
+              width: '18px',
+              height: '18px',
+              borderRadius: '50%',
+              background: '#FFF',
+              transition: 'left 0.3s cubic-bezier(0.68, -0.55, 0.26, 1.55)'
+            }} />
+          </button>
+        </div>
 
         {/* Daily Shubh Muhurat & Reward Streak Ticker */}
         <div
