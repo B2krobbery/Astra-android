@@ -3,7 +3,7 @@ import { UserProfile } from '../types';
 
 export const ProfileService = {
   async getProfile(userId: string) {
-    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
     if (error) throw error;
     return data;
   },

@@ -68,7 +68,7 @@ interface AstraContextType {
   filteredCandidates: Candidate[];
   candidateIndex: number;
   currentCandidate: Candidate | null;
-  selectedCandidate: Candidate;
+  selectedCandidate: Candidate | null;
   selectCandidate: (candidate: Candidate) => void;
   likeCandidate: (candidate: Candidate, onMatch: () => void) => void;
   passCandidate: (candidate: Candidate) => void;
@@ -126,10 +126,10 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
          setUserProfile(dbProfile as any);
       }
       const dbCandidates = await DiscoveryService.getCandidates();
-      if (dbCandidates) {
+      if (dbCandidates && dbCandidates.length > 0) {
          setCandidates(dbCandidates as any);
-         
-         
+      } else {
+         setCandidates(mockCandidates);
       }
     } catch (e) {
       console.error(e);
@@ -187,7 +187,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [themeMode]);
 
   // User Profile
-  const [userProfile, setUserProfile] = useState<UserProfile>({} as UserProfile);
+  const [userProfile, setUserProfile] = useState<UserProfile>(initialUserProfile);
 
   const setUserIntent = (intent: 'Dating' | 'Marriage') => {
     setUserProfile((prev: any) => ({ ...prev, intent }));
@@ -211,7 +211,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [candidates, setCandidates] = useState<Candidate[]>(mockCandidates);
   const [passedCandidatesHistory, setPassedCandidatesHistory] = useState<Candidate[]>([]);
   const [candidateIndex] = useState(0);
-  const [selectedCandidate, setSelectedCandidate] = useState<Candidate>(mockCandidates[0]);
+  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [lastMatchedCandidate, setLastMatchedCandidate] = useState<Candidate | null>(null);
 
   const [isPreferenceStrictFilterOn, setIsPreferenceStrictFilterOn] = useState(false);
@@ -237,8 +237,9 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (userProfile.gender === 'Female' && c.gender === 'Female') return false;
     
     // Regional Prefs
-    if (userProfile.regionalPreference === 'ALL') return true;
-    return c.regionalCategory === userProfile.regionalPreference;
+    const userRegionalPref = userProfile.regionalPreference || 'ALL';
+    if (userRegionalPref === 'ALL') return true;
+    return c.regionalCategory === userRegionalPref;
   });
 
   const activeCandidateList = filteredCandidates;
@@ -366,9 +367,11 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setActiveConversation(existing);
     }
 
+    // Save to backend
+    DiscoveryService.interact(candidate.id, 'LIKE').catch(console.error);
+
     setCandidates((prev: any) => {
-      const remaining = prev.filter((c: any) => c.id !== candidate.id);
-      return remaining.length > 0 ? remaining : mockCandidates;
+      return prev.filter((c: any) => c.id !== candidate.id);
     });
 
     if (onMatch && candidate.compatibilityScore > 85) {
@@ -378,9 +381,12 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const passCandidate = (candidate: Candidate) => {
     setPassedCandidatesHistory(prev => [...prev, candidate]);
+    
+    // Save to backend
+    DiscoveryService.interact(candidate.id, 'PASS').catch(console.error);
+
     setCandidates((prev: any) => {
-      const remaining = prev.filter((c: any) => c.id !== candidate.id);
-      return remaining.length > 0 ? remaining : mockCandidates;
+      return prev.filter((c: any) => c.id !== candidate.id);
     });
   };
 
