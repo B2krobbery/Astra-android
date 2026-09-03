@@ -15,7 +15,11 @@ export const SplashPage: React.FC = () => {
 
   // Auth State
   const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
+  const [loginMethod, setLoginMethod] = useState<'EmailLogin' | 'EmailSignup' | 'Phone'>('EmailSignup');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,16 +29,6 @@ export const SplashPage: React.FC = () => {
   const [selectedIntent, setSelectedIntent] = useState<'Dating' | 'Marriage' | 'Login'>('Marriage');
 
   const handleSendOtp = async () => {
-    // TEMPORARY BYPASS FOR TESTING
-    if (selectedIntent === 'Marriage' || selectedIntent === 'Dating') {
-      setUserIntent(selectedIntent);
-    }
-    if (selectedIntent === 'Marriage') {
-      navigate('/marriage-onboarding');
-    } else {
-      navigate('/onboarding-typeform');
-    }
-    return;
 
     const rawPhone = phoneNumber.replace(/\D/g, '');
     if (rawPhone.length < 10) return setErrorMsg('Enter a valid 10-digit number');
@@ -88,6 +82,52 @@ export const SplashPage: React.FC = () => {
     }
   };
 
+  const handleEmailAuth = async () => {
+    if (!email || password.length < 6) return setErrorMsg('Enter a valid email and 6+ char password');
+    if (loginMethod === 'EmailSignup' && password !== confirmPassword) {
+      return setErrorMsg('Passwords do not match');
+    }
+    
+    setIsLoading(true);
+    setErrorMsg('');
+    try {
+      let sessionData = null;
+      if (loginMethod === 'EmailSignup') {
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) throw error;
+        sessionData = data;
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        sessionData = data;
+      }
+
+      setIsPhoneModalOpen(false);
+      
+      if (sessionData?.user) {
+        const { data: profile } = await supabase.from('profiles').select('onboarding_completed, intent').eq('id', sessionData.user.id).single();
+        
+        if (profile?.onboarding_completed) {
+          navigate('/discover');
+        } else {
+          const finalIntent = selectedIntent === 'Login' ? 'Marriage' : selectedIntent;
+          // upsert intent
+          await supabase.from('profiles').upsert({ id: sessionData.user.id, intent: finalIntent });
+          
+          if (finalIntent === 'Marriage') {
+            navigate('/marriage-onboarding');
+          } else {
+            navigate('/onboarding-typeform');
+          }
+        }
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Login failed.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div
       style={{
@@ -110,40 +150,86 @@ export const SplashPage: React.FC = () => {
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 12, 27, 0.9)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
           <div style={{ background: '#1E1836', width: '100%', maxWidth: '360px', padding: '24px', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)' }}>
             <h3 style={{ color: '#FFF', fontSize: '1.2rem', fontWeight: 800, marginBottom: '16px' }}>
-              {isOtpSent ? 'Verify Phone Number' : 'Enter Phone Number'}
+              {loginMethod === 'EmailSignup' ? 'Create Account' : loginMethod === 'EmailLogin' ? 'Sign In' : isOtpSent ? 'Verify Phone Number' : 'Enter Phone Number'}
             </h3>
             
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '12px' }}>
+              <button 
+                onClick={() => setLoginMethod('EmailSignup')}
+                style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: loginMethod === 'EmailSignup' ? '#E11D48' : 'transparent', color: loginMethod === 'EmailSignup' ? '#FFF' : '#94A3B8', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+              >
+                Sign Up
+              </button>
+              <button 
+                onClick={() => setLoginMethod('EmailLogin')}
+                style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: loginMethod === 'EmailLogin' ? '#E11D48' : 'transparent', color: loginMethod === 'EmailLogin' ? '#FFF' : '#94A3B8', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+              >
+                Sign In
+              </button>
+            </div>
+
             {errorMsg && <div style={{ color: '#EF4444', fontSize: '0.85rem', marginBottom: '12px', fontWeight: 600 }}>{errorMsg}</div>}
 
-            {!isOtpSent ? (
+            {loginMethod === 'EmailSignup' || loginMethod === 'EmailLogin' ? (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px' }}>
-                  <span style={{ color: '#94A3B8', marginRight: '8px', fontSize: '1rem' }}>+91</span>
+                <input 
+                  type="email" 
+                  placeholder="name@example.com" 
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px', padding: '14px 16px', marginBottom: '12px', color: '#FFF', fontSize: '1rem', width: '100%', outline: 'none' }}
+                />
+                <input 
+                  type="password" 
+                  placeholder="Password" 
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px', padding: '14px 16px', marginBottom: loginMethod === 'EmailSignup' ? '12px' : '16px', color: '#FFF', fontSize: '1rem', width: '100%', outline: 'none' }}
+                />
+                {loginMethod === 'EmailSignup' && (
                   <input 
-                    type="tel" 
-                    placeholder="99999 99999" 
-                    value={phoneNumber}
-                    onChange={e => setPhoneNumber(e.target.value)}
-                    style={{ background: 'transparent', border: 'none', color: '#FFF', fontSize: '1rem', width: '100%', outline: 'none' }}
+                    type="password" 
+                    placeholder="Confirm Password" 
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px', padding: '14px 16px', marginBottom: '16px', color: '#FFF', fontSize: '1rem', width: '100%', outline: 'none' }}
                   />
-                </div>
-                <PrimaryButton onClick={handleSendOtp}>
-                  {isLoading ? 'Sending...' : 'Send Secure OTP'}
+                )}
+                <PrimaryButton onClick={handleEmailAuth}>
+                  {isLoading ? 'Loading...' : loginMethod === 'EmailSignup' ? 'Create Account' : 'Sign In'}
                 </PrimaryButton>
               </>
             ) : (
-              <>
-                <input 
-                  type="number" 
-                  placeholder="6-digit code" 
-                  value={otpCode}
-                  onChange={e => setOtpCode(e.target.value)}
-                  style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px', padding: '14px 16px', marginBottom: '16px', color: '#FFF', fontSize: '1.2rem', width: '100%', outline: 'none', textAlign: 'center', letterSpacing: '4px', fontWeight: 800 }}
-                />
-                <PrimaryButton onClick={handleVerifyOtp}>
-                  {isLoading ? 'Verifying...' : 'Verify & Continue'}
-                </PrimaryButton>
-              </>
+              !isOtpSent ? (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px' }}>
+                    <span style={{ color: '#94A3B8', marginRight: '8px', fontSize: '1rem' }}>+91</span>
+                    <input 
+                      type="tel" 
+                      placeholder="99999 99999" 
+                      value={phoneNumber}
+                      onChange={e => setPhoneNumber(e.target.value)}
+                      style={{ background: 'transparent', border: 'none', color: '#FFF', fontSize: '1rem', width: '100%', outline: 'none' }}
+                    />
+                  </div>
+                  <PrimaryButton onClick={handleSendOtp}>
+                    {isLoading ? 'Sending...' : 'Send Secure OTP'}
+                  </PrimaryButton>
+                </>
+              ) : (
+                <>
+                  <input 
+                    type="number" 
+                    placeholder="6-digit code" 
+                    value={otpCode}
+                    onChange={e => setOtpCode(e.target.value)}
+                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px', padding: '14px 16px', marginBottom: '16px', color: '#FFF', fontSize: '1.2rem', width: '100%', outline: 'none', textAlign: 'center', letterSpacing: '4px', fontWeight: 800 }}
+                  />
+                  <PrimaryButton onClick={handleVerifyOtp}>
+                    {isLoading ? 'Verifying...' : 'Verify & Continue'}
+                  </PrimaryButton>
+                </>
+              )
             )}
 
             <button 
@@ -176,18 +262,18 @@ export const SplashPage: React.FC = () => {
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px', zIndex: 5 }}>
         <h3 style={{ color: 'white', fontSize: '1.1rem', textAlign: 'center', marginBottom: '4px', fontWeight: 700 }}>Choose Your Path</h3>
         
-        <PrimaryButton onClick={() => { setSelectedIntent('Dating'); setIsPhoneModalOpen(true); }} style={{ background: 'linear-gradient(135deg, #F43F5E, #FB923C)', display: 'flex', justifyContent: 'space-between', padding: '16px 20px' }}>
+        <PrimaryButton onClick={() => { setSelectedIntent('Dating'); setLoginMethod('EmailSignup'); setIsPhoneModalOpen(true); }} style={{ background: 'linear-gradient(135deg, #F43F5E, #FB923C)', display: 'flex', justifyContent: 'space-between', padding: '16px 20px' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Heart size={20} /> Dating</span>
           <span style={{ fontSize: '0.8rem', opacity: 0.9, fontWeight: 500 }}>Lighter Experience</span>
         </PrimaryButton>
 
-        <PrimaryButton onClick={() => { setSelectedIntent('Marriage'); setIsPhoneModalOpen(true); }} style={{ background: 'linear-gradient(135deg, #8B5CF6, #3B82F6)', display: 'flex', justifyContent: 'space-between', padding: '16px 20px' }}>
+        <PrimaryButton onClick={() => { setSelectedIntent('Marriage'); setLoginMethod('EmailSignup'); setIsPhoneModalOpen(true); }} style={{ background: 'linear-gradient(135deg, #8B5CF6, #3B82F6)', display: 'flex', justifyContent: 'space-between', padding: '16px 20px' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Users size={20} /> Marriage</span>
           <span style={{ fontSize: '0.8rem', opacity: 0.9, fontWeight: 500 }}>Serious Matrimonial</span>
         </PrimaryButton>
 
         <div style={{ marginTop: '12px' }}>
-          <SecondaryOutlineButton onClick={() => { setSelectedIntent('Login'); setIsPhoneModalOpen(true); }}>
+          <SecondaryOutlineButton onClick={() => { setSelectedIntent('Login'); setLoginMethod('EmailLogin'); setIsPhoneModalOpen(true); }}>
             Already have an account? Sign In
           </SecondaryOutlineButton>
         </div>

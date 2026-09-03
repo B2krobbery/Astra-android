@@ -125,11 +125,10 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (dbProfile) {
          setUserProfile(dbProfile as any);
       }
+      
       const dbCandidates = await DiscoveryService.getCandidates();
-      if (dbCandidates && dbCandidates.length > 0) {
+      if (dbCandidates) {
          setCandidates(dbCandidates as any);
-      } else {
-         setCandidates(mockCandidates);
       }
     } catch (e) {
       console.error(e);
@@ -187,7 +186,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [themeMode]);
 
   // User Profile
-  const [userProfile, setUserProfile] = useState<UserProfile>(initialUserProfile);
+  const [userProfile, setUserProfile] = useState<UserProfile>({} as UserProfile);
 
   const setUserIntent = (intent: 'Dating' | 'Marriage') => {
     setUserProfile((prev: any) => ({ ...prev, intent }));
@@ -208,7 +207,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Candidates & Regional Filtering
-  const [candidates, setCandidates] = useState<Candidate[]>(mockCandidates);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [passedCandidatesHistory, setPassedCandidatesHistory] = useState<Candidate[]>([]);
   const [candidateIndex] = useState(0);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
