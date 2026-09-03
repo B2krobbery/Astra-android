@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CelestialLogo } from '../components/CelestialLogo';
 import { PrimaryButton, SecondaryOutlineButton } from '../components/AstraButtons';
-import { Sparkles, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Sparkles, ShieldCheck, ArrowRight, Heart, Users } from 'lucide-react';
 import { CosmicBackgroundCanvas } from '../components/CosmicBackgroundCanvas';
 import { FloatingHeartsBackground } from '../components/FloatingHeartsBackground';
 import { AuthService } from '../services/auth';
+import { supabase } from '../lib/supabase';
 
 export const SplashPage: React.FC = () => {
   const navigate = useNavigate();
@@ -17,6 +18,9 @@ export const SplashPage: React.FC = () => {
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  
+  // Gateway State
+  const [selectedIntent, setSelectedIntent] = useState<'Dating' | 'Marriage' | 'Login'>('Marriage');
 
   const handleSendOtp = async () => {
     const rawPhone = phoneNumber.replace(/\D/g, '');
@@ -41,23 +45,33 @@ export const SplashPage: React.FC = () => {
     setIsLoading(true);
     setErrorMsg('');
     try {
-      const { error } = await AuthService.verifyOtp('+91' + phoneNumber.replace(/\D/g, ''), otpCode);
+      const { data: sessionData, error } = await AuthService.verifyOtp('+91' + phoneNumber.replace(/\D/g, ''), otpCode);
       if (error) throw error;
+      
       setIsPhoneModalOpen(false);
-      navigate('/onboarding-typeform');
+      
+      // Smart Routing based on DB Profile
+      if (sessionData?.user) {
+        const { data: profile } = await supabase.from('profiles').select('onboarding_completed, intent').eq('id', sessionData.user.id).single();
+        
+        if (profile?.onboarding_completed) {
+          navigate('/discover');
+        } else {
+          // Update intent if they selected one
+          const finalIntent = selectedIntent === 'Login' ? 'Marriage' : selectedIntent;
+          await supabase.from('profiles').update({ intent: finalIntent }).eq('id', sessionData.user.id);
+          
+          if (finalIntent === 'Marriage') {
+            navigate('/marriage-onboarding');
+          } else {
+            navigate('/onboarding-typeform'); // Fallback for dating
+          }
+        }
+      }
     } catch (err: any) {
       setErrorMsg(err.message || 'Invalid OTP');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    try {
-      await AuthService.signInWithGoogle();
-      // OAuth redirects automatically
-    } catch (err: any) {
-      console.error('Google login failed:', err);
     }
   };
 
@@ -76,13 +90,9 @@ export const SplashPage: React.FC = () => {
         overflow: 'hidden'
       }}
     >
-      {/* Floating Hearts & Orbs Background */}
       <FloatingHeartsBackground />
-
-      {/* Interactive Background Starfield Canvas */}
       <CosmicBackgroundCanvas />
 
-      {/* Auth OTP Modal Overlay */}
       {isPhoneModalOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 12, 27, 0.9)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
           <div style={{ background: '#1E1836', width: '100%', maxWidth: '360px', padding: '24px', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)' }}>
@@ -147,25 +157,30 @@ export const SplashPage: React.FC = () => {
         >
           Modern Matchmaking, Guided by the Stars ✨
           <br />
-          <span style={{ fontSize: '0.8rem', opacity: 0.85 }}>
-            Interactive Typeform Onboarding & Verified Trust Badges
-          </span>
         </p>
       </div>
 
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px', zIndex: 5 }}>
-        <PrimaryButton onClick={() => setIsPhoneModalOpen(true)}>
-          Start Interactive Onboarding <ArrowRight size={18} />
+        <h3 style={{ color: 'white', fontSize: '1.1rem', textAlign: 'center', marginBottom: '4px', fontWeight: 700 }}>Choose Your Path</h3>
+        
+        <PrimaryButton onClick={() => { setSelectedIntent('Dating'); setIsPhoneModalOpen(true); }} style={{ background: 'linear-gradient(135deg, #F43F5E, #FB923C)', display: 'flex', justifyContent: 'space-between', padding: '16px 20px' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Heart size={20} /> Dating</span>
+          <span style={{ fontSize: '0.8rem', opacity: 0.9, fontWeight: 500 }}>Lighter Experience</span>
         </PrimaryButton>
 
-        <SecondaryOutlineButton onClick={handleGoogleLogin}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '1.1rem' }}>G</span> Continue with Google
-          </span>
-        </SecondaryOutlineButton>
+        <PrimaryButton onClick={() => { setSelectedIntent('Marriage'); setIsPhoneModalOpen(true); }} style={{ background: 'linear-gradient(135deg, #8B5CF6, #3B82F6)', display: 'flex', justifyContent: 'space-between', padding: '16px 20px' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Users size={20} /> Marriage</span>
+          <span style={{ fontSize: '0.8rem', opacity: 0.9, fontWeight: 500 }}>Serious Matrimonial</span>
+        </PrimaryButton>
+
+        <div style={{ marginTop: '12px' }}>
+          <SecondaryOutlineButton onClick={() => { setSelectedIntent('Login'); setIsPhoneModalOpen(true); }}>
+            Already have an account? Sign In
+          </SecondaryOutlineButton>
+        </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.75rem', color: 'rgba(248, 250, 252, 0.6)', marginTop: '8px' }}>
-          <ShieldCheck size={14} color="var(--accent-amber)" /> DigiLocker & Background Check Verified Profiles
+          <ShieldCheck size={14} color="var(--accent-amber)" /> Verified Trust Badges & Background Checks
         </div>
       </div>
     </div>

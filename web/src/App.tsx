@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AstraProvider, useAstra } from './context/AstraContext';
 import { SplashPage } from './pages/SplashPage';
 import { TypeformOnboardingPage } from './pages/TypeformOnboardingPage';
+import { MarriageOnboardingPage } from './pages/MarriageOnboardingPage';
 import { ProfileOnboardingPage } from './pages/ProfileOnboardingPage';
 import { AstrologySetupPage } from './pages/AstrologySetupPage';
 import { DiscoverFeedPage } from './pages/DiscoverFeedPage';
@@ -32,6 +33,7 @@ const AppRoutes: React.FC = () => {
       <Routes>
         <Route path="/splash" element={<SplashPage />} />
         <Route path="/onboarding-typeform" element={<TypeformOnboardingPage />} />
+        <Route path="/marriage-onboarding" element={<MarriageOnboardingPage />} />
         <Route path="/onboarding-profile" element={<ProfileOnboardingPage />} />
         <Route path="/onboarding-astrology" element={<AstrologySetupPage />} />
         <Route path="/discover" element={<DiscoverFeedPage />} />

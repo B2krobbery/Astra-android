@@ -65,6 +65,31 @@ export interface UserProfile {
   hasVoiceNote?: boolean;
   voiceNotePrompt?: string;
   voiceNoteDuration?: number;
+  
+  // Marriage specific fields
+  intent?: string;
+  birthLocation?: string;
+  height?: string;
+  bloodGroup?: string;
+  motherTongue?: string;
+  religion?: string;
+  caste?: string;
+  subCaste?: string;
+  gotra?: string;
+  education10th?: string;
+  education12th?: string;
+  higherEducation?: string;
+  employer?: string;
+  annualIncome?: string;
+  healthInfo?: string;
+  healthPrivacy?: string;
+  diet?: string;
+  alcohol?: string;
+  smoking?: string;
+  maritalStatus?: string;
+  previousMarriage?: string;
+  childrenStatus?: string;
+  photoPrivacy?: string;
 }
 
 export interface AstrologyCompatibility {
