@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CelestialLogo } from '../components/CelestialLogo';
 import { PrimaryButton, SecondaryOutlineButton } from '../components/AstraButtons';
@@ -11,7 +11,7 @@ import { useAstra } from '../context/AstraContext';
 
 export const SplashPage: React.FC = () => {
   const navigate = useNavigate();
-  const { setUserIntent } = useAstra();
+  const { setUserIntent, sessionUser } = useAstra();
 
   // Auth State
   const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
@@ -27,6 +27,32 @@ export const SplashPage: React.FC = () => {
   
   // Gateway State
   const [selectedIntent, setSelectedIntent] = useState<'Dating' | 'Marriage' | 'Login'>('Marriage');
+
+  useEffect(() => {
+    const checkSessionAndRoute = async () => {
+      if (sessionUser) {
+        setIsLoading(true);
+        try {
+          const { data: profile } = await supabase.from('profiles').select('onboarding_completed, intent').eq('id', sessionUser.id).single();
+          
+          if (profile?.onboarding_completed) {
+            navigate('/discover');
+          } else {
+            if (profile?.intent === 'Marriage') {
+              navigate('/marriage-onboarding');
+            } else {
+              navigate('/onboarding-typeform');
+            }
+          }
+        } catch (err) {
+          console.error('Failed to route based on session:', err);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+    checkSessionAndRoute();
+  }, [sessionUser, navigate]);
 
   const handleSendOtp = async () => {
 

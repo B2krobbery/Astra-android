@@ -43,7 +43,7 @@ export const ChatDetailPage: React.FC = () => {
       {/* Top Bar Header */}
       <header
         style={{
-          padding: '12px 16px',
+          padding: 'calc(12px + env(safe-area-inset-top, 0px)) 16px 12px 16px',
           background: 'var(--bg-secondary)',
           borderBottom: '1px solid var(--border-color)',
           display: 'flex',
@@ -133,7 +133,7 @@ export const ChatDetailPage: React.FC = () => {
           handleSend();
         }}
         style={{
-          padding: '12px 16px',
+          padding: '12px 16px calc(12px + env(safe-area-inset-bottom, 0px)) 16px',
           background: 'var(--bg-secondary)',
           borderTop: '1px solid var(--border-color)',
           display: 'flex',
