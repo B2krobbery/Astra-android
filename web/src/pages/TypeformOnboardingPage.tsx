@@ -19,12 +19,12 @@ export const TypeformOnboardingPage: React.FC = () => {
   const [name, setName] = useState(userProfile.name || '');
   const [gender, setGender] = useState(userProfile.gender || 'Male');
   const [profession, setProfession] = useState(userProfile.profession || '');
-  const [education, setEducation] = useState(userProfile.education || '');
+  const [education, setEducation] = useState(userProfile.higherEducation || userProfile.education || '');
   const [city, setCity] = useState(userProfile.location || '');
   const [regionalPref, setRegionalPref] = useState<RegionalPreference>(userProfile.regionalPreference || 'ALL');
   const [dob, setDob] = useState(userProfile.dateOfBirth || '');
   const [birthTime, setBirthTime] = useState(userProfile.birthTime || '');
-  const [birthCity, setBirthCity] = useState(userProfile.birthCity || '');
+  const [birthCity, setBirthCity] = useState(userProfile.birthLocation || '');
   const [selectedGoals, setSelectedGoals] = useState<string[]>(userProfile.lookingFor || []);
   const [preferredEducation, setPreferredEducation] = useState(userProfile.partnerPreferences?.preferredEducation || 'Any');
   const [preferredLocation, setPreferredLocation] = useState(userProfile.partnerPreferences?.preferredLocation || 'Any');
@@ -59,13 +59,14 @@ export const TypeformOnboardingPage: React.FC = () => {
       if (!user) throw new Error("No user session");
 
       const updates = {
-        display_name: name,
-        gender,
-        profession,
-        higher_education: education,
-        location: city,
-        date_of_birth: dob,
-        looking_for: userProfile.interests,
+        display_name: name || null,
+        gender: gender || null,
+        profession: profession || null,
+        higher_education: education || null,
+        location: city || null,
+        birth_location: birthCity || null,
+        date_of_birth: dob || null,
+        looking_for: selectedGoals,
         onboarding_completed: true,
         updated_at: new Date().toISOString()
       };
@@ -80,17 +81,21 @@ export const TypeformOnboardingPage: React.FC = () => {
       // Update private profiles table for sensitive birth data
       await supabase
         .from('private_profiles')
-        .upsert({ id: user.id, birth_time: birthTime, updated_at: new Date().toISOString() });
+        .upsert({ id: user.id, birth_time: birthTime || null, updated_at: new Date().toISOString() });
 
       // Save match preferences
       await supabase
         .from('preferences')
         .upsert({ 
           user_id: user.id, 
-          intent: 'Dating',
+          intent: userProfile?.intent || 'Dating', // Preserve intent if already set
           gender_preference: gender === 'Male' ? 'Female' : gender === 'Female' ? 'Male' : 'Everyone',
+          preferred_religion: userProfile?.partnerPreferences?.preferredReligion || null,
+          preferred_caste: userProfile?.partnerPreferences?.preferredCaste || null,
+          preferred_education: preferredEducation === 'Any' ? null : preferredEducation,
+          preferred_location: preferredLocation === 'Any' ? null : preferredLocation,
           updated_at: new Date().toISOString()
-        });
+        }, { onConflict: 'user_id' });
 
       window.location.href = '/discover';
     } catch (error) {
@@ -320,6 +325,27 @@ export const TypeformOnboardingPage: React.FC = () => {
                   />
                 </div>
               </div>
+
+              <div>
+                <label style={{ fontSize: '0.75rem', color: '#CBD5E1' }}>Where do you currently live?</label>
+                <div style={{ position: 'relative', marginTop: '4px' }}>
+                  <MapPin size={18} color="#94A3B8" style={{ position: 'absolute', left: 14, top: 14 }} />
+                  <input
+                    type="text"
+                    value={city}
+                    onChange={e => setCity(e.target.value)}
+                    placeholder="e.g. Bengaluru, India"
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px 12px 42px',
+                      borderRadius: '16px',
+                      background: 'rgba(30, 24, 54, 0.95)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      color: '#FFF'
+                    }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -381,7 +407,7 @@ export const TypeformOnboardingPage: React.FC = () => {
                 <div style={{ position: 'relative' }}>
                   <Calendar size={18} color="#94A3B8" style={{ position: 'absolute', left: 14, top: 14 }} />
                   <input
-                    type="text"
+                    type="date"
                     value={dob}
                     onChange={e => setDob(e.target.value)}
                     placeholder="14 July 1998"
@@ -402,7 +428,7 @@ export const TypeformOnboardingPage: React.FC = () => {
                 <div style={{ position: 'relative' }}>
                   <Clock size={18} color="#94A3B8" style={{ position: 'absolute', left: 14, top: 14 }} />
                   <input
-                    type="text"
+                    type="time"
                     value={birthTime}
                     onChange={e => setBirthTime(e.target.value)}
                     placeholder="08:45 AM"

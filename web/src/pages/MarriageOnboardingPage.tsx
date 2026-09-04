@@ -141,9 +141,9 @@ export const MarriageOnboardingPage: React.FC = () => {
       if (!user) throw new Error("No user session");
 
       const updates = {
-        display_name: name,
-        gender,
-        date_of_birth: dateOfBirth,
+        display_name: name || null,
+        gender: gender || null,
+        date_of_birth: dateOfBirth || null,
         height,
         blood_group: bloodGroup,
         location,
@@ -183,18 +183,20 @@ export const MarriageOnboardingPage: React.FC = () => {
       // Update private profiles table for sensitive birth data
       await supabase
         .from('private_profiles')
-        .upsert({ id: user.id, birth_time: birthTime, updated_at: new Date().toISOString() });
+        .upsert({ id: user.id, birth_time: birthTime || null, updated_at: new Date().toISOString() });
 
       // Save match preferences
       await supabase
         .from('preferences')
         .upsert({ 
           user_id: user.id, 
-          preferred_religion: preferredReligion,
-          preferred_caste: preferredCaste,
+          preferred_religion: preferredReligion === 'Any' ? null : preferredReligion,
+          preferred_caste: preferredCaste === 'Any' ? null : preferredCaste,
+          preferred_education: userProfile?.partnerPreferences?.preferredEducation === 'Any' ? null : userProfile?.partnerPreferences?.preferredEducation,
+          preferred_location: userProfile?.partnerPreferences?.preferredLocation === 'Any' ? null : userProfile?.partnerPreferences?.preferredLocation,
           gender_preference: gender === 'Male' ? 'Female' : gender === 'Female' ? 'Male' : 'Everyone',
           updated_at: new Date().toISOString()
-        });
+        }, { onConflict: 'user_id' });
 
       window.location.href = '/discover';
 

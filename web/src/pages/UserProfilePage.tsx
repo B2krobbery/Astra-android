@@ -31,7 +31,7 @@ export const UserProfilePage: React.FC = () => {
   const [isEditingProfile, setIsEditingProfile] = React.useState(false);
   const [editedName, setEditedName] = React.useState(userProfile.name);
   const [editedProfession, setEditedProfession] = React.useState(userProfile.profession);
-  const [editedEducation, setEditedEducation] = React.useState(userProfile.education);
+  const [editedEducation, setEditedEducation] = React.useState(userProfile.higherEducation || userProfile.education);
   const [editedLocation, setEditedLocation] = React.useState(userProfile.location);
   const [editedBio, setEditedBio] = React.useState(userProfile.bio || '');
 
@@ -265,7 +265,7 @@ export const UserProfilePage: React.FC = () => {
                   {userProfile.profession}
                 </p>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                  {userProfile.education} • {userProfile.location}
+                  {(userProfile.higherEducation || userProfile.education)} • {userProfile.location}
                 </p>
               </>
             )}
@@ -276,7 +276,7 @@ export const UserProfilePage: React.FC = () => {
               onClick={() => {
                 setEditedName(userProfile.name);
                 setEditedProfession(userProfile.profession);
-                setEditedEducation(userProfile.education);
+                setEditedEducation(userProfile.higherEducation || userProfile.education);
                 setEditedLocation(userProfile.location);
                 setEditedBio(userProfile.bio || '');
                 setIsEditingProfile(true);

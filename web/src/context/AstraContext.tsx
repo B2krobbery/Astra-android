@@ -138,10 +138,16 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
              : supabase.storage.from('avatars').getPublicUrl(photoData.storage_path).data.publicUrl;
          }
 
+         const { data: privateProfileData } = await supabase.from('private_profiles').select('birth_time').eq('id', sessionUser.id).maybeSingle();
+         const fetchedBirthTime = privateProfileData?.birth_time || '';
+
+         const { data: preferencesData } = await supabase.from('preferences').select('preferred_education, preferred_location, preferred_religion, preferred_caste').eq('user_id', sessionUser.id).maybeSingle();
+
          setUserProfile({
            ...dbProfile,
            name: dbProfile.display_name || '',
            dateOfBirth: dbProfile.date_of_birth,
+           birthTime: fetchedBirthTime,
            birthLocation: dbProfile.birth_location,
            bloodGroup: dbProfile.blood_group,
            motherTongue: dbProfile.mother_tongue,
@@ -163,8 +169,13 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
            hasVoiceNote: !!dbProfile.voice_note_url,
            voiceNoteUrl: dbProfile.voice_note_url,
            voiceNotePrompt: dbProfile.voice_note_prompt,
-           marriageQuestionnaire: dbProfile.marriage_questionnaire
-
+           marriageQuestionnaire: dbProfile.marriage_questionnaire,
+           partnerPreferences: {
+             preferredEducation: preferencesData?.preferred_education || 'Any',
+             preferredLocation: preferencesData?.preferred_location || 'Any',
+             preferredReligion: preferencesData?.preferred_religion || 'Any',
+             preferredCaste: preferencesData?.preferred_caste || 'Any'
+           }
          } as any);
       }
       
@@ -461,6 +472,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       name: finalName,
       profession: finalProfession,
       education: finalEducation,
+      higherEducation: finalEducation,
       location: finalLocation,
       lookingFor: finalLookingFor,
       interests: finalInterests,
@@ -514,7 +526,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }));
   };
 
-  const updateDatingPreferences = (education: string, location: string) => {
+  const updateDatingPreferences = async (education: string, location: string) => {
     setUserProfile((prev: any) => ({
       ...prev,
       partnerPreferences: {
@@ -523,6 +535,21 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         preferredLocation: location
       }
     }));
+
+    if (sessionUser) {
+      try {
+        await supabase.from('preferences').upsert({
+          user_id: sessionUser.id,
+          preferred_education: education === 'Any' ? null : education,
+          preferred_location: location === 'Any' ? null : location,
+          preferred_religion: userProfile?.partnerPreferences?.preferredReligion === 'Any' ? null : userProfile?.partnerPreferences?.preferredReligion,
+          preferred_caste: userProfile?.partnerPreferences?.preferredCaste === 'Any' ? null : userProfile?.partnerPreferences?.preferredCaste,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' });
+      } catch (e) {
+        console.error('Failed to update dating preferences', e);
+      }
+    }
   };
 
   const selectCandidate = (candidate: Candidate) => {
