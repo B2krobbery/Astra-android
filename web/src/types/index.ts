@@ -52,6 +52,7 @@ export interface Candidate {
   overallScore?: number;
   compatibilityNote?: string;
   matchReasons?: string[];
+  marriageQuestionnaire?: Record<string, string>;
 }
 
 export interface UserProfile {
@@ -107,6 +108,7 @@ export interface UserProfile {
   nadi?: string;
   manglik?: string;
   partnerPreferences?: PartnerPreferences;
+  marriageQuestionnaire?: Record<string, string>;
 }
 
 export interface AstrologyCompatibility {

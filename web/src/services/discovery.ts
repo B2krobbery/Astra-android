@@ -70,7 +70,8 @@ export const DiscoveryService = {
         creditVerified: true,
         interests: [],
         education: p.education_10th || 'Graduate',
-        compatibilityScore: 0 // Handled by AstraContext AstrologyEngine
+        compatibilityScore: 0, // Handled by AstraContext AstrologyEngine
+        marriageQuestionnaire: p.marriage_questionnaire
       };
     });
   },

@@ -12,7 +12,8 @@ export const MatchesConversationsPage: React.FC = () => {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        height: '100%',
+        overflowY: 'auto',
         background: 'var(--bg-primary)',
         paddingBottom: '88px'
       }}

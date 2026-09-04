@@ -16,9 +16,11 @@ export const CandidateDetailPage: React.FC = () => {
     <div
       style={{
         minHeight: '100vh',
+        height: '100vh',
         background: 'var(--bg-primary)',
         paddingBottom: '88px',
-        position: 'relative'
+        position: 'relative',
+        overflowY: 'auto'
       }}
     >
       {/* Top Bar Overlay */}
@@ -221,6 +223,43 @@ export const CandidateDetailPage: React.FC = () => {
             ))}
           </div>
         </div>
+
+        {/* Personal Values & Vision (Questionnaire) */}
+        {candidate.marriageQuestionnaire && Object.keys(candidate.marriageQuestionnaire).length > 0 && (
+          <div style={{ marginBottom: '24px' }}>
+            <h3 className="heading-font" style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '12px' }}>
+              Personal Values & Vision
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {[
+                { id: 'q1', text: 'Future career plans and goals' },
+                { id: 'q2', text: 'Work-life balance' },
+                { id: 'q3', text: 'Household responsibilities' },
+                { id: 'q4', text: 'Finances and investments' },
+                { id: 'q5', text: 'Family involvement' },
+                { id: 'q6', text: 'Living arrangements' },
+                { id: 'q7', text: 'Handling conflicts' },
+                { id: 'q8', text: 'Starting a family' },
+                { id: 'q9', text: 'Weekends and free time' },
+                { id: 'q10', text: 'Most important quality in a partner' }
+              ].map(q => {
+                const answer = candidate.marriageQuestionnaire?.[q.id];
+                if (!answer) return null;
+                return (
+                  <div key={q.id} style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                    <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
+                      {q.text}
+                    </p>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-primary)', lineHeight: 1.5, margin: 0, whiteSpace: 'pre-wrap' }}>
+                      {answer}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
 
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
           <CosmicCheckButton

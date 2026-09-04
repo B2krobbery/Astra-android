@@ -162,7 +162,9 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
            photoUrl: photoUrl,
            hasVoiceNote: !!dbProfile.voice_note_url,
            voiceNoteUrl: dbProfile.voice_note_url,
-           voiceNotePrompt: dbProfile.voice_note_prompt
+           voiceNotePrompt: dbProfile.voice_note_prompt,
+           marriageQuestionnaire: dbProfile.marriage_questionnaire
+
          } as any);
       }
       
@@ -533,6 +535,9 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setCandidates((prev: any) => {
       return prev.filter((c: any) => c.id !== candidate.id);
     });
+    
+    // Optimistically add to Sent Requests
+    setSentRequests((prev: any) => [candidate, ...prev]);
 
     try {
       // Save to backend
@@ -540,38 +545,6 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       if (isMatch) {
         setLastMatchedCandidate(candidate);
-        
-        // Wait a small moment for the DB trigger to finish creating the conversation
-        setTimeout(async () => {
-          try {
-            const [dbConversations, dbCandidates, dbPending, dbSent] = await Promise.all([
-              ChatService.getConversations(),
-              DiscoveryService.getCandidates(),
-              DiscoveryService.getPendingRequests(),
-              DiscoveryService.getSentRequests()
-            ]);
-            
-            if (dbConversations) {
-              setConversations(dbConversations as any);
-            }
-            if (dbCandidates) {
-              setCandidates(dbCandidates);
-            }
-            if (dbPending) {
-              setPendingRequests(dbPending);
-            }
-            if (dbSent) {
-              setSentRequests(dbSent);
-            }
-            const match = dbConversations.find(c => c.candidate.id === candidate.id);
-            if (match) {
-                 setActiveConversation(match as any);
-            }
-          } catch (e) {
-            console.error('Failed to load new conversation:', e);
-          }
-        }, 500);
-
         if (onMatch) {
           onMatch();
         }
@@ -580,12 +553,40 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           onNotMatch();
         }
       }
+
+      // Always wait a moment for the DB to settle, then refresh all data
+      setTimeout(async () => {
+        try {
+          const [dbConversations, dbCandidates, dbPending, dbSent] = await Promise.all([
+            ChatService.getConversations(),
+            DiscoveryService.getCandidates(),
+            DiscoveryService.getPendingRequests(),
+            DiscoveryService.getSentRequests()
+          ]);
+          
+          if (dbConversations) setConversations(dbConversations as any);
+          if (dbCandidates) setCandidates(dbCandidates);
+          if (dbPending) setPendingRequests(dbPending);
+          if (dbSent) setSentRequests(dbSent);
+          
+          if (isMatch) {
+            const match = dbConversations?.find(c => c.candidate.id === candidate.id);
+            if (match) {
+              setActiveConversation(match as any);
+            }
+          }
+        } catch (e) {
+          console.error('Failed to load updated data after like:', e);
+        }
+      }, 500);
+
     } catch (e) {
       console.error('Failed to like candidate:', e);
+      // Remove from sent requests if failed
+      setSentRequests((prev: any) => prev.filter((c: any) => c.id !== candidate.id));
       if (onNotMatch) {
         onNotMatch();
       }
-      // Optionally put them back in the feed if it failed
     }
   };
 

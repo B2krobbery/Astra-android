@@ -19,6 +19,7 @@ const SECTIONS = [
   'Numerology & Nadi',
   'Interests',
   'Photos & Privacy',
+  'Personal Values & Vision',
   'Partner Preferences'
 ];
 
@@ -99,6 +100,9 @@ export const MarriageOnboardingPage: React.FC = () => {
   const [preferredReligion, setPreferredReligion] = useState(userProfile?.partnerPreferences?.preferredReligion || '');
   const [preferredCaste, setPreferredCaste] = useState(userProfile?.partnerPreferences?.preferredCaste || '');
 
+  // Step 10: Personal Values & Vision
+  const [marriageQuestionnaire, setMarriageQuestionnaire] = useState<Record<string, string>>(userProfile?.marriageQuestionnaire || {});
+
   // -- Cascading Logic --
   const selectedReligionObj = indianReligions.find(r => r.name === religion);
 
@@ -163,6 +167,7 @@ export const MarriageOnboardingPage: React.FC = () => {
         previous_marriage: previousMarriage,
         children_status: childrenStatus,
         photo_privacy: photoPrivacy,
+        marriage_questionnaire: marriageQuestionnaire,
         onboarding_completed: true,
         intent: 'Marriage',
         updated_at: new Date().toISOString()
@@ -577,6 +582,50 @@ export const MarriageOnboardingPage: React.FC = () => {
           </div>
         );
       case 10:
+        return (
+          <div style={{ textAlign: 'left', padding: '10px 0' }}>
+            <h4 style={{ color: 'white', marginBottom: '8px' }}>Personal Values & Vision</h4>
+            <p style={{ color: '#94A3B8', fontSize: '0.9rem', marginBottom: '24px' }}>
+              Answer these questions to help potential matches understand you better.
+            </p>
+            {[
+              { id: 'q1', text: 'What are your future career plans and goals?' },
+              { id: 'q2', text: 'How do you balance your work life and personal life?' },
+              { id: 'q3', text: 'What is your view on sharing household responsibilities?' },
+              { id: 'q4', text: 'How do you manage your finances and investments?' },
+              { id: 'q5', text: 'How important is family involvement in your daily life?' },
+              { id: 'q6', text: 'What are your preferences regarding living arrangements after marriage?' },
+              { id: 'q7', text: 'How do you usually handle disagreements or conflicts?' },
+              { id: 'q8', text: 'What are your views on starting a family and raising children?' },
+              { id: 'q9', text: 'How do you like to spend your weekends and free time?' },
+              { id: 'q10', text: 'What is the most important quality you seek in a partner?' }
+            ].map(q => (
+              <div key={q.id} style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', color: '#E2E8F0', fontSize: '0.95rem' }}>
+                  {q.text}
+                </label>
+                <textarea
+                  value={marriageQuestionnaire[q.id] || ''}
+                  onChange={(e) => setMarriageQuestionnaire(prev => ({ ...prev, [q.id]: e.target.value }))}
+                  placeholder="Your answer..."
+                  rows={3}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    borderRadius: '12px',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: '#FFF',
+                    fontSize: '1rem',
+                    outline: 'none',
+                    resize: 'vertical'
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        );
+      case 11:
         return (
           <div style={{ textAlign: 'left', padding: '10px 0' }}>
             <h4 style={{ color: 'white', marginBottom: '8px' }}>Partner Preferences</h4>

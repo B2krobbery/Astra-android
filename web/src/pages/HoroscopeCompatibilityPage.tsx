@@ -31,9 +31,11 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
     <div
       style={{
         minHeight: '100vh',
+        height: '100vh',
         background: themeMode === 'LIGHT' ? '#FFF5F7' : 'var(--bg-primary)',
         color: 'var(--text-primary)',
-        paddingBottom: '40px'
+        paddingBottom: '40px',
+        overflowY: 'auto'
       }}
     >
       {/* Fixed Top Bar */}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AstraProvider, useAstra } from './context/AstraContext';
 import { SplashPage } from './pages/SplashPage';
 import { TypeformOnboardingPage } from './pages/TypeformOnboardingPage';
@@ -22,8 +22,39 @@ import { VerificationModal } from './components/VerificationModal';
 import { ReferralModal } from './components/ReferralModal';
 import { SplashScreenOverlay } from './components/SplashScreenOverlay';
 
+import { App as CapacitorApp } from '@capacitor/app';
+import { supabase } from './lib/supabase';
+
 const AppRoutes: React.FC = () => {
   const { activeVerificationDetail, dismissVerification, verifyPoliceForUser } = useAstra();
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    CapacitorApp.addListener('appUrlOpen', (event) => {
+      const url = new URL(event.url);
+      if (url.protocol === 'astra:') {
+        // Handle Supabase Auth redirect deep link
+        const hash = url.hash;
+        if (hash) {
+          // If using implicit flow, pass hash to supabase
+          const params = new URLSearchParams(hash.substring(1));
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
+          if (accessToken && refreshToken) {
+            supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+            navigate('/discover');
+          }
+        }
+        
+        // Also handle PKCE query parameters if present
+        if (url.searchParams.has('code')) {
+           supabase.auth.exchangeCodeForSession(url.searchParams.get('code')!).then(() => {
+             navigate('/discover');
+           });
+        }
+      }
+    });
+  }, [navigate]);
 
   return (
     <div className="app-container">
