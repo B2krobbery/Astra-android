@@ -38,27 +38,13 @@ export const TypeformOnboardingPage: React.FC = () => {
     }
   };
 
-  const nextStep = () => {
-    if (step < totalSteps) setStep(prev => prev + 1);
-    else handleComplete();
-  };
-
-  const prevStep = () => {
-    if (step > 1) setStep(prev => prev - 1);
-    else navigate('/splash');
-  };
-
-  const handleComplete = async () => {
-    updateProfileInfo(name, profession, education, city, selectedGoals, userProfile.interests, regionalPref);
-    updateBirthDetails(dob, birthTime, birthCity);
-    updateDatingPreferences(preferredEducation, preferredLocation);
-
+  const saveToDatabase = async (isFinal: boolean) => {
     try {
       const { data } = await supabase.auth.getSession();
       const user = data?.session?.user;
       if (!user) throw new Error("No user session");
 
-      const updates = {
+      const updates: any = {
         display_name: name || null,
         gender: gender || null,
         profession: profession || null,
@@ -67,9 +53,12 @@ export const TypeformOnboardingPage: React.FC = () => {
         birth_location: birthCity || null,
         date_of_birth: dob || null,
         looking_for: selectedGoals,
-        onboarding_completed: true,
         updated_at: new Date().toISOString()
       };
+      
+      if (isFinal) {
+        updates.onboarding_completed = true;
+      }
 
       const { error } = await supabase
         .from('profiles')
@@ -97,10 +86,46 @@ export const TypeformOnboardingPage: React.FC = () => {
           updated_at: new Date().toISOString()
         }, { onConflict: 'user_id' });
 
-      window.location.href = '/discover';
     } catch (error) {
       console.error('Error saving profile:', error);
-      alert('Failed to save profile. Please try again.');
+      if (isFinal) {
+        alert('Failed to save profile. Please try again.');
+      }
+      throw error;
+    }
+  };
+
+  const nextStep = async () => {
+    // Save locally
+    updateProfileInfo(name, profession, education, city, selectedGoals, userProfile.interests, regionalPref);
+    updateBirthDetails(dob, birthTime, birthCity);
+    updateDatingPreferences(preferredEducation, preferredLocation);
+    
+    // Save to DB incrementally
+    try {
+      await saveToDatabase(false);
+    } catch (e) {
+      // Ignore intermediate save errors
+    }
+
+    if (step < totalSteps) {
+      setStep(prev => prev + 1);
+    } else {
+      handleComplete();
+    }
+  };
+
+  const prevStep = () => {
+    if (step > 1) setStep(prev => prev - 1);
+    else navigate('/splash');
+  };
+
+  const handleComplete = async () => {
+    try {
+      await saveToDatabase(true);
+      window.location.href = '/discover';
+    } catch (error) {
+      // Error handled in saveToDatabase
     }
   };
 

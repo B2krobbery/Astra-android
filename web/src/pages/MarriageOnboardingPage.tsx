@@ -121,29 +121,17 @@ export const MarriageOnboardingPage: React.FC = () => {
     return Math.round((completed / requiredFields.length) * 100);
   };
 
-  const handleSaveAndContinue = async () => {
-    if (currentStep === 6) {
-      updateBirthDetails(dateOfBirth, birthTime, birthLocation, manglik, nadi);
-    }
-
-    if (currentStep < SECTIONS.length - 1) {
-      setCurrentStep(curr => curr + 1);
-      return;
-    }
-
-    // Final Save
-    setIsSaving(true);
-    updatePartnerPreferences(preferredReligion, preferredCaste);
-    
+  const saveToDatabase = async (isFinal: boolean) => {
     try {
       const { data } = await supabase.auth.getSession();
       const user = data?.session?.user;
       if (!user) throw new Error("No user session");
 
-      const updates = {
+      const updates: any = {
         display_name: name || null,
         gender: gender || null,
         date_of_birth: dateOfBirth || null,
+        birth_location: birthLocation || null,
         height,
         blood_group: bloodGroup,
         location,
@@ -168,10 +156,13 @@ export const MarriageOnboardingPage: React.FC = () => {
         children_status: childrenStatus,
         photo_privacy: photoPrivacy,
         marriage_questionnaire: marriageQuestionnaire,
-        onboarding_completed: true,
         intent: 'Marriage',
         updated_at: new Date().toISOString()
       };
+      
+      if (isFinal) {
+        updates.onboarding_completed = true;
+      }
 
       const { error } = await supabase
         .from('profiles')
@@ -198,11 +189,43 @@ export const MarriageOnboardingPage: React.FC = () => {
           updated_at: new Date().toISOString()
         }, { onConflict: 'user_id' });
 
-      window.location.href = '/discover';
-
     } catch (error) {
       console.error("Error saving profile:", error);
-      alert("Failed to save profile. Please try again.");
+      if (isFinal) {
+        alert("Failed to save profile. Please try again.");
+      }
+      throw error;
+    }
+  };
+
+  const handleSaveAndContinue = async () => {
+    if (currentStep === 6) {
+      updateBirthDetails(dateOfBirth, birthTime, birthLocation, manglik, nadi);
+    }
+    
+    // Save to DB on every step so progress isn't lost
+    setIsSaving(true);
+    try {
+      await saveToDatabase(false);
+    } catch (e) {
+      // Ignore intermediate save errors so they don't block progression
+    }
+    setIsSaving(false);
+
+    if (currentStep < SECTIONS.length - 1) {
+      setCurrentStep(curr => curr + 1);
+      return;
+    }
+
+    // Final Save
+    setIsSaving(true);
+    updatePartnerPreferences(preferredReligion, preferredCaste);
+    
+    try {
+      await saveToDatabase(true);
+      window.location.href = '/discover';
+    } catch (error) {
+      // Alert already handled in saveToDatabase
     } finally {
       setIsSaving(false);
     }
