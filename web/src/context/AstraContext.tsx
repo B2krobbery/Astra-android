@@ -81,6 +81,7 @@ interface AstraContextType {
   pendingRequests: Candidate[];
   sentRequests: Candidate[];
   rewindCandidate: () => void;
+  resetFeed: () => Promise<void>;
   lastMatchedCandidate: Candidate | null;
 
   isAnalyzingCompatibility: boolean;
@@ -639,6 +640,19 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   };
 
+  const resetFeed = async () => {
+    try {
+      await DiscoveryService.resetInteractions();
+      const dbCandidates = await DiscoveryService.getCandidates();
+      if (dbCandidates) {
+        setCandidates(dbCandidates as any);
+      }
+      setPassedCandidatesHistory([]);
+    } catch (e) {
+      console.error("Error resetting feed:", e);
+    }
+  };
+
   const checkCompatibility = (candidate: Candidate, onAnalyzed: () => void) => {
     setSelectedCandidate(candidate);
     setIsAnalyzingCompatibility(true);
@@ -912,6 +926,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         pendingRequests,
         sentRequests,
         rewindCandidate,
+        resetFeed,
         lastMatchedCandidate,
         isAnalyzingCompatibility,
         currentCompatibility,

@@ -619,7 +619,7 @@ export const UserProfilePage: React.FC = () => {
 
         {/* Astrology Edit Link */}
         <button
-          onClick={() => navigate('/onboarding-typeform')}
+          onClick={() => navigate('/onboarding-astrology')}
           style={{
             width: '100%',
             padding: '14px',

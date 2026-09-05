@@ -4,8 +4,6 @@ import { useAstra } from '../context/AstraContext';
 import { ArrowLeft, ArrowRight, User, Briefcase, GraduationCap, MapPin, Calendar, Clock, Camera, Globe } from 'lucide-react';
 import { AstrologyEngine } from '../data/astrologyEngine';
 import { RegionalPreference } from '../types';
-import { KundaliWheelIllustration } from '../components/Illustrations';
-import { FloatingHeartsBackground } from '../components/FloatingHeartsBackground';
 import { supabase } from '../lib/supabase';
 export const TypeformOnboardingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -13,7 +11,7 @@ export const TypeformOnboardingPage: React.FC = () => {
   const { userProfile, updateProfileInfo, updateBirthDetails, uploadUserProfilePhoto, language, setLanguage, t, updateDatingPreferences } = useAstra();
 
   const [step, setStep] = useState(1);
-  const totalSteps = 9;
+  const totalSteps = 7;
 
   // Form State
   const [name, setName] = useState(userProfile.name || '');
@@ -79,8 +77,8 @@ export const TypeformOnboardingPage: React.FC = () => {
           user_id: user.id, 
           intent: userProfile?.intent || 'Dating', // Preserve intent if already set
           gender_preference: gender === 'Male' ? 'Female' : gender === 'Female' ? 'Male' : 'Everyone',
-          preferred_religion: userProfile?.partnerPreferences?.preferredReligion || null,
-          preferred_caste: userProfile?.partnerPreferences?.preferredCaste || null,
+          preferred_religion: userProfile?.partnerPreferences?.preferredReligion === 'Any' ? null : userProfile?.partnerPreferences?.preferredReligion || null,
+          preferred_caste: userProfile?.partnerPreferences?.preferredCaste === 'Any' ? null : userProfile?.partnerPreferences?.preferredCaste || null,
           preferred_education: preferredEducation === 'Any' ? null : preferredEducation,
           preferred_location: preferredLocation === 'Any' ? null : preferredLocation,
           updated_at: new Date().toISOString()
@@ -150,8 +148,9 @@ export const TypeformOnboardingPage: React.FC = () => {
     <div
       style={{
         minHeight: '100vh',
-        padding: 'calc(16px + env(safe-area-inset-top, 0px)) 24px calc(32px + env(safe-area-inset-bottom, 0px)) 24px',
-        background: 'linear-gradient(180deg, #181236 0%, #0F0C1B 100%)',
+        background: getStageTheme(),
+        color: '#F8FAFC',
+        padding: '24px 20px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -160,8 +159,6 @@ export const TypeformOnboardingPage: React.FC = () => {
         overflowY: 'auto'
       }}
     >
-      {/* Floating Celestial Hearts & Orbs Background */}
-      <FloatingHeartsBackground />
       {/* Hidden File Input */}
       <input
         type="file"
@@ -199,8 +196,8 @@ export const TypeformOnboardingPage: React.FC = () => {
                 padding: '4px 10px',
                 borderRadius: '9999px',
                 background: 'rgba(255, 255, 255, 0.12)',
-                border: '1px solid var(--accent-amber)',
-                color: 'var(--accent-amber-light)',
+                border: '1px solid #4F46E5',
+                color: '#A5B4FC',
                 fontSize: '0.75rem',
                 fontWeight: 700,
                 display: 'flex',
@@ -212,7 +209,7 @@ export const TypeformOnboardingPage: React.FC = () => {
               <Globe size={12} /> {language === 'EN' ? 'മലയാളം' : language === 'ML' ? 'हिंदी' : 'English'}
             </button>
 
-            <span style={{ fontSize: '0.75rem', color: 'var(--accent-amber-light)', fontWeight: 800 }}>
+            <span style={{ fontSize: '0.75rem', color: '#A5B4FC', fontWeight: 800 }}>
               Step {step} of {totalSteps}
             </span>
           </div>
@@ -223,7 +220,7 @@ export const TypeformOnboardingPage: React.FC = () => {
             style={{
               width: `${(step / totalSteps) * 100}%`,
               height: '100%',
-              background: 'linear-gradient(90deg, var(--accent-amber) 0%, #D97706 100%)',
+              background: 'linear-gradient(90deg, #4F46E5 0%, #7C3AED 100%)',
               transition: 'width 0.3s ease'
             }}
           />
@@ -235,7 +232,7 @@ export const TypeformOnboardingPage: React.FC = () => {
         {/* STEP 1: Name & Identity */}
         {step === 1 && (
           <div style={{ animation: 'floatOrb 0.3s ease-out' }}>
-            <span style={{ fontSize: '0.8rem', color: 'var(--accent-amber-light)', fontWeight: 600, textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '0.8rem', color: '#A5B4FC', fontWeight: 600, textTransform: 'uppercase' }}>
               Personal Identity
             </span>
             <h2 className="heading-font" style={{ fontSize: '1.6rem', fontWeight: 800, marginTop: '8px', marginBottom: '16px', color: '#FFF' }}>
@@ -266,7 +263,7 @@ export const TypeformOnboardingPage: React.FC = () => {
         {/* STEP 2: Gender & Identity */}
         {step === 2 && (
           <div style={{ animation: 'floatOrb 0.3s ease-out' }}>
-            <span style={{ fontSize: '0.8rem', color: 'var(--accent-amber-light)', fontWeight: 600, textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '0.8rem', color: '#A5B4FC', fontWeight: 600, textTransform: 'uppercase' }}>
               Identity & Orientation
             </span>
             <h2 className="heading-font" style={{ fontSize: '1.6rem', fontWeight: 800, marginTop: '8px', marginBottom: '16px', color: '#FFF' }}>
@@ -282,9 +279,9 @@ export const TypeformOnboardingPage: React.FC = () => {
                   style={{
                     padding: '14px 18px',
                     borderRadius: '16px',
-                    border: gender === opt ? '2px solid var(--accent-amber)' : '1px solid rgba(255, 255, 255, 0.15)',
-                    background: gender === opt ? 'rgba(245, 158, 11, 0.2)' : 'rgba(30, 24, 54, 0.95)',
-                    color: gender === opt ? 'var(--accent-amber-light)' : '#FFF',
+                    border: gender === opt ? '2px solid #4F46E5' : '1px solid rgba(255, 255, 255, 0.15)',
+                    background: gender === opt ? 'rgba(79, 70, 229, 0.2)' : 'rgba(30, 24, 54, 0.95)',
+                    color: gender === opt ? '#A5B4FC' : '#FFF',
                     fontSize: '0.95rem',
                     fontWeight: 600,
                     textAlign: 'left',
@@ -400,9 +397,9 @@ export const TypeformOnboardingPage: React.FC = () => {
                   style={{
                     padding: '14px 18px',
                     borderRadius: '16px',
-                    border: regionalPref === item.key ? '2px solid var(--accent-amber)' : '1px solid rgba(255, 255, 255, 0.15)',
-                    background: regionalPref === item.key ? 'rgba(245, 158, 11, 0.2)' : 'rgba(30, 24, 54, 0.95)',
-                    color: regionalPref === item.key ? 'var(--accent-amber-light)' : '#FFF',
+                    border: regionalPref === item.key ? '2px solid #4F46E5' : '1px solid rgba(255, 255, 255, 0.15)',
+                    background: regionalPref === item.key ? 'rgba(79, 70, 229, 0.2)' : 'rgba(30, 24, 54, 0.95)',
+                    color: regionalPref === item.key ? '#A5B4FC' : '#FFF',
                     fontSize: '0.9rem',
                     fontWeight: 600,
                     textAlign: 'left',
@@ -416,87 +413,10 @@ export const TypeformOnboardingPage: React.FC = () => {
           </div>
         )}
 
-        {/* STEP 5: Birth Parameters */}
+        {/* STEP 5: Profile Photo Upload */}
         {step === 5 && (
-          <div style={{ animation: 'floatOrb 0.3s ease-out' }}>
-            <span style={{ fontSize: '0.8rem', color: 'var(--accent-amber-light)', fontWeight: 600, textTransform: 'uppercase' }}>
-              Vedic Placement Parameters
-            </span>
-            <h2 className="heading-font" style={{ fontSize: '1.6rem', fontWeight: 800, marginTop: '8px', marginBottom: '16px', color: '#FFF' }}>
-              {t('question_6')}
-            </h2>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div>
-                <label style={{ fontSize: '0.75rem', color: '#CBD5E1' }}>Date of Birth</label>
-                <div style={{ position: 'relative' }}>
-                  <Calendar size={18} color="#94A3B8" style={{ position: 'absolute', left: 14, top: 14 }} />
-                  <input
-                    type="date"
-                    value={dob}
-                    onChange={e => setDob(e.target.value)}
-                    placeholder="14 July 1998"
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px 12px 42px',
-                      borderRadius: '16px',
-                      background: 'rgba(30, 24, 54, 0.95)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      color: '#FFF'
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.75rem', color: '#CBD5E1' }}>Exact Birth Time</label>
-                <div style={{ position: 'relative' }}>
-                  <Clock size={18} color="#94A3B8" style={{ position: 'absolute', left: 14, top: 14 }} />
-                  <input
-                    type="time"
-                    value={birthTime}
-                    onChange={e => setBirthTime(e.target.value)}
-                    placeholder="08:45 AM"
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px 12px 42px',
-                      borderRadius: '16px',
-                      background: 'rgba(30, 24, 54, 0.95)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      color: '#FFF'
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.75rem', color: '#CBD5E1' }}>Birth City</label>
-                <div style={{ position: 'relative' }}>
-                  <MapPin size={18} color="#94A3B8" style={{ position: 'absolute', left: 14, top: 14 }} />
-                  <input
-                    type="text"
-                    value={birthCity}
-                    onChange={e => setBirthCity(e.target.value)}
-                    placeholder="Bengaluru"
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px 12px 42px',
-                      borderRadius: '16px',
-                      background: 'rgba(30, 24, 54, 0.95)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      color: '#FFF'
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 6: Profile Photo Upload */}
-        {step === 6 && (
           <div style={{ textAlign: 'center', animation: 'floatOrb 0.3s ease-out' }}>
-            <span style={{ fontSize: '0.8rem', color: 'var(--accent-amber-light)', fontWeight: 600, textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '0.8rem', color: '#A5B4FC', fontWeight: 600, textTransform: 'uppercase' }}>
               Photo Verification
             </span>
             <h2 className="heading-font" style={{ fontSize: '1.6rem', fontWeight: 800, marginTop: '8px', marginBottom: '16px', color: '#FFF' }}>
@@ -513,7 +433,7 @@ export const TypeformOnboardingPage: React.FC = () => {
                     height: '120px',
                     borderRadius: '50%',
                     objectFit: 'cover',
-                    border: '3px solid var(--accent-amber)',
+                    border: '3px solid #4F46E5',
                     boxShadow: 'var(--shadow-cosmic)'
                   }}
                 />
@@ -525,7 +445,7 @@ export const TypeformOnboardingPage: React.FC = () => {
                 style={{
                   padding: '12px 24px',
                   borderRadius: '9999px',
-                  background: 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
+                  background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
                   border: 'none',
                   color: '#0F0C1B',
                   fontWeight: 800,
@@ -542,44 +462,8 @@ export const TypeformOnboardingPage: React.FC = () => {
           </div>
         )}
 
-        {/* STEP 7: Kundali Preview Illustration */}
-        {step === 7 && (
-          <div style={{ textAlign: 'center', animation: 'floatOrb 0.3s ease-out' }}>
-            <KundaliWheelIllustration size={150} />
-            <h2 className="heading-font" style={{ fontSize: '1.6rem', fontWeight: 800, marginTop: '16px', color: '#FFF' }}>
-              {previewNakshatra} Nakshatra
-            </h2>
-            <p style={{ fontSize: '0.95rem', color: 'var(--accent-amber-light)', marginTop: '4px', fontWeight: 700 }}>
-              Moon Sign: {previewRashi}
-            </p>
-
-            {/* High Contrast Crystal Clear Card */}
-            <div
-              style={{
-                marginTop: '18px',
-                padding: '18px',
-                borderRadius: '20px',
-                background: 'rgba(30, 24, 54, 0.95)',
-                border: '1.5px solid var(--accent-amber)',
-                fontSize: '0.85rem',
-                color: '#F8FAFC',
-                lineHeight: 1.5,
-                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)'
-              }}
-            >
-              {language === 'HI' ? (
-                <>✨ आपका नक्षत्र और ग्रह स्थिति कलात्मक प्रतिभा और संगत राशियों के साथ उच्च गुण मिलान की संभावना दर्शाती है।</>
-              ) : language === 'ML' ? (
-                <>✨ നിങ്ങളുടെ നക്ഷത്രവും ഗ്രഹനിലയും കലാപരമായ പ്രതിഭയെയും അനുയോജ്യമായ ജാതകങ്ങളുമായുള്ള ഉയർന്ന ഗുണ പൊരുത്തത്തെയും സൂചിപ്പിക്കുന്നു.</>
-              ) : (
-                <>✨ Your celestial signature signifies artistic elegance, nurturing devotion, and high Guna Milan potential with compatible signs.</>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* STEP 8: Relationship Goals */}
-        {step === 8 && (
+        {/* STEP 6: Relationship Goals */}
+        {step === 6 && (
           <div style={{ animation: 'floatOrb 0.3s ease-out' }}>
             <span style={{ fontSize: '0.8rem', color: 'var(--accent-rose)', fontWeight: 600, textTransform: 'uppercase' }}>
               Intentions & Desires
@@ -607,9 +491,9 @@ export const TypeformOnboardingPage: React.FC = () => {
                     style={{
                       padding: '14px 18px',
                       borderRadius: '16px',
-                      border: isSelected ? '2px solid var(--accent-amber)' : '1px solid rgba(255, 255, 255, 0.15)',
-                      background: isSelected ? 'rgba(245, 158, 11, 0.2)' : 'rgba(30, 24, 54, 0.95)',
-                      color: isSelected ? 'var(--accent-amber-light)' : '#FFF',
+                      border: isSelected ? '2px solid #4F46E5' : '1px solid rgba(255, 255, 255, 0.15)',
+                      background: isSelected ? 'rgba(79, 70, 229, 0.2)' : 'rgba(30, 24, 54, 0.95)',
+                      color: isSelected ? '#A5B4FC' : '#FFF',
                       fontSize: '0.85rem',
                       fontWeight: 600,
                       textAlign: 'left',
@@ -624,8 +508,8 @@ export const TypeformOnboardingPage: React.FC = () => {
           </div>
         )}
 
-        {/* STEP 9: Dating Partner Preferences */}
-        {step === 9 && (
+        {/* STEP 7: Dating Partner Preferences */}
+        {step === 7 && (
           <div style={{ animation: 'floatOrb 0.3s ease-out' }}>
             <span style={{ fontSize: '0.8rem', color: 'var(--accent-indigo)', fontWeight: 600, textTransform: 'uppercase' }}>
               Your Preferences
@@ -696,7 +580,7 @@ export const TypeformOnboardingPage: React.FC = () => {
           padding: '16px',
           borderRadius: '9999px',
           border: 'none',
-          background: 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
+          background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
           color: '#0F0C1B',
           fontWeight: 800,
           fontSize: '1rem',

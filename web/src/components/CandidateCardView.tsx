@@ -60,13 +60,13 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
     if (!isDragging || exitDirection) return;
     setIsDragging(false);
 
-    if (dragOffset.x > 40) {
+    if (dragOffset.x > 120) {
       // Smooth Fly-Off Animation to the Right (LIKE)
       setExitDirection('LIKE');
       setTimeout(() => {
         onLikeClick();
       }, 220);
-    } else if (dragOffset.x < -40) {
+    } else if (dragOffset.x < -120) {
       // Smooth Fly-Off Animation to the Left (PASS)
       setExitDirection('PASS');
       setTimeout(() => {
@@ -129,7 +129,7 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
       />
 
       {/* Swipe Feedback Overlay Badges */}
-      {(dragOffset.x > 40 || exitDirection === 'LIKE') && (
+      {(dragOffset.x > 120 || exitDirection === 'LIKE') && (
         <div
           style={{
             position: 'absolute',
@@ -149,7 +149,7 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
           LIKE ✨
         </div>
       )}
-      {(dragOffset.x < -40 || exitDirection === 'PASS') && (
+      {(dragOffset.x < -120 || exitDirection === 'PASS') && (
         <div
           style={{
             position: 'absolute',

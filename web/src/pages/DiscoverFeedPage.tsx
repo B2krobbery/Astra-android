@@ -27,7 +27,8 @@ export const DiscoverFeedPage: React.FC = () => {
     isPreferenceStrictFilterOn,
     setIsPreferenceStrictFilterOn,
     passedCandidatesHistory,
-    rewindCandidate
+    rewindCandidate,
+    resetFeed
   } = useAstra();
 
   const toggleLanguage = () => {
@@ -57,9 +58,7 @@ export const DiscoverFeedPage: React.FC = () => {
         background: themeMode === 'LIGHT' ? '#FFF5F7' : '#0F0C1B'
       }}
     >
-      {/* Floating Celestial Hearts & Orbs Background */}
       <FloatingHeartsBackground />
-
       {/* FIXED TOP HEADER CONTAINER */}
       <div
         style={{
@@ -381,7 +380,7 @@ export const DiscoverFeedPage: React.FC = () => {
             />
           </div>
         ) : (
-          <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+          <div style={{ textAlign: 'center', padding: '40px 20px', position: 'relative', zIndex: 10 }}>
             <Sparkles size={48} color="var(--accent-amber)" style={{ margin: '0 auto 16px' }} className="spin-slow" />
             <h2 className="heading-font" style={{ fontSize: '1.4rem', fontWeight: 800 }}>
               {t('all_caught_up')}
@@ -389,6 +388,33 @@ export const DiscoverFeedPage: React.FC = () => {
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '8px', maxWidth: '280px', margin: '8px auto 0' }}>
               {t('check_back_tomorrow')}
             </p>
+            <button
+              onClick={() => {
+                const btn = document.getElementById('reset-feed-btn');
+                if (btn) btn.innerHTML = 'Resetting...';
+                resetFeed().then(() => {
+                  if (btn) btn.innerHTML = 'Feed Reset!';
+                  setTimeout(() => { if (btn) btn.innerHTML = 'Reset Feed (Dev Tool)'; }, 2000);
+                });
+              }}
+              id="reset-feed-btn"
+              style={{
+                marginTop: '24px',
+                padding: '8px 16px',
+                borderRadius: '9999px',
+                background: 'rgba(245, 158, 11, 0.1)',
+                border: '1px solid var(--accent-amber)',
+                color: 'var(--accent-amber-light)',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: 'pointer'
+              }}
+            >
+              <RotateCcw size={14} /> Reset Feed (Dev Tool)
+            </button>
           </div>
         )}
       </main>

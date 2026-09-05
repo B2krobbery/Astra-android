@@ -6,12 +6,8 @@ export const ProfileService = {
     const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
     if (error) throw error;
     
-    // Fetch preferences to get the user's intent
-    const { data: prefData } = await supabase.from('preferences').select('intent').eq('user_id', userId).maybeSingle();
-    
-    if (data && prefData) {
-      data.intent = prefData.intent;
-    }
+    // (Intent should come from the profiles table, not preferences)
+    // The preferences table fetch is removed from here to prevent overwriting the profile intent.
     
     return data;
   },

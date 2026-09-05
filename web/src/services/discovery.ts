@@ -109,5 +109,18 @@ export const DiscoveryService = {
     }
     
     return { isMatch: false };
+  },
+
+  async resetInteractions() {
+    const { data: userData } = await supabase.auth.getUser();
+    const actorId = userData?.user?.id;
+    if (!actorId) throw new Error('Not authenticated');
+
+    const { error } = await supabase
+      .from('interactions')
+      .delete()
+      .eq('actor_id', actorId);
+      
+    if (error) throw error;
   }
 };

@@ -4,7 +4,6 @@ import { CelestialLogo } from '../components/CelestialLogo';
 import { PrimaryButton, SecondaryOutlineButton } from '../components/AstraButtons';
 import { Sparkles, ShieldCheck, ArrowRight, Heart, Users } from 'lucide-react';
 import { CosmicBackgroundCanvas } from '../components/CosmicBackgroundCanvas';
-import { FloatingHeartsBackground } from '../components/FloatingHeartsBackground';
 import { AuthService } from '../services/auth';
 import { supabase } from '../lib/supabase';
 import { useAstra } from '../context/AstraContext';
@@ -169,7 +168,6 @@ export const SplashPage: React.FC = () => {
         overflow: 'hidden'
       }}
     >
-      <FloatingHeartsBackground />
       <CosmicBackgroundCanvas />
 
       {isPhoneModalOpen && (
