@@ -16,7 +16,7 @@ export const DiscoverFeedPage: React.FC = () => {
     passCandidate,
     checkCompatibility,
     selectCandidate,
-    showUserVerification,
+    openChaanbean,
     openReferralModal,
     setRegionalPreference,
     themeMode,
@@ -181,7 +181,7 @@ export const DiscoverFeedPage: React.FC = () => {
         {/* Profile Nudge Banner */}
         {userProfile.completionPercentage < 100 && (
           <div
-            onClick={() => showUserVerification('POLICE' as any)}
+            onClick={() => openChaanbean()}
             style={{
               padding: '8px 16px',
               background: 'linear-gradient(90deg, rgba(245, 158, 11, 0.2) 0%, rgba(79, 70, 229, 0.2) 100%)',

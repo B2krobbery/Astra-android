@@ -61,29 +61,36 @@ export class AstrologyEngine {
   }
 
   static calculateCompatibility(user: UserProfile, candidate: Candidate): AstrologyCompatibility {
-    const emotional = candidate.emotionalScore ?? 90;
-    const nakshatra = candidate.nakshatraScore ?? 88;
-    const rashi = candidate.rashiScore ?? 84;
-    const overall = candidate.overallScore ?? candidate.compatibilityScore ?? 87;
+    // Deterministic prototype calculation based on IDs
+    const userHash = stringHashCode(user.name + user.nakshatra);
+    const candHash = stringHashCode(candidate.id + candidate.nakshatra);
+    
+    // Generate scores between 60 and 98
+    const baseScore = 60 + ((userHash + candHash) % 39);
+    const emotional = Math.min(99, baseScore + ((userHash % 5) - 2));
+    const nakshatraScore = Math.min(99, baseScore + ((candHash % 7) - 3));
+    const rashiScore = Math.min(99, baseScore + ((userHash % 3) - 1));
+    const overall = Math.round((emotional + nakshatraScore + rashiScore) / 3);
 
     let level = 'Compatible Match';
     if (overall >= 85) level = 'Highly Compatible';
     else if (overall >= 75) level = 'Very Compatible';
+    else level = 'Moderate Match';
 
-    const gunaMatched = Math.min(34, Math.max(24, Math.round((overall * 36) / 100)));
+    const gunaMatched = Math.min(36, Math.max(18, Math.round((overall * 36) / 100)));
 
     return {
       candidateName: candidate.name,
       score: overall,
       level,
       emotionalScore: emotional,
-      nakshatraScore: nakshatra,
-      rashiScore: rashi,
+      nakshatraScore: nakshatraScore,
+      rashiScore: rashiScore,
       overallHarmonyScore: overall,
-      reasonTitle: 'Why this match?',
-      reasonDescription: candidate.compatibilityNote || 'Your profiles show strong compatibility in emotional temperament and communication under Vedic principles.',
-      userNakshatra: user.nakshatra || 'Rohini',
-      candidateNakshatra: candidate.nakshatra,
+      reasonTitle: 'Prototype Compatibility Analysis',
+      reasonDescription: '(PROTOTYPE) Your profiles show alignment based on simulated Vedic metrics. Actual engine not connected.',
+      userNakshatra: user.nakshatra || 'Unknown',
+      candidateNakshatra: candidate.nakshatra || 'Unknown',
       gunaScore: `${gunaMatched}/36 Gunas Matched`
     };
   }

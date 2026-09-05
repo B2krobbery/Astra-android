@@ -17,8 +17,8 @@ export const UserProfilePage: React.FC = () => {
     userProfile,
     themeMode,
     setThemeMode,
-    showUserVerification,
-    verifyPoliceForUser,
+    openChaanbean,
+    
     openReferralModal,
     uploadUserProfilePhoto,
     updateProfileInfo,
@@ -486,7 +486,7 @@ export const UserProfilePage: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <VerificationBadge
                 type={VerificationType.EDUCATION}
-                onClick={() => showUserVerification(VerificationType.EDUCATION)}
+                onClick={() => openChaanbean()}
               />
               <span style={{ fontSize: '0.75rem', color: '#4ADE80', fontWeight: 600 }}>DigiLocker Verified</span>
             </div>
@@ -495,13 +495,13 @@ export const UserProfilePage: React.FC = () => {
               <VerificationBadge
                 type={VerificationType.POLICE}
                 isVerified={userProfile.policeVerified}
-                onClick={() => showUserVerification(VerificationType.POLICE)}
+                onClick={() => openChaanbean()}
               />
               {userProfile.policeVerified ? (
                 <span style={{ fontSize: '0.75rem', color: '#4ADE80', fontWeight: 600 }}>Clear Record</span>
               ) : (
                 <button
-                  onClick={verifyPoliceForUser}
+                  onClick={() => openChaanbean()}
                   style={{
                     padding: '4px 10px',
                     borderRadius: '9999px',
@@ -521,7 +521,7 @@ export const UserProfilePage: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <VerificationBadge
                 type={VerificationType.CREDIT}
-                onClick={() => showUserVerification(VerificationType.CREDIT)}
+                onClick={() => openChaanbean()}
               />
               <span style={{ fontSize: '0.75rem', color: '#FBBF24', fontWeight: 600 }}>Prime 780+</span>
             </div>

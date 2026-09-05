@@ -71,7 +71,11 @@ export const DiscoveryService = {
         interests: [],
         education: p.education_10th || 'Graduate',
         compatibilityScore: 0, // Handled by AstraContext AstrologyEngine
-        marriageQuestionnaire: p.marriage_questionnaire
+        marriageQuestionnaire: p.marriage_questionnaire,
+        nakshatra: p.nakshatra,
+        rashi: p.rashi,
+        nadi: p.nadi,
+        manglik: p.manglik
       };
     });
   },

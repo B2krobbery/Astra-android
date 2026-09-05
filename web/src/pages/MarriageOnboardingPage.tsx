@@ -152,11 +152,15 @@ export const MarriageOnboardingPage: React.FC = () => {
         alcohol,
         smoking,
         marital_status: maritalStatus,
-        previous_marriage: previousMarriage,
+                previous_marriage: previousMarriage,
         children_status: childrenStatus,
         photo_privacy: photoPrivacy,
         marriage_questionnaire: marriageQuestionnaire,
         intent: 'Marriage',
+        manglik: manglik,
+        nadi: nadi,
+        nakshatra: (await import('../data/astrologyEngine')).AstrologyEngine.calculateNakshatra(dateOfBirth, birthTime, birthLocation),
+        rashi: (await import('../data/astrologyEngine')).AstrologyEngine.calculateRashi(dateOfBirth, birthTime, birthLocation),
         updated_at: new Date().toISOString()
       };
       

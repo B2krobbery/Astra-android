@@ -8,7 +8,7 @@ import { PassCircleButton, LikeCircleButton, CosmicCheckButton } from '../compon
 
 export const CandidateDetailPage: React.FC = () => {
   const navigate = useNavigate();
-  const { selectedCandidate, likeCandidate, passCandidate, checkCompatibility, showVerification, t } = useAstra();
+  const { selectedCandidate, likeCandidate, passCandidate, checkCompatibility, openChaanbean, t } = useAstra();
   const candidate = selectedCandidate;
   if (!candidate) return null;
 
@@ -172,19 +172,19 @@ export const CandidateDetailPage: React.FC = () => {
             {candidate.educationVerified && (
               <VerificationBadge
                 type={VerificationType.EDUCATION}
-                onClick={() => showVerification(VerificationType.EDUCATION, candidate)}
+                onClick={() => openChaanbean(candidate)}
               />
             )}
             {candidate.policeVerified && (
               <VerificationBadge
                 type={VerificationType.POLICE}
-                onClick={() => showVerification(VerificationType.POLICE, candidate)}
+                onClick={() => openChaanbean(candidate)}
               />
             )}
             {candidate.creditVerified && (
               <VerificationBadge
                 type={VerificationType.CREDIT}
-                onClick={() => showVerification(VerificationType.CREDIT, candidate)}
+                onClick={() => openChaanbean(candidate)}
               />
             )}
           </div>

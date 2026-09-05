@@ -97,11 +97,14 @@ interface AstraContextType {
   askAstroAi: (question: string) => void;
   isAstroAiTyping: boolean;
 
-  activeVerificationDetail: VerificationDetail | null;
-  showVerification: (type: VerificationType, candidate?: Candidate) => void;
-  showUserVerification: (type: VerificationType) => void;
-  dismissVerification: () => void;
-  verifyPoliceForUser: () => void;
+  isChaanbeanOpen: boolean;
+  chaanbeanTarget: Candidate | null;
+  openChaanbean: (candidate?: Candidate) => void;
+  closeChaanbean: () => void;
+  
+  
+  
+  
 
   // Referral State
   isReferralModalOpen: boolean;
@@ -449,7 +452,8 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isAstroAiTyping, setIsAstroAiTyping] = useState(false);
 
   // Verification Modal
-  const [activeVerificationDetail, setActiveVerificationDetail] = useState<VerificationDetail | null>(null);
+  const [isChaanbeanOpen, setIsChaanbeanOpen] = useState(false);
+  const [chaanbeanTarget, setChaanbeanTarget] = useState<Candidate | null>(null);
 
   // Referral Modal State
   const [isReferralModalOpen, setIsReferralModalOpen] = useState(false);
@@ -820,42 +824,20 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, 1600);
   };
 
-  const showVerification = (type: VerificationType, candidate?: Candidate) => {
-    const target = candidate || currentCandidate || ({ name: 'Unknown', education: 'Unknown', profession: 'Unknown', age: 25, location: 'Unknown', gender: 'Female', regionalCategory: 'ALL', photoUrls: [], isVerified: false } as any);
-    const detail = getVerificationDetail(
-      type,
-      target.name,
-      type === VerificationType.EDUCATION ? target.education : 'Digital Authority',
-      type === VerificationType.EDUCATION
-        ? target.educationDetails || 'Verified Degree'
-        : type === VerificationType.POLICE
-        ? target.policeDetails || 'Verified Background'
-        : target.creditDetails || 'Verified Score'
-    );
-    setActiveVerificationDetail(detail);
+  const openChaanbean = (candidate?: Candidate) => {
+    setChaanbeanTarget(candidate || null);
+    setIsChaanbeanOpen(true);
+  };
+  const closeChaanbean = () => {
+    setIsChaanbeanOpen(false);
+    setChaanbeanTarget(null);
   };
 
-  const showUserVerification = (type: VerificationType) => {
-    const detail = getVerificationDetail(
-      type,
-      userProfile.name,
-      'DigiLocker & National Crime Registry',
-      'Pending Verification Check'
-    );
-    setActiveVerificationDetail(detail);
-  };
+  
 
-  const dismissVerification = () => {
-    setActiveVerificationDetail(null);
-  };
+  
 
-  const verifyPoliceForUser = () => {
-    setUserProfile((prev: any) => ({
-      ...prev,
-      policeVerified: true
-    }));
-    dismissVerification();
-  };
+  
 
   const openReferralModal = () => setIsReferralModalOpen(true);
   const closeReferralModal = () => setIsReferralModalOpen(false);
@@ -953,11 +935,11 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         astroAiMessages,
         askAstroAi,
         isAstroAiTyping,
-        activeVerificationDetail,
-        showVerification,
-        showUserVerification,
-        dismissVerification,
-        verifyPoliceForUser,
+        isChaanbeanOpen, chaanbeanTarget, openChaanbean, closeChaanbean,
+        
+        
+        
+        
         isReferralModalOpen,
         openReferralModal,
         closeReferralModal,

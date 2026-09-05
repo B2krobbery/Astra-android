@@ -18,7 +18,7 @@ import { AdminAiPanelPage } from './pages/AdminAiPanelPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AdminMarketingPage } from './pages/AdminMarketingPage';
 import { DigitalWeddingCardPage } from './pages/DigitalWeddingCardPage';
-import { VerificationModal } from './components/VerificationModal';
+import { ChaanbeanModal } from './components/ChaanbeanModal';
 import { ReferralModal } from './components/ReferralModal';
 import { SplashScreenOverlay } from './components/SplashScreenOverlay';
 
@@ -26,7 +26,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { supabase } from './lib/supabase';
 
 const AppRoutes: React.FC = () => {
-  const { activeVerificationDetail, dismissVerification, verifyPoliceForUser } = useAstra();
+  const { isChaanbeanOpen, chaanbeanTarget, closeChaanbean } = useAstra();
   const navigate = useNavigate();
 
   React.useEffect(() => {
@@ -84,11 +84,10 @@ const AppRoutes: React.FC = () => {
       </Routes>
 
       {/* Global Verification Modal Overlay */}
-      {activeVerificationDetail && (
-        <VerificationModal
-          detail={activeVerificationDetail}
-          onDismiss={dismissVerification}
-          onVerifyAction={!activeVerificationDetail.isVerified ? verifyPoliceForUser : null}
+      {isChaanbeanOpen && (
+        <ChaanbeanModal
+          targetUser={chaanbeanTarget}
+          onDismiss={closeChaanbean}
         />
       )}
 
