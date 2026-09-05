@@ -2,8 +2,8 @@ import { supabase } from '../lib/supabase';
 import { Candidate } from '../types';
 
 export const DiscoveryService = {
-  async getCandidates(): Promise<Candidate[]> {
-    const { data: profiles, error } = await supabase.rpc('get_discovery_candidates');
+  async getCandidates(filters: any = {}): Promise<Candidate[]> {
+    const { data: profiles, error } = await supabase.rpc('get_discovery_candidates', { p_filters: filters });
     if (error) throw error;
     return DiscoveryService.mapProfilesToCandidates(profiles || []);
   },

@@ -13,8 +13,19 @@ export const AstrologySetupPage: React.FC = () => {
   const [time, setTime] = useState(userProfile.birthTime);
   const [city, setCity] = useState(userProfile.birthCity);
 
-  const previewNakshatra = AstrologyEngine.calculateNakshatra(dob, time, city);
-  const previewRashi = AstrologyEngine.calculateRashi(dob, time, city);
+  // Removed
+  // Removed
+
+  
+  const [previewNakshatra, setPreviewNakshatra] = useState<string | null>(null);
+  const [previewRashi, setPreviewRashi] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (dob && time && city) {
+      AstrologyEngine.calculateNakshatra(dob, time, city).then(setPreviewNakshatra);
+      AstrologyEngine.calculateRashi(dob, time, city).then(setPreviewRashi);
+    }
+  }, [dob, time, city]);
 
   const handleCalculate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,10 +179,10 @@ export const AstrologySetupPage: React.FC = () => {
             Calculated Celestial Placement
           </span>
           <h3 className="heading-font" style={{ fontSize: '1.25rem', fontWeight: 800, marginTop: '4px' }}>
-            {previewNakshatra} Nakshatra
+            {previewNakshatra || '...'} Nakshatra
           </h3>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-            Moon Sign: {previewRashi}
+            Moon Sign: {previewRashi || '...'}
           </p>
         </div>
       </div>

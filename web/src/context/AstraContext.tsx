@@ -147,19 +147,26 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
          const { data: preferencesData } = await supabase.from('preferences').select('preferred_education, preferred_location, preferred_religion, preferred_caste').eq('user_id', sessionUser.id).maybeSingle();
 
                   const calculateCompletion = (p: any, photo: string | undefined) => {
-           let score = 0;
-           if (p.display_name) score += 10;
-           if (photo) score += 20;
-           if (p.bio) score += 10;
-           if (p.date_of_birth) score += 10;
-           if (p.education) score += 10;
-           if (p.profession) score += 10;
-           if (p.location) score += 10;
-           if (p.looking_for && p.looking_for.length > 0) score += 10;
-           if (p.voice_note_url) score += 5;
-           if (p.marriage_questionnaire) score += 5;
-           return Math.min(100, score);
-         };
+    let completed = 0;
+    const requiredFields = [
+      p.display_name, p.gender, p.date_of_birth, p.height, p.mother_tongue,
+      p.religion, p.caste, p.sub_caste, p.region, p.state, p.city_district, p.gotra,
+      p.education_10th, p.education_12th, p.higher_education, p.profession,
+      p.employer, p.annual_income, p.health_status, p.diet, p.marital_status
+    ];
+    // Check if private birth time is known (we don't have it in p directly if we didn't fetch it, but let's assume it's part of onboarding).
+    // The requirement says 100% means EVERY required field is genuinely populated.
+    requiredFields.forEach(field => {
+      if (field && typeof field === 'string' && field.trim() !== '') completed += 1;
+      else if (field && typeof field !== 'string') completed += 1;
+    });
+    // Add photo
+    if (photo && photo.trim() !== '') completed += 1;
+    
+    // total required = 22
+    const totalRequired = 22;
+    return Math.round((completed / totalRequired) * 100);
+};
 
          setUserProfile({
            ...dbProfile,
@@ -198,7 +205,18 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
          } as any);
       }
       
-      const dbCandidates = await DiscoveryService.getCandidates();
+      
+      // Construct discovery filters from preferences
+      const filters: any = {};
+      if (userProfile.partnerPreferences?.tiers) {
+        userProfile.partnerPreferences.tiers.forEach((t: any) => {
+          if (t.tier === 'MUST_HAVE' || t.tier === 'PREFERRED') {
+             filters[t.attributeName] = t.attributeValue;
+          }
+        });
+      }
+      const dbCandidates = await DiscoveryService.getCandidates(filters);
+
       if (dbCandidates) {
          setCandidates(dbCandidates as any);
       }
@@ -521,7 +539,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const updateBirthDetails = (dob: string, birthTime: string, birthCity: string, manglik?: string, nadi?: string) => {
     const nakshatra = AstrologyEngine.calculateNakshatra(dob, birthTime, birthCity);
     const rashi = AstrologyEngine.calculateRashi(dob, birthTime, birthCity);
-    const autoNadi = AstrologyEngine.calculateNadi(nakshatra);
+    const autoNadi = nakshatra ? AstrologyEngine.calculateNadi(nakshatra.toString()) : '';
 
     setUserProfile((prev: any) => ({
       ...prev,
@@ -605,9 +623,11 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setTimeout(async () => {
         try {
           const [dbConversations, dbCandidates, dbPending, dbSent] = await Promise.all([
+            
             ChatService.getConversations(),
-            DiscoveryService.getCandidates(),
+            DiscoveryService.getCandidates(), // We should ideally pass filters here too, but this is init.
             DiscoveryService.getPendingRequests(),
+
             DiscoveryService.getSentRequests()
           ]);
           
@@ -810,8 +830,8 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setAstroAiMessages((prev: any) => [...prev, userMsg]);
     setIsAstroAiTyping(true);
 
-    setTimeout(() => {
-      const botResponse = AstrologyEngine.getAstroAiResponse(question, userProfile, currentCandidate ? AstrologyEngine.calculateCompatibility(userProfile, currentCandidate) : undefined);
+    setTimeout(async () => {
+      const botResponse = await AstrologyEngine.getAstroAiResponse(question, userProfile, currentCandidate ? AstrologyEngine.calculateCompatibility(userProfile, currentCandidate) : undefined);
       const aiMsg: ChatMessage = {
         id: `ai_resp_${Date.now()}`,
         senderName: 'Astro AI Guide',

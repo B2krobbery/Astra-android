@@ -121,16 +121,20 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.85rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>🌙 Moon Placement (Emotional Base):</span>
-                  <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>Vrishabha & Ashwini</span>
+                  <span style={{ color: 'var(--text-secondary)' }}>🌙 Nakshatra:</span>
+                  <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{userProfile.nakshatra} & {candidate.nakshatra}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>✨ Venus Transit (Romance & Value):</span>
-                  <span style={{ fontWeight: 700, color: '#4ADE80' }}>5th House Trine</span>
+                  <span style={{ color: 'var(--text-secondary)' }}>✨ Rashi:</span>
+                  <span style={{ fontWeight: 700, color: '#4ADE80' }}>{userProfile.rashi?.split(' ')[0]} & {candidate.rashi?.split(' ')[0]}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>🛡️ Nadi Neutralization Status:</span>
-                  <span style={{ fontWeight: 700, color: 'var(--accent-amber-light)' }}>No Nadi Dosha</span>
+                  <span style={{ color: 'var(--text-secondary)' }}>🛡️ Nadi:</span>
+                  <span style={{ fontWeight: 700, color: 'var(--accent-amber-light)' }}>{userProfile.nadi || 'Unknown'} & {candidate.nadi || 'Unknown'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '8px', marginTop: '4px' }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>Manglik Status:</span>
+                  <span style={{ fontWeight: 700, color: '#FDA4AF' }}>{userProfile.manglik === 'Yes' || candidate.manglik === 'Yes' ? 'Requires Attention' : 'No Manglik Dosha'}</span>
                 </div>
               </div>
             </div>
@@ -160,11 +164,11 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
             <div style={{ padding: '12px', borderRadius: '14px', background: 'rgba(255, 255, 255, 0.05)', textAlign: 'center' }}>
               <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Life Path Alignment</span>
-              <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#4ADE80', marginTop: '2px' }}>Path 7 & 9 (88%)</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#4ADE80', marginTop: '2px' }}>Path {userProfile.dateOfBirth ? (userProfile.dateOfBirth.substring(userProfile.dateOfBirth.length - 1)) : 7} & {candidate.name.length % 9 + 1}</div>
             </div>
             <div style={{ padding: '12px', borderRadius: '14px', background: 'rgba(255, 255, 255, 0.05)', textAlign: 'center' }}>
               <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Name Vibration</span>
-              <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--accent-amber-light)', marginTop: '2px' }}>Harmony 6</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--accent-amber-light)', marginTop: '2px' }}>Harmony {candidate.name.length % 9 + 1}</div>
             </div>
           </div>
         </div>
@@ -191,23 +195,23 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
             </div>
 
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              To resolve slight 7th House Rahu transits and ensure marital harmony, Vedic astrologers recommend:
+              Based on the 36 Guna calculation, here are the observations:
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderRadius: '14px', background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.3)' }}>
                 <CheckCircle2 size={16} color="#F43F5E" />
                 <div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#FFF' }}>Rahu-Ketu Shanti Puja</div>
-                  <div style={{ fontSize: '0.72rem', color: '#FDA4AF' }}>Suggested before wedding finalization</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#FFF' }}>36 Guna Score</div>
+                  <div style={{ fontSize: '0.72rem', color: '#FDA4AF' }}>{Math.round((candidate.compatibilityScore / 100) * 36)} out of 36</div>
                 </div>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderRadius: '14px', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
                 <Gem size={16} color="var(--accent-amber)" />
                 <div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#FFF' }}>Yellow Sapphire (Pukhraj) Gemstone</div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--accent-amber-light)' }}>Enhances Jupiter's blessing for longevity</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#FFF' }}>Match Level</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--accent-amber-light)' }}>{candidate.compatibilityScore >= 60 ? 'Favorable for Marriage' : 'Careful Consideration Required'}</div>
                 </div>
               </div>
             </div>

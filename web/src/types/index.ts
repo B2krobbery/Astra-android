@@ -10,11 +10,32 @@ export enum VerificationType {
 
 export type RegionalPreference = 'ALL' | 'KERALA' | 'NORTH_INDIA' | 'SOUTH_INDIA' | 'WEST_INDIA' | 'NRI';
 
+export interface PreferenceTier {
+  attributeName: string;
+  attributeValue: string;
+  tier: 'MUST_HAVE' | 'PREFERRED' | 'FLEXIBLE' | 'DEAL_BREAKER';
+}
+
+export interface ChemistryData {
+  sports: string[];
+  movies: string[];
+  shows: string[];
+  favoriteCharacters: string[];
+  music: string[];
+  hobbies: string[];
+  travel: string[];
+  weekendHabits: string;
+  personality: string;
+  thingsTheyLove: string[];
+  partnerExpectations: string;
+}
+
 export interface PartnerPreferences {
   preferredReligion?: string;
   preferredCaste?: string;
   preferredEducation?: string;
   preferredLocation?: string;
+  tiers?: PreferenceTier[];
 }
 
 export interface Candidate {
@@ -90,6 +111,10 @@ export interface UserProfile {
   religion?: string;
   caste?: string;
   subCaste?: string;
+  region?: string;
+  state?: string;
+  cityDistrict?: string;
+
   gotra?: string;
   education10th?: string;
   education12th?: string;
@@ -116,6 +141,9 @@ export interface AstrologyCompatibility {
   score: number;
   level: string;
   emotionalScore: number;
+  intellectualScore: number;
+  physicalScore: number;
+  spiritualScore: number;
   nakshatraScore: number;
   rashiScore: number;
   overallHarmonyScore: number;
