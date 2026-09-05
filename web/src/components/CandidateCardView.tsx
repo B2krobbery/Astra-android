@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Candidate } from '../types';
-import { Sparkles, MapPin, Briefcase, GraduationCap, ShieldCheck, ChevronRight } from 'lucide-react';
+import { Sparkles, MapPin, Briefcase, GraduationCap, ShieldCheck, ChevronRight, Lock } from 'lucide-react';
+import { PhotoService } from '../services/PhotoService';
 import { VerificationBadge } from './VerificationBadge';
 import { VerificationType } from '../types';
 import { VoiceIntroCard } from './VoiceIntroCard';
@@ -25,6 +26,28 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartX, setDragStartX] = useState(0);
   const [exitDirection, setExitDirection] = useState<'LIKE' | 'PASS' | null>(null);
+  const [photoReqStatus, setPhotoReqStatus] = useState<'NONE' | 'PENDING' | 'ACCEPTED'>('NONE');
+  const [isRequestingPhotos, setIsRequestingPhotos] = useState(false);
+
+  React.useEffect(() => {
+    if (candidate.photoPrivacy === 'private') {
+      PhotoService.getRequestStatus(candidate.id).then(status => {
+        if (status === 'PENDING' || status === 'ACCEPTED') setPhotoReqStatus(status);
+      });
+    }
+  }, [candidate.id, candidate.photoPrivacy]);
+
+  const handleRequestPhotos = async () => {
+    try {
+      setIsRequestingPhotos(true);
+      const res = await PhotoService.requestPhotos(candidate.id);
+      setPhotoReqStatus(res);
+    } catch (e) {
+      console.error('Failed to request photos', e);
+    } finally {
+      setIsRequestingPhotos(false);
+    }
+  };
 
   const nextPhoto = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -116,7 +139,7 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
         touchAction: 'pan-y'
       }}
     >
-      {/* Photo Viewport */}
+            {/* Photo Viewport */}
       <img
         src={candidate.photoUrls[photoIndex] || candidate.photoUrls[0]}
         alt={candidate.name}
@@ -124,9 +147,53 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
           width: '100%',
           height: '100%',
           objectFit: 'cover',
-          pointerEvents: 'none'
+          pointerEvents: 'none',
+          filter: candidate.photoPrivacy === 'private' && photoReqStatus !== 'ACCEPTED' ? 'blur(16px)' : 'none'
         }}
       />
+
+      {/* Private Photo Shield Overlay */}
+      {candidate.photoPrivacy === 'private' && photoReqStatus !== 'ACCEPTED' && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(15, 12, 27, 0.72)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '24px',
+          textAlign: 'center',
+          zIndex: 22
+        }}>
+          <div style={{ width: 54, height: 54, borderRadius: '50%', background: 'rgba(245,158,11,0.18)', border: '1.5px solid var(--accent-amber)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
+            <Lock size={24} color="var(--accent-amber-light)" />
+          </div>
+          <h4 style={{ color: '#FFF', fontSize: '1.1rem', margin: '0 0 6px 0', fontWeight: 800 }}>Private Matrimonial Photo</h4>
+          <p style={{ color: '#CBD5E1', fontSize: '0.8rem', margin: '0 0 16px 0', maxWidth: '280px' }}>
+            {candidate.name} has kept photos private. Request access to unlock verified photos upon approval.
+          </p>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRequestPhotos();
+            }}
+            disabled={isRequestingPhotos || photoReqStatus === 'PENDING'}
+            style={{
+              padding: '10px 22px',
+              borderRadius: '9999px',
+              background: photoReqStatus === 'PENDING' ? 'rgba(255,255,255,0.15)' : 'var(--accent-amber)',
+              color: photoReqStatus === 'PENDING' ? '#CBD5E1' : '#0F0C1B',
+              fontWeight: 800,
+              fontSize: '0.82rem',
+              border: 'none',
+              cursor: photoReqStatus === 'PENDING' ? 'default' : 'pointer'
+            }}
+          >
+            {photoReqStatus === 'PENDING' ? '⏳ Photo Request Pending' : 'Request Access to Photos'}
+          </button>
+        </div>
+      )}
 
       {/* Swipe Feedback Overlay Badges */}
       {(dragOffset.x > 120 || exitDirection === 'LIKE') && (

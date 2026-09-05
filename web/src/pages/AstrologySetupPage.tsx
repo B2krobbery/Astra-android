@@ -22,8 +22,8 @@ export const AstrologySetupPage: React.FC = () => {
 
   React.useEffect(() => {
     if (dob && time && city) {
-      AstrologyEngine.calculateNakshatra(dob, time, city).then(setPreviewNakshatra);
-      AstrologyEngine.calculateRashi(dob, time, city).then(setPreviewRashi);
+      setPreviewNakshatra(AstrologyEngine.calculateNakshatra(dob, time, city));
+      setPreviewRashi(AstrologyEngine.calculateRashi(dob, time, city));
     }
   }, [dob, time, city]);
 

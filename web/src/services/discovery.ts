@@ -77,7 +77,6 @@ export const DiscoveryService = {
         gender: p.gender || 'Female',
         profession: p.profession || 'Professional',
         location: p.location || 'India',
-        regionalCategory: 'ALL',
         bio: p.bio || '',
         intent: p.intent || 'Marriage',
         religion: p.religion,
@@ -88,13 +87,20 @@ export const DiscoveryService = {
         policeVerified: true,
         creditVerified: true,
         interests: [],
-        education: p.education_10th || 'Graduate',
-        compatibilityScore: 0, // Handled by AstraContext AstrologyEngine
+        education: p.higher_education || p.education || 'Graduate',
+        compatibilityScore: 0, // Handled dynamically
         marriageQuestionnaire: p.marriage_questionnaire,
+        chemistryAnswers: p.chemistry_answers || p.marriage_questionnaire,
         nakshatra: p.nakshatra,
         rashi: p.rashi,
         nadi: p.nadi,
-        manglik: p.manglik
+        manglik: p.manglik,
+        subCaste: p.sub_caste,
+        gotra: p.gotra,
+        height: p.height,
+        diet: p.diet,
+        photoPrivacy: p.photo_privacy,
+        regionalCategory: (p.region as any) || 'ALL'
       };
     });
   },

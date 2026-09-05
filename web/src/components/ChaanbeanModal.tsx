@@ -226,7 +226,7 @@ export const ChaanbeanModal: React.FC<ChaanbeanModalProps> = ({ targetUser, onDi
                 opacity: loading ? 0.7 : 1
               }}
             >
-              {loading ? 'Processing...' : 'Simulate Payment & Request Consent'}
+              {loading ? 'Processing...' : 'Confirm Request (Status: PENDING_PAYMENT)'}
             </button>
           </div>
         )}

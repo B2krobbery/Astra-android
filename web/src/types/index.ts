@@ -66,6 +66,11 @@ export interface Candidate {
   manglik?: string;
   religion?: string;
   caste?: string;
+  photoPrivacy?: string;
+  subCaste?: string;
+  gotra?: string;
+  height?: string;
+  diet?: string;
   compatibilityScore: number;
   emotionalScore?: number;
   nakshatraScore?: number;
@@ -111,16 +116,16 @@ export interface UserProfile {
   religion?: string;
   caste?: string;
   subCaste?: string;
+  gotra?: string;
   region?: string;
   state?: string;
   cityDistrict?: string;
-
-  gotra?: string;
   education10th?: string;
   education12th?: string;
   higherEducation?: string;
   employer?: string;
   annualIncome?: string;
+  healthStatus?: string;
   healthInfo?: string;
   healthPrivacy?: string;
   diet?: string;
@@ -239,4 +244,8 @@ export interface GunaScore {
   score: number;
   max: number;
   description: string;
+  categoryMeaning?: string;
+  boyValue?: string;
+  girlValue?: string;
+  status?: 'Full' | 'Partial' | 'Dosha' | 'None';
 }

@@ -1,3 +1,5 @@
+import { calculateMarriageReadiness } from '../utils/profileReadiness';
+import { PhotoService, PhotoRequestRecord } from '../services/PhotoService';
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 import {
@@ -146,27 +148,8 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
          const { data: preferencesData } = await supabase.from('preferences').select('preferred_education, preferred_location, preferred_religion, preferred_caste').eq('user_id', sessionUser.id).maybeSingle();
 
-                  const calculateCompletion = (p: any, photo: string | undefined) => {
-    let completed = 0;
-    const requiredFields = [
-      p.display_name, p.gender, p.date_of_birth, p.height, p.mother_tongue,
-      p.religion, p.caste, p.sub_caste, p.region, p.state, p.city_district, p.gotra,
-      p.education_10th, p.education_12th, p.higher_education, p.profession,
-      p.employer, p.annual_income, p.health_status, p.diet, p.marital_status
-    ];
-    // Check if private birth time is known (we don't have it in p directly if we didn't fetch it, but let's assume it's part of onboarding).
-    // The requirement says 100% means EVERY required field is genuinely populated.
-    requiredFields.forEach(field => {
-      if (field && typeof field === 'string' && field.trim() !== '') completed += 1;
-      else if (field && typeof field !== 'string') completed += 1;
-    });
-    // Add photo
-    if (photo && photo.trim() !== '') completed += 1;
-    
-    // total required = 22
-    const totalRequired = 22;
-    return Math.round((completed / totalRequired) * 100);
-};
+                  const readinessResult = calculateMarriageReadiness({ ...dbProfile, birth_time: fetchedBirthTime }, photoUrl);
+          const completionPercentage = readinessResult.percentage;
 
          setUserProfile({
            ...dbProfile,
@@ -195,7 +178,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
            voiceNoteUrl: dbProfile.voice_note_url,
            voiceNotePrompt: dbProfile.voice_note_prompt,
            marriageQuestionnaire: dbProfile.marriage_questionnaire,
-           completionPercentage: calculateCompletion(dbProfile, photoUrl),
+           completionPercentage,
            partnerPreferences: {
              preferredEducation: preferencesData?.preferred_education || 'Any',
              preferredLocation: preferencesData?.preferred_location || 'Any',
@@ -418,6 +401,8 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [passedCandidatesHistory, setPassedCandidatesHistory] = useState<Candidate[]>([]);
   const [pendingRequests, setPendingRequests] = useState<Candidate[]>([]);
+  const [incomingPhotoRequests, setIncomingPhotoRequests] = useState<PhotoRequestRecord[]>([]);
+  const loadIncomingPhotoRequests = async () => { const reqs = await PhotoService.getIncomingRequests(); setIncomingPhotoRequests(reqs); };
   const [sentRequests, setSentRequests] = useState<Candidate[]>([]);
   const [candidateIndex] = useState(0);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
@@ -536,21 +521,54 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  const updateBirthDetails = (dob: string, birthTime: string, birthCity: string, manglik?: string, nadi?: string) => {
-    const nakshatra = AstrologyEngine.calculateNakshatra(dob, birthTime, birthCity);
-    const rashi = AstrologyEngine.calculateRashi(dob, birthTime, birthCity);
-    const autoNadi = nakshatra ? AstrologyEngine.calculateNadi(nakshatra.toString()) : '';
+  const updateBirthDetails = async (dob: string, birthTime: string, birthCity: string) => {
+    const chart = AstrologyEngine.calculateChart(dob, birthTime, birthCity);
+    const coords = AstrologyEngine.getCoordinatesForCity(birthCity);
 
-    setUserProfile((prev: any) => ({
-      ...prev,
-      dateOfBirth: dob,
-      birthTime,
-      birthCity,
-      nakshatra,
-      rashi,
-      manglik: manglik || prev.manglik,
-      nadi: nadi || autoNadi || prev.nadi
-    }));
+    setUserProfile((prev: any) => {
+      const updated = {
+        ...prev,
+        dateOfBirth: dob,
+        birthTime,
+        birthLocation: birthCity,
+        nakshatra: chart.nakshatraName,
+        rashi: chart.rashiName,
+        nadi: chart.nadiName,
+        manglik: chart.isManglik ? 'Yes' : 'No',
+        nakshatraPada: chart.pada
+      };
+      const r = calculateMarriageReadiness(updated, updated.photoUrl);
+      return {
+        ...updated,
+        completionPercentage: r.percentage,
+        onboardingCompleted: r.isComplete
+      };
+    });
+
+    if (sessionUser) {
+      try {
+        await supabase.from('profiles').update({
+          date_of_birth: dob,
+          birth_location: birthCity,
+          nakshatra: chart.nakshatraName,
+          rashi: chart.rashiName,
+          nadi: chart.nadiName,
+          manglik: chart.isManglik ? 'Yes' : 'No',
+          nakshatra_pada: chart.pada,
+          updated_at: new Date().toISOString()
+        }).eq('id', sessionUser.id);
+
+        await supabase.from('private_profiles').upsert({
+          id: sessionUser.id,
+          birth_time: birthTime,
+          birth_latitude: coords.lat,
+          birth_longitude: coords.lon,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'id' });
+      } catch (e) {
+        console.error('Failed to update birth details in DB', e);
+      }
+    }
   };
 
   const updatePartnerPreferences = (religion: string, caste: string) => {

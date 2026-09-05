@@ -178,6 +178,8 @@ export const DiscoverFeedPage: React.FC = () => {
           </div>
         </header>
 
+      </div>
+
         {/* Profile Nudge Banner */}
         {userProfile.completionPercentage < 100 && (
           <div
@@ -204,140 +206,7 @@ export const DiscoverFeedPage: React.FC = () => {
           </div>
         )}
 
-        {/* Regional Preference Selector Strip */}
-        <div
-          style={{
-            padding: '6px 16px',
-            background: 'transparent',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            overflowX: 'auto'
-          }}
-        >
-          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-            <Globe size={12} /> {t('filter_label')}
-          </span>
-          {[
-            { key: 'ALL', label: t('filter_all') },
-            { key: 'KERALA', label: t('filter_kerala') },
-            { key: 'NORTH_INDIA', label: t('filter_north') },
-            { key: 'WEST_INDIA', label: t('filter_west') },
-            { key: 'NRI', label: t('filter_nri') }
-          ].map(item => {
-            const isSelected = userProfile.regionalPreference === item.key;
-            return (
-              <button
-                key={item.key}
-                onClick={() => setRegionalPreference(item.key as RegionalPreference)}
-                style={{
-                  padding: '4px 10px',
-                  borderRadius: '9999px',
-                  border: isSelected ? '1px solid var(--accent-amber)' : '1px solid var(--border-color)',
-                  background: isSelected ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                  color: isSelected ? 'var(--accent-amber-light)' : 'var(--text-muted)',
-                  fontSize: '0.7rem',
-                  fontWeight: isSelected ? 800 : 500,
-                  whiteSpace: 'nowrap',
-                  cursor: 'pointer'
-                }}
-              >
-                {item.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Strict Partner Preferences Toggle & Rewind Bar */}
-        <div
-          style={{
-            padding: '6px 16px',
-            background: 'rgba(236, 72, 153, 0.1)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '6px',
-            margin: '0 16px 16px',
-            borderRadius: '12px',
-            border: '1px solid rgba(236, 72, 153, 0.2)'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Sparkles size={14} color="var(--accent-amber)" />
-            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-              🎯 For You
-            </span>
-            {passedCandidatesHistory.length > 0 && (
-              <button 
-                onClick={rewindCandidate} 
-                style={{ 
-                  background: 'rgba(245, 158, 11, 0.2)', 
-                  border: '1px solid var(--accent-amber)', 
-                  borderRadius: '50%',
-                  color: 'var(--accent-amber)', 
-                  cursor: 'pointer', 
-                  padding: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginLeft: '8px'
-                }}
-                title="Rewind last pass"
-              >
-                <RotateCcw size={12} />
-              </button>
-            )}
-          </div>
-          
-          <button
-            onClick={() => setIsPreferenceStrictFilterOn(!isPreferenceStrictFilterOn)}
-            style={{
-              width: '40px',
-              height: '22px',
-              borderRadius: '11px',
-              background: isPreferenceStrictFilterOn ? 'var(--accent-amber)' : 'rgba(255,255,255,0.2)',
-              position: 'relative',
-              cursor: 'pointer',
-              border: 'none',
-              transition: 'background 0.3s'
-            }}
-          >
-            <div style={{
-              position: 'absolute',
-              top: '2px',
-              left: isPreferenceStrictFilterOn ? '20px' : '2px',
-              width: '18px',
-              height: '18px',
-              borderRadius: '50%',
-              background: '#FFF',
-              transition: 'left 0.3s cubic-bezier(0.68, -0.55, 0.26, 1.55)'
-            }} />
-          </button>
-        </div>
-
-        {/* Daily Shubh Muhurat & Reward Streak Ticker */}
-        <div
-          style={{
-            padding: '6px 16px',
-            background: 'rgba(245, 158, 11, 0.12)',
-            borderTop: '1px solid rgba(245, 158, 11, 0.2)',
-            borderBottom: '1px solid rgba(245, 158, 11, 0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            fontSize: '0.7rem',
-            color: 'var(--accent-amber-light)'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Sparkles size={12} color="var(--accent-amber)" />
-            <span><strong>Today's Shubh Muhurat:</strong> Abhijit 11:48 AM – 12:36 PM</span>
-          </div>
-          <span style={{ fontWeight: 800, background: 'rgba(245, 158, 11, 0.25)', padding: '2px 8px', borderRadius: '9999px', fontSize: '0.65rem' }}>
-            🔥 7-Day Streak (+350 pts)
-          </span>
-        </div>
-      </div>
+        
 
       {/* MIDDLE CANDIDATE CARD VIEWPORT (Single Clean Card) */}
       <main
@@ -353,20 +222,36 @@ export const DiscoverFeedPage: React.FC = () => {
           justifyContent: 'center'
         }}
       >
-        {currentCandidate ? (
-          <div
-            style={{
-              width: '100%',
-              height: userProfile.completionPercentage < 100 ? 'calc(100vh - 225px)' : 'calc(100vh - 185px)',
-              maxHeight: '660px',
-              minHeight: '460px',
-              margin: 'auto 0',
-              display: 'flex',
-              flexDirection: 'column'
-            }}
-          >
+        {userProfile.intent === 'Marriage' && userProfile.completionPercentage < 100 ? (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px', textAlign: 'center', margin: 'auto' }}>
+            <div style={{ width: 68, height: 68, borderRadius: '50%', background: 'rgba(245, 158, 11, 0.15)', border: '2px solid var(--accent-amber)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '18px' }}>
+              <ShieldCheck size={36} color="var(--accent-amber)" />
+            </div>
+            <h2 className="heading-font" style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
+              Matrimonial Discovery Locked
+            </h2>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: '24px', maxWidth: '340px' }}>
+              To ensure verified, genuine alliances and mutual trust for all families, Mangalsutra requires a 100% completed profile before accessing discovery.
+            </p>
+            <div style={{ width: '100%', maxWidth: '300px', background: 'rgba(255,255,255,0.06)', borderRadius: '12px', padding: '16px', marginBottom: '24px', border: '1px solid rgba(245,158,11,0.2)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                <span>Profile Readiness</span>
+                <span style={{ color: 'var(--accent-amber-light)' }}>{userProfile.completionPercentage}%</span>
+              </div>
+              <div style={{ width: '100%', height: '8px', background: 'rgba(0,0,0,0.5)', borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{ width: `${userProfile.completionPercentage}%`, height: '100%', background: 'linear-gradient(90deg, #F59E0B, #10B981)' }} />
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/marriage-onboarding')}
+              style={{ padding: '14px 32px', borderRadius: '9999px', background: 'linear-gradient(135deg, var(--accent-amber), #D97706)', color: '#0F0C1B', fontWeight: 800, fontSize: '0.9rem', border: 'none', cursor: 'pointer', boxShadow: 'var(--shadow-cosmic)' }}
+            >
+              Complete Marriage Profile
+            </button>
+          </div>
+        ) : currentCandidate ? (
+          <div style={{ width: '100%', height: '100%', position: 'relative' }}>
             <CandidateCardView
-              key={currentCandidate.id}
               candidate={currentCandidate}
               onCardClick={() => {
                 selectCandidate(currentCandidate);
@@ -417,7 +302,7 @@ export const DiscoverFeedPage: React.FC = () => {
             </button>
           </div>
         )}
-      </main>
+</main>
 
       {/* FIXED BOTTOM NAVIGATION BAR */}
       <AstraBottomNavigation />
