@@ -16,7 +16,6 @@ import {
   MarketingCampaign,
   ReferralData
 } from '../types';
-import { mockCandidates } from '../data/mockData';
 
 import { getVerificationDetail, initialAiAgents, initialAdminMetrics, initialMarketingCampaigns, initialReferralData, astroAiKnowledge, suggestedQuestions, initialAiMessages } from '../data/mockData';
 import { translations } from '../data/translations';
@@ -144,6 +143,21 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
          const { data: preferencesData } = await supabase.from('preferences').select('preferred_education, preferred_location, preferred_religion, preferred_caste').eq('user_id', sessionUser.id).maybeSingle();
 
+                  const calculateCompletion = (p: any, photo: string | undefined) => {
+           let score = 0;
+           if (p.display_name) score += 10;
+           if (photo) score += 20;
+           if (p.bio) score += 10;
+           if (p.date_of_birth) score += 10;
+           if (p.education) score += 10;
+           if (p.profession) score += 10;
+           if (p.location) score += 10;
+           if (p.looking_for && p.looking_for.length > 0) score += 10;
+           if (p.voice_note_url) score += 5;
+           if (p.marriage_questionnaire) score += 5;
+           return Math.min(100, score);
+         };
+
          setUserProfile({
            ...dbProfile,
            name: dbProfile.display_name || '',
@@ -171,6 +185,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
            voiceNoteUrl: dbProfile.voice_note_url,
            voiceNotePrompt: dbProfile.voice_note_prompt,
            marriageQuestionnaire: dbProfile.marriage_questionnaire,
+           completionPercentage: calculateCompletion(dbProfile, photoUrl),
            partnerPreferences: {
              preferredEducation: preferencesData?.preferred_education || 'Any',
              preferredLocation: preferencesData?.preferred_location || 'Any',
@@ -274,7 +289,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setUserProfile((prev: any) => ({
       ...prev,
       photoUrl: objectUrl,
-      completionPercentage: Math.min(100, prev.completionPercentage + 5)
+      completionPercentage: Math.min(100, (prev.completionPercentage || 0) + 20)
     }));
 
     if (!sessionUser) return;
@@ -421,7 +436,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Compatibility State
   const [isAnalyzingCompatibility, setIsAnalyzingCompatibility] = useState(false);
   const [currentCompatibility, setCurrentCompatibility] = useState<AstrologyCompatibility | null>(() =>
-    AstrologyEngine.calculateCompatibility(initialUserProfile, mockCandidates[0])
+    AstrologyEngine.calculateCompatibility(initialUserProfile, ({ name: 'Unknown', education: 'Unknown', profession: 'Unknown', age: 25, location: 'Unknown', gender: 'Female', regionalCategory: 'ALL', photoUrls: [], isVerified: false } as any))
   );
 
   // Messaging & Conversations
@@ -806,7 +821,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const showVerification = (type: VerificationType, candidate?: Candidate) => {
-    const target = candidate || currentCandidate || mockCandidates[0];
+    const target = candidate || currentCandidate || ({ name: 'Unknown', education: 'Unknown', profession: 'Unknown', age: 25, location: 'Unknown', gender: 'Female', regionalCategory: 'ALL', photoUrls: [], isVerified: false } as any);
     const detail = getVerificationDetail(
       type,
       target.name,
@@ -837,8 +852,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const verifyPoliceForUser = () => {
     setUserProfile((prev: any) => ({
       ...prev,
-      policeVerified: true,
-      completionPercentage: 100
+      policeVerified: true
     }));
     dismissVerification();
   };
