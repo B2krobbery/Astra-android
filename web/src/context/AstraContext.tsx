@@ -811,7 +811,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setIsAstroAiTyping(true);
 
     setTimeout(() => {
-      const botResponse = AstrologyEngine.getAstroAiResponse(question, userProfile);
+      const botResponse = AstrologyEngine.getAstroAiResponse(question, userProfile, currentCandidate ? AstrologyEngine.calculateCompatibility(userProfile, currentCandidate) : undefined);
       const aiMsg: ChatMessage = {
         id: `ai_resp_${Date.now()}`,
         senderName: 'Astro AI Guide',

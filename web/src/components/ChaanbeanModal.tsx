@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
-import { Shield, X, FileText, CheckCircle, Search, AlertCircle, CreditCard } from 'lucide-react';
-import { Candidate } from '../types';
+import { Search, X, CheckCircle, AlertCircle, CreditCard } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { useAstra } from '../context/AstraContext';
 
 interface ChaanbeanModalProps {
-  targetUser: Candidate | null;
+  targetUser?: any;
   onDismiss: () => void;
 }
 
 export const ChaanbeanModal: React.FC<ChaanbeanModalProps> = ({ targetUser, onDismiss }) => {
+  const { sessionUser } = useAstra();
   const [step, setStep] = useState(1);
   const [selectedChecks, setSelectedChecks] = useState<string[]>([]);
   const [consentGiven, setConsentGiven] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const toggleCheck = (id: string) => {
     setSelectedChecks(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]);
@@ -21,6 +25,34 @@ export const ChaanbeanModal: React.FC<ChaanbeanModalProps> = ({ targetUser, onDi
     { id: 'credit', name: 'Financial & Credit Health', price: '₹499' },
     { id: 'education', name: 'Academic Credentials', price: '₹799' },
   ];
+
+  const submitRequest = async () => {
+    if (!sessionUser || !targetUser) return;
+    setLoading(true);
+    setError('');
+    try {
+      // 1. Create the architecture row (status: PENDING_PAYMENT)
+      const { error: dbError } = await supabase.from('chaanbean_requests').insert({
+        requester_id: sessionUser.id,
+        target_id: targetUser.id,
+        status: 'PENDING_PAYMENT',
+        checks_requested: selectedChecks,
+        consent_granted: false
+      });
+      
+      if (dbError) throw dbError;
+
+      // 2. Mock hitting a payment gateway
+      // BLOCKED: Awaiting Razorpay/Stripe credentials and Edge Function integration
+      // In production, this redirects to checkout, and the webhook updates the status.
+      setStep(4); // Success step
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Failed to submit request');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div
@@ -82,6 +114,8 @@ export const ChaanbeanModal: React.FC<ChaanbeanModalProps> = ({ targetUser, onDi
           </button>
         </div>
 
+        {error && <p style={{ color: '#ef4444', fontSize: '0.85rem' }}>{error}</p>}
+
         {step === 1 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
@@ -137,7 +171,7 @@ export const ChaanbeanModal: React.FC<ChaanbeanModalProps> = ({ targetUser, onDi
                 <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#ef4444' }}>Legal Consent Required</span>
               </div>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                Chaanbean requires explicit legal consent from the target profile to perform external verification via DigiLocker, CIBIL, or Police networks.
+                Chaanbean requires explicit legal consent from the target profile to perform external verification.
               </p>
             </div>
 
@@ -171,13 +205,14 @@ export const ChaanbeanModal: React.FC<ChaanbeanModalProps> = ({ targetUser, onDi
         {step === 3 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center', textAlign: 'center' }}>
             <CreditCard size={48} color="var(--accent-amber)" />
-            <h4 style={{ fontSize: '1.2rem', margin: 0 }}>Prototype Payment</h4>
+            <h4 style={{ fontSize: '1.2rem', margin: 0 }}>Payment Gateway (BLOCKED)</h4>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-              (MOCK) In the production version, this will open a Razorpay/Stripe gateway for ₹{(selectedChecks.length * 799).toString()}. No real verification is performed in this MVP.
+              Awaiting Stripe/Razorpay provider credentials. For this MVP demonstration, clicking below will persist the request to the database as "PENDING_PAYMENT".
             </p>
             
             <button
-              onClick={onDismiss}
+              onClick={submitRequest}
+              disabled={loading}
               style={{
                 width: '100%',
                 padding: '14px',
@@ -187,10 +222,37 @@ export const ChaanbeanModal: React.FC<ChaanbeanModalProps> = ({ targetUser, onDi
                 color: '#0F0C1B',
                 fontWeight: 700,
                 marginTop: '8px',
+                cursor: 'pointer',
+                opacity: loading ? 0.7 : 1
+              }}
+            >
+              {loading ? 'Processing...' : 'Simulate Payment & Request Consent'}
+            </button>
+          </div>
+        )}
+        
+        {step === 4 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center', textAlign: 'center', padding: '16px 0' }}>
+            <CheckCircle size={48} color="#10B981" />
+            <h4 style={{ fontSize: '1.2rem', margin: 0, color: '#10B981' }}>Request Saved!</h4>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              The Chaanbean request has been securely persisted to the database. The target user will be notified to grant consent once payment logic is live.
+            </p>
+            <button
+              onClick={onDismiss}
+              style={{
+                width: '100%',
+                padding: '14px',
+                borderRadius: '9999px',
+                border: '1px solid var(--border-color)',
+                background: 'transparent',
+                color: 'var(--text-primary)',
+                fontWeight: 600,
+                marginTop: '16px',
                 cursor: 'pointer'
               }}
             >
-              Send Request (Simulated)
+              Close
             </button>
           </div>
         )}

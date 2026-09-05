@@ -124,6 +124,7 @@ export interface AstrologyCompatibility {
   userNakshatra: string;
   candidateNakshatra?: string;
   gunaScore: string;
+  detailedGunas?: GunaScore[];
 }
 
 export interface ChatMessage {
@@ -203,4 +204,11 @@ export interface ReferralData {
   successfulSignups: number;
   goldenBadgeUnlocked: boolean;
   unlimitedAiUnlocked: boolean;
+}
+
+export interface GunaScore {
+  name: string;
+  score: number;
+  max: number;
+  description: string;
 }
