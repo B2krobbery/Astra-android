@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { Preferences } from '@capacitor/preferences';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-anon-key';
+const supabaseUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) || ((globalThis as any).process?.env?.VITE_SUPABASE_URL) || 'https://placeholder.supabase.co';
+const supabaseAnonKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_ANON_KEY) || ((globalThis as any).process?.env?.VITE_SUPABASE_ANON_KEY) || 'placeholder-anon-key';
 
 // Create a custom storage adapter using Capacitor Preferences
 const capacitorStorage = {
