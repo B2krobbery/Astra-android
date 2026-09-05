@@ -69,6 +69,7 @@ interface AstraContextType {
 
   regionalPreference: RegionalPreference;
   setRegionalPreference: (pref: RegionalPreference) => void;
+  refreshProfile: () => Promise<void>;
 
   candidates: Candidate[];
   filteredCandidates: Candidate[];
@@ -138,28 +139,36 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
          let photoUrl = undefined;
          const { data: photoData } = await supabase.from('profile_photos').select('storage_path').eq('user_id', sessionUser.id).eq('is_primary', true).maybeSingle();
          if (photoData && photoData.storage_path) {
-           photoUrl = photoData.storage_path.startsWith('http') 
-             ? photoData.storage_path 
-             : supabase.storage.from('avatars').getPublicUrl(photoData.storage_path).data.publicUrl;
+           if (photoData.storage_path.startsWith('http')) {
+             photoUrl = photoData.storage_path;
+           } else {
+             const { data: signedData } = await supabase.storage.from('avatars').createSignedUrl(photoData.storage_path, 3600);
+             if (signedData) photoUrl = signedData.signedUrl;
+           }
          }
 
          const { data: privateProfileData } = await supabase.from('private_profiles').select('birth_time').eq('id', sessionUser.id).maybeSingle();
          const fetchedBirthTime = privateProfileData?.birth_time || '';
 
-         const { data: preferencesData } = await supabase.from('preferences').select('preferred_education, preferred_location, preferred_religion, preferred_caste').eq('user_id', sessionUser.id).maybeSingle();
+         const { data: preferencesData } = await supabase.from('preferences').select('preferred_education, preferred_location, preferred_religion, preferred_caste, preferred_sub_caste, preferred_gotra, tier_religion, tier_caste, tier_sub_caste, tier_gotra, tier_diet').eq('user_id', sessionUser.id).maybeSingle();
 
-                  const readinessResult = calculateMarriageReadiness({ ...dbProfile, birth_time: fetchedBirthTime }, photoUrl);
-          const completionPercentage = readinessResult.percentage;
+         const readinessResult = calculateMarriageReadiness({ ...dbProfile, birth_time: fetchedBirthTime }, photoUrl);
+         const completionPercentage = readinessResult.percentage;
 
          setUserProfile({
            ...dbProfile,
            name: dbProfile.display_name || '',
            dateOfBirth: dbProfile.date_of_birth,
            birthTime: fetchedBirthTime,
-           birthLocation: dbProfile.birth_location,
+           birthLocation: dbProfile.birth_location || '',
+           birthCity: dbProfile.birth_location || dbProfile.birthCity || '',
+           nativeLocation: dbProfile.native_location || '',
            bloodGroup: dbProfile.blood_group,
            motherTongue: dbProfile.mother_tongue,
            subCaste: dbProfile.sub_caste,
+           cityDistrict: dbProfile.city_district || dbProfile.cityDistrict || '',
+           region: dbProfile.region || '',
+           state: dbProfile.state || '',
            education10th: dbProfile.education_10th,
            education12th: dbProfile.education_12th,
            higherEducation: dbProfile.higher_education,
@@ -183,7 +192,14 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
              preferredEducation: preferencesData?.preferred_education || 'Any',
              preferredLocation: preferencesData?.preferred_location || 'Any',
              preferredReligion: preferencesData?.preferred_religion || 'Any',
-             preferredCaste: preferencesData?.preferred_caste || 'Any'
+             preferredCaste: preferencesData?.preferred_caste || 'Any',
+             preferredSubCaste: preferencesData?.preferred_sub_caste || 'Any',
+             preferredGotra: preferencesData?.preferred_gotra || 'Any (Except My Own)',
+             tierReligion: preferencesData?.tier_religion,
+             tierCaste: preferencesData?.tier_caste,
+             tierSubCaste: preferencesData?.tier_sub_caste,
+             tierGotra: preferencesData?.tier_gotra,
+             tierDiet: preferencesData?.tier_diet
            }
          } as any);
       }
@@ -312,29 +328,25 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return;
       }
 
-      // 2. Get public URL
-      const { data } = supabase.storage
+      // 2. Get Signed URL for immediate display
+      const { data: signedData } = await supabase.storage
         .from('avatars')
-        .getPublicUrl(filePath);
+        .createSignedUrl(filePath, 3600);
 
-      const publicUrl = data.publicUrl;
-
-      // The profiles table doesn't have a photo_url column. 
-      // We only use profile_photos table for photos.
       // Remove existing photos (since we only support 1 primary photo currently)
       await supabase.from('profile_photos').delete().eq('user_id', sessionUser.id);
       
-      // Insert the new photo
+      // Insert the new photo using the file path, NOT the public URL
       await supabase.from('profile_photos').insert({
         user_id: sessionUser.id,
-        storage_path: publicUrl,
+        storage_path: filePath,
         is_primary: true
       });
 
-      // Update local state with the actual public URL
+      // Update local state with the actual signed URL
       setUserProfile((prev: any) => ({
         ...prev,
-        photoUrl: publicUrl
+        photoUrl: signedData?.signedUrl || objectUrl
       }));
     } catch (e) {
       console.error('Failed to upload user photo to Supabase', e);
@@ -433,7 +445,23 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Regional Prefs
     const userRegionalPref = userProfile.regionalPreference || 'ALL';
     if (userRegionalPref === 'ALL') return true;
-    return c.regionalCategory === userRegionalPref;
+    
+    // Map the enum keys to the human readable strings used in the DB
+    const regionalMapping: Record<string, string> = {
+      'KERALA': 'Kerala',
+      'NORTH_INDIA': 'North India',
+      'SOUTH_INDIA': 'South India',
+      'WEST_INDIA': 'West India',
+      'EAST_INDIA': 'East India',
+      'CENTRAL_INDIA': 'Central India',
+      'NRI': 'NRI'
+    };
+    
+    const mappedPref = regionalMapping[userRegionalPref] || userRegionalPref;
+    if (userRegionalPref === 'KERALA') {
+      return c.regionalCategory === 'Kerala' || c.regionalCategory === 'South India';
+    }
+    return c.regionalCategory === mappedPref;
   });
 
   const activeCandidateList = filteredCandidates;
@@ -705,6 +733,9 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setCandidates(dbCandidates as any);
       }
       setPassedCandidatesHistory([]);
+      setSentRequests([]);
+      setPendingRequests([]);
+      setConversations([]);
     } catch (e) {
       console.error("Error resetting feed:", e);
     }
@@ -948,10 +979,11 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         uploadUserProfilePhoto,
         regionalPreference: userProfile.regionalPreference,
         setRegionalPreference,
+        refreshProfile: loadBackendData,
         candidates,
         filteredCandidates,
         candidateIndex,
-        currentCandidate,
+        currentCandidate: filteredCandidates[candidateIndex] || null,
         selectedCandidate,
         selectCandidate: setSelectedCandidate,
         likeCandidate,

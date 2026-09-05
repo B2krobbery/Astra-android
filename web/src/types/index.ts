@@ -33,8 +33,15 @@ export interface ChemistryData {
 export interface PartnerPreferences {
   preferredReligion?: string;
   preferredCaste?: string;
+  preferredSubCaste?: string;
+  preferredGotra?: string;
   preferredEducation?: string;
   preferredLocation?: string;
+  tierReligion?: string;
+  tierCaste?: string;
+  tierSubCaste?: string;
+  tierGotra?: string;
+  tierDiet?: string;
   tiers?: PreferenceTier[];
 }
 

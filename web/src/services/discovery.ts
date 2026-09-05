@@ -100,7 +100,15 @@ export const DiscoveryService = {
         height: p.height,
         diet: p.diet,
         photoPrivacy: p.photo_privacy,
-        regionalCategory: (p.region as any) || 'ALL'
+        regionalCategory: p.region || (() => {
+          const loc = (p.location || '').toLowerCase();
+          if (loc.includes('kerala')) return 'Kerala';
+          if (loc.includes('delhi') || loc.includes('ncr') || loc.includes('punjab') || loc.includes('uttar') || loc.includes('rajasthan')) return 'North India';
+          if (loc.includes('mumbai') || loc.includes('pune') || loc.includes('maharashtra') || loc.includes('gujarat')) return 'West India';
+          if (loc.includes('chennai') || loc.includes('bengaluru') || loc.includes('hyderabad') || loc.includes('tamil') || loc.includes('karnataka') || loc.includes('andhra')) return 'South India';
+          if (loc.includes('kolkata') || loc.includes('bengal') || loc.includes('odisha') || loc.includes('bihar')) return 'East India';
+          return 'ALL';
+        })()
       };
     });
   },

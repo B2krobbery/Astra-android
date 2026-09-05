@@ -7,10 +7,7 @@ import { supabase } from '../lib/supabase';
 import { calculateMarriageReadiness } from '../utils/profileReadiness';
 import { AstrologyEngine } from '../data/astrologyEngine';
 
-const indianReligions = [
-  { name: 'Hindu' }, { name: 'Muslim' }, { name: 'Christian' }, { name: 'Sikh' },
-  { name: 'Jain' }, { name: 'Buddhist' }, { name: 'Parsi' }, { name: 'Jewish' }, { name: 'Other' }
-];
+import { indianReligions } from '../data/indianCastes';
 
 const SECTIONS = [
   'Basic Info',
@@ -21,12 +18,13 @@ const SECTIONS = [
   'Family & Marriage',
   'Astrology & Birth',
   'Chemistry & Interests',
+  'Values & Vision',
   'Partner Preferences',
   'Photo & Privacy',
 ];
 
 export const MarriageOnboardingPage: React.FC = () => {
-  const { userProfile, updateProfileInfo, uploadUserProfilePhoto } = useAstra();
+  const { userProfile, updateProfileInfo, uploadUserProfilePhoto, refreshProfile } = useAstra();
   const navigate = useNavigate();
   
   const [currentStep, setCurrentStep] = useState(0);
@@ -42,7 +40,7 @@ export const MarriageOnboardingPage: React.FC = () => {
   
   // Location
   const [location, setLocation] = useState(userProfile.location || '');
-  const [nativeLocation, setNativeLocation] = useState(userProfile.birthLocation || '');
+  const [nativeLocation, setNativeLocation] = useState((userProfile as any).nativeLocation || (userProfile as any).native_location || '');
   const [motherTongue, setMotherTongue] = useState(userProfile.motherTongue || 'Hindi');
   
   // Religion
@@ -51,7 +49,7 @@ export const MarriageOnboardingPage: React.FC = () => {
   const [subCaste, setSubCaste] = useState(userProfile.subCaste || '');
   const [region, setRegion] = useState((userProfile as any).region || 'North India');
   const [state, setState] = useState((userProfile as any).state || '');
-  const [cityDistrict, setCityDistrict] = useState((userProfile as any).cityDistrict || '');
+  const [cityDistrict, setCityDistrict] = useState((userProfile as any).cityDistrict || (userProfile as any).city_district || '');
   const [gotra, setGotra] = useState(userProfile.gotra || '');
   
   // Education & Career
@@ -73,21 +71,86 @@ export const MarriageOnboardingPage: React.FC = () => {
   
   // Astro
   const [birthTime, setBirthTime] = useState(userProfile.birthTime || '');
-  const [birthCity, setBirthCity] = useState(userProfile.birthCity || '');
+  const [birthCity, setBirthCity] = useState(userProfile.birthCity || userProfile.birthLocation || (userProfile as any).birth_location || '');
 
   // Preferences
   const [preferredReligion, setPreferredReligion] = useState(userProfile.partnerPreferences?.preferredReligion || 'Any');
   const [preferredCaste, setPreferredCaste] = useState(userProfile.partnerPreferences?.preferredCaste || 'Any');
+  const [preferredSubCaste, setPreferredSubCaste] = useState(userProfile.partnerPreferences?.preferredSubCaste || 'Any');
+  const [preferredGotra, setPreferredGotra] = useState(userProfile.partnerPreferences?.preferredGotra || 'Any (Except My Own)');
   const [preferredDiet, setPreferredDiet] = useState('Any');
   const [minAgePref, setMinAgePref] = useState('21');
   const [maxAgePref, setMaxAgePref] = useState('32');
-  const [religionTier, setReligionTier] = useState<'MUST_HAVE' | 'PREFERRED' | 'FLEXIBLE' | 'DEAL_BREAKER'>('MUST_HAVE');
-  const [dietTier, setDietTier] = useState<'MUST_HAVE' | 'PREFERRED' | 'FLEXIBLE' | 'DEAL_BREAKER'>('DEAL_BREAKER');
+  const [religionTier, setReligionTier] = useState<'MUST_HAVE' | 'PREFERRED' | 'FLEXIBLE' | 'DEAL_BREAKER'>((userProfile.partnerPreferences?.tierReligion as any) || 'MUST_HAVE');
+  const [casteTier, setCasteTier] = useState<'MUST_HAVE' | 'PREFERRED' | 'FLEXIBLE' | 'DEAL_BREAKER'>((userProfile.partnerPreferences?.tierCaste as any) || 'PREFERRED');
+  const [subCasteTier, setSubCasteTier] = useState<'MUST_HAVE' | 'PREFERRED' | 'FLEXIBLE' | 'DEAL_BREAKER'>((userProfile.partnerPreferences?.tierSubCaste as any) || 'FLEXIBLE');
+  const [gotraTier, setGotraTier] = useState<'MUST_HAVE' | 'PREFERRED' | 'FLEXIBLE' | 'DEAL_BREAKER'>((userProfile.partnerPreferences?.tierGotra as any) || 'DEAL_BREAKER');
+  const [dietTier, setDietTier] = useState<'MUST_HAVE' | 'PREFERRED' | 'FLEXIBLE' | 'DEAL_BREAKER'>((userProfile.partnerPreferences?.tierDiet as any) || 'DEAL_BREAKER');
   
   // Photos
   const [photoPreview, setPhotoPreview] = useState(userProfile.photoUrl || '');
   const [photoPrivacy, setPhotoPrivacy] = useState(userProfile.photoPrivacy || 'public');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Questionnaire
+  const [questionnaire, setQuestionnaire] = useState<Record<string, string>>(userProfile.marriageQuestionnaire || {});
+
+  const hasHydrated = useRef(false);
+
+  useEffect(() => {
+    if (Object.keys(userProfile).length > 0 && !hasHydrated.current) {
+      setName(userProfile.name || '');
+      setGender(userProfile.gender || 'Male');
+      setDateOfBirth(userProfile.dateOfBirth || '');
+      setHeight(userProfile.height || '');
+      setBloodGroup(userProfile.bloodGroup || 'B+');
+      
+      setLocation(userProfile.location || '');
+      setNativeLocation((userProfile as any).nativeLocation || (userProfile as any).native_location || '');
+      setMotherTongue(userProfile.motherTongue || 'Hindi');
+      
+      setReligion(userProfile.religion || 'Hindu');
+      setCaste(userProfile.caste || '');
+      setSubCaste(userProfile.subCaste || '');
+      setRegion((userProfile as any).region || 'North India');
+      setState((userProfile as any).state || '');
+      setCityDistrict((userProfile as any).cityDistrict || (userProfile as any).city_district || '');
+      setGotra(userProfile.gotra || '');
+      
+      setEducation10th(userProfile.education10th || '');
+      setEducation12th(userProfile.education12th || '');
+      setHigherEducation(userProfile.higherEducation || userProfile.education || '');
+      setProfession(userProfile.profession || '');
+      setEmployer(userProfile.employer || '');
+      setAnnualIncome(userProfile.annualIncome || '₹15 - ₹25 LPA');
+      
+      setHealthStatus((userProfile as any).healthStatus || userProfile.healthInfo || 'Excellent');
+      setDiet(userProfile.diet || 'Vegetarian');
+      setAlcohol(userProfile.alcohol || 'Never');
+      setSmoking(userProfile.smoking || 'Never');
+      
+      setMaritalStatus(userProfile.maritalStatus || 'Never Married');
+      
+      setBirthTime(userProfile.birthTime || '');
+      setBirthCity(userProfile.birthCity || userProfile.birthLocation || (userProfile as any).birth_location || '');
+      
+      setPreferredReligion(userProfile.partnerPreferences?.preferredReligion || 'Any');
+      setPreferredCaste(userProfile.partnerPreferences?.preferredCaste || 'Any');
+      setPreferredSubCaste(userProfile.partnerPreferences?.preferredSubCaste || 'Any');
+      setPreferredGotra(userProfile.partnerPreferences?.preferredGotra || 'Any (Except My Own)');
+      
+      setReligionTier((userProfile.partnerPreferences?.tierReligion as any) || 'MUST_HAVE');
+      setCasteTier((userProfile.partnerPreferences?.tierCaste as any) || 'PREFERRED');
+      setSubCasteTier((userProfile.partnerPreferences?.tierSubCaste as any) || 'FLEXIBLE');
+      setGotraTier((userProfile.partnerPreferences?.tierGotra as any) || 'DEAL_BREAKER');
+      setDietTier((userProfile.partnerPreferences?.tierDiet as any) || 'DEAL_BREAKER');
+      
+      setPhotoPreview(userProfile.photoUrl || '');
+      setPhotoPrivacy(userProfile.photoPrivacy || 'public');
+
+      hasHydrated.current = true;
+    }
+  }, [userProfile]);
 
   // Authoritative Readiness Calculation
   const currentProfileData = {
@@ -169,7 +232,8 @@ export const MarriageOnboardingPage: React.FC = () => {
         height,
         blood_group: bloodGroup,
         location,
-        birth_location: nativeLocation || birthCity,
+        birth_location: birthCity,
+        native_location: nativeLocation,
         mother_tongue: motherTongue,
         religion,
         caste,
@@ -197,6 +261,7 @@ export const MarriageOnboardingPage: React.FC = () => {
         nakshatra_pada: pada,
         onboarding_completed: isCompleted,
         intent: 'Marriage',
+        marriage_questionnaire: questionnaire,
         updated_at: new Date().toISOString()
       }).eq('id', uid);
 
@@ -216,11 +281,19 @@ export const MarriageOnboardingPage: React.FC = () => {
         user_id: uid,
         preferred_religion: preferredReligion === 'Any' ? null : preferredReligion,
         preferred_caste: preferredCaste === 'Any' ? null : preferredCaste,
+        preferred_sub_caste: preferredSubCaste === 'Any' ? null : preferredSubCaste,
+        preferred_gotra: preferredGotra === 'Any' ? null : preferredGotra,
+        tier_religion: religionTier,
+        tier_caste: casteTier,
+        tier_sub_caste: subCasteTier,
+        tier_gotra: gotraTier,
+        tier_diet: dietTier,
         updated_at: new Date().toISOString()
       }, { onConflict: 'user_id' });
 
       // Update Local Context State
-      updateProfileInfo(name, profession, higherEducation, location, [], [], region, '');
+      updateProfileInfo(name, profession, higherEducation, location, [], [], undefined, '');
+      await refreshProfile();
 
     } catch (e) {
       console.error('Failed to save marriage profile to DB:', e);
@@ -271,6 +344,19 @@ export const MarriageOnboardingPage: React.FC = () => {
     </div>
   );
 
+  const renderTextarea = (label: string, value: string, setter: (v: string) => void, placeholder: string) => (
+    <div style={{ marginBottom: '16px' }}>
+      <label style={{ display: 'block', fontSize: '0.8rem', color: '#94A3B8', marginBottom: '6px' }}>{label}</label>
+      <textarea 
+        value={value} 
+        onChange={e => setter(e.target.value)}
+        placeholder={placeholder}
+        rows={3}
+        style={{ width: '100%', padding: '12px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.15)', color: '#FFF', fontSize: '0.9rem', resize: 'vertical' }}
+      />
+    </div>
+  );
+
   const renderStepContent = () => {
     switch(currentStep) {
       case 0: // Basic
@@ -298,9 +384,45 @@ export const MarriageOnboardingPage: React.FC = () => {
           <div>
             <h4 style={{ color: 'white', marginBottom: '24px' }}>Religion & Community</h4>
             {renderSelect('Religion', religion, setReligion, indianReligions.map(r => r.name))}
-            {renderInput('Caste / Community', caste, setCaste, 'e.g. Brahmin, Nair, Agarwal, Khatri')}
-            {renderInput('Sub-Caste', subCaste, setSubCaste, 'e.g. Saraswat, Iyer, Kanyakubja')}
-            {renderSelect('Cultural Region', region, setRegion, ['North India', 'South India', 'West India', 'East India', 'Central India', 'NRI'])}
+            
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', color: '#94A3B8', fontSize: '0.85rem', marginBottom: '8px' }}>Caste / Community</label>
+              <select
+                value={caste}
+                onChange={e => { setCaste(e.target.value); setSubCaste(''); }}
+                style={{ width: '100%', padding: '12px', borderRadius: '12px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF' }}
+              >
+                <option value="">Select Caste</option>
+                {indianReligions.find(r => r.name === religion)?.castes.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                <option value="Any">Any</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', color: '#94A3B8', fontSize: '0.85rem', marginBottom: '8px' }}>Sub-Caste</label>
+              {(indianReligions.find(r => r.name === religion)?.castes.find(c => c.name === caste)?.subCastes?.length || 0) > 0 ? (
+                <select
+                  value={subCaste}
+                  onChange={e => setSubCaste(e.target.value)}
+                  style={{ width: '100%', padding: '12px', borderRadius: '12px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF' }}
+                >
+                  <option value="">Select Sub-Caste</option>
+                  {indianReligions.find(r => r.name === religion)?.castes.find(c => c.name === caste)?.subCastes.map(sc => <option key={sc} value={sc}>{sc}</option>)}
+                  <option value="Any">Any</option>
+                  <option value="Other">Other</option>
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  placeholder="e.g. Saraswat, Iyer, Kanyakubja"
+                  value={subCaste}
+                  onChange={e => setSubCaste(e.target.value)}
+                  style={{ width: '100%', padding: '12px', borderRadius: '12px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF' }}
+                />
+              )}
+            </div>
+            {renderSelect('Cultural Region', region, setRegion, ['North India', 'South India', 'West India', 'East India', 'Central India', 'Kerala', 'NRI'])}
             {renderInput('State', state, setState, 'e.g. Maharashtra')}
             {renderInput('City / District', cityDistrict, setCityDistrict, 'e.g. Pune')}
             {renderInput('Gotra', gotra, setGotra, 'e.g. Kashyapa, Vatsa, Bharadwaja')}
@@ -358,7 +480,26 @@ export const MarriageOnboardingPage: React.FC = () => {
             {renderInput('Music & Artists', (userProfile as any).chemistryAnswers?.music?.join(', ') || 'A.R. Rahman, Classical', () => {}, 'Comma-separated')}
           </div>
         );
-      case 8: // Partner Preferences
+      case 8: // Values & Vision
+        return (
+          <div>
+            <h4 style={{ color: 'white', marginBottom: '24px' }}>Values & Vision</h4>
+            <p style={{ color: '#94A3B8', fontSize: '0.85rem', marginBottom: '16px' }}>
+              These answers will be displayed directly on your profile to help matches understand your personal values.
+            </p>
+            {renderTextarea('Future career plans and goals', questionnaire['q1'] || '', v => setQuestionnaire(prev => ({ ...prev, q1: v })), 'e.g. Planning to start a business or grow in tech')}
+            {renderTextarea('Work-life balance', questionnaire['q2'] || '', v => setQuestionnaire(prev => ({ ...prev, q2: v })), 'e.g. Weekends are strictly for family')}
+            {renderTextarea('Household responsibilities', questionnaire['q3'] || '', v => setQuestionnaire(prev => ({ ...prev, q3: v })), 'e.g. Expect to split 50/50')}
+            {renderTextarea('Finances and investments', questionnaire['q4'] || '', v => setQuestionnaire(prev => ({ ...prev, q4: v })), 'e.g. Prefer to invest heavily in real estate')}
+            {renderTextarea('Family involvement', questionnaire['q5'] || '', v => setQuestionnaire(prev => ({ ...prev, q5: v })), 'e.g. Very close to my parents, visit them often')}
+            {renderTextarea('Living arrangements', questionnaire['q6'] || '', v => setQuestionnaire(prev => ({ ...prev, q6: v })), 'e.g. Plan to live independently after marriage')}
+            {renderTextarea('Handling conflicts', questionnaire['q7'] || '', v => setQuestionnaire(prev => ({ ...prev, q7: v })), 'e.g. Direct communication and compromise')}
+            {renderTextarea('Starting a family', questionnaire['q8'] || '', v => setQuestionnaire(prev => ({ ...prev, q8: v })), 'e.g. Want kids after 2-3 years of marriage')}
+            {renderTextarea('Weekends and free time', questionnaire['q9'] || '', v => setQuestionnaire(prev => ({ ...prev, q9: v })), 'e.g. Hiking, trying new restaurants, or relaxing at home')}
+            {renderTextarea('Most important quality in a partner', questionnaire['q10'] || '', v => setQuestionnaire(prev => ({ ...prev, q10: v })), 'e.g. Honesty, ambition, and a good sense of humor')}
+          </div>
+        );
+      case 9: // Partner Preferences
         return (
           <div>
             <h4 style={{ color: 'white', marginBottom: '24px' }}>Partner Preferences & Criteria</h4>
@@ -381,6 +522,88 @@ export const MarriageOnboardingPage: React.FC = () => {
                   value={religionTier} 
                   onChange={e => setReligionTier(e.target.value as any)}
                   style={{ width: '130px', padding: '10px', borderRadius: '8px', background: '#0F0C1B', border: '1px solid var(--accent-amber)', color: 'var(--accent-amber-light)', fontWeight: 700 }}
+                >
+                  <option value="MUST_HAVE">MUST HAVE</option>
+                  <option value="PREFERRED">PREFERRED</option>
+                  <option value="FLEXIBLE">FLEXIBLE</option>
+                  <option value="DEAL_BREAKER">DEAL BREAKER</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', marginBottom: '16px' }}>
+              <h5 style={{ color: '#E2E8F0', margin: '0 0 8px 0' }}>Caste Preference</h5>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <select
+                  value={preferredCaste}
+                  onChange={e => { setPreferredCaste(e.target.value); setPreferredSubCaste('Any'); }}
+                  style={{ flex: 1, padding: '10px', borderRadius: '8px', background: '#0F0C1B', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF' }}
+                >
+                  <option value="Any">Any Caste</option>
+                  {indianReligions.find(r => r.name === (preferredReligion === 'Any' ? religion : preferredReligion))?.castes.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                </select>
+                <select 
+                  value={casteTier} 
+                  onChange={e => setCasteTier(e.target.value as any)}
+                  style={{ width: '130px', padding: '10px', borderRadius: '8px', background: '#0F0C1B', border: '1px solid var(--accent-amber)', color: 'var(--accent-amber-light)', fontWeight: 700 }}
+                >
+                  <option value="MUST_HAVE">MUST HAVE</option>
+                  <option value="PREFERRED">PREFERRED</option>
+                  <option value="FLEXIBLE">FLEXIBLE</option>
+                  <option value="DEAL_BREAKER">DEAL BREAKER</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', marginBottom: '16px' }}>
+              <h5 style={{ color: '#E2E8F0', margin: '0 0 8px 0' }}>Sub-Caste Preference</h5>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {(indianReligions.find(r => r.name === (preferredReligion === 'Any' ? religion : preferredReligion))?.castes.find(c => c.name === preferredCaste)?.subCastes?.length || 0) > 0 ? (
+                  <select
+                    value={preferredSubCaste}
+                    onChange={e => setPreferredSubCaste(e.target.value)}
+                    style={{ flex: 1, padding: '10px', borderRadius: '8px', background: '#0F0C1B', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF' }}
+                  >
+                    <option value="Any">Any Sub-Caste</option>
+                    {indianReligions.find(r => r.name === (preferredReligion === 'Any' ? religion : preferredReligion))?.castes.find(c => c.name === preferredCaste)?.subCastes.map(sc => <option key={sc} value={sc}>{sc}</option>)}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    placeholder="e.g. Kanyakubja, Any"
+                    value={preferredSubCaste}
+                    onChange={e => setPreferredSubCaste(e.target.value)}
+                    style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF' }}
+                  />
+                )}
+                <select 
+                  value={subCasteTier} 
+                  onChange={e => setSubCasteTier(e.target.value as any)}
+                  style={{ width: '130px', padding: '10px', borderRadius: '8px', background: '#0F0C1B', border: '1px solid var(--accent-amber)', color: 'var(--accent-amber-light)', fontWeight: 700 }}
+                >
+                  <option value="MUST_HAVE">MUST HAVE</option>
+                  <option value="PREFERRED">PREFERRED</option>
+                  <option value="FLEXIBLE">FLEXIBLE</option>
+                  <option value="DEAL_BREAKER">DEAL BREAKER</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', marginBottom: '16px' }}>
+              <h5 style={{ color: '#E2E8F0', margin: '0 0 8px 0' }}>Gotra Preference</h5>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <select 
+                  value={preferredGotra} 
+                  onChange={e => setPreferredGotra(e.target.value)}
+                  style={{ flex: 1, padding: '10px', borderRadius: '8px', background: '#0F0C1B', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF' }}
+                >
+                  <option value="Any">Any Gotra</option>
+                  <option value="Any (Except My Own)">Any (Except My Own)</option>
+                </select>
+                <select 
+                  value={gotraTier} 
+                  onChange={e => setGotraTier(e.target.value as any)}
+                  style={{ width: '130px', padding: '10px', borderRadius: '8px', background: '#0F0C1B', border: '1px solid #F43F5E', color: '#FDA4AF', fontWeight: 700 }}
                 >
                   <option value="MUST_HAVE">MUST HAVE</option>
                   <option value="PREFERRED">PREFERRED</option>
@@ -436,7 +659,7 @@ export const MarriageOnboardingPage: React.FC = () => {
             </div>
           </div>
         );
-      case 9: // Photo & Privacy
+      case 10: // Photo & Privacy
         return (
           <div>
             <h4 style={{ color: 'white', marginBottom: '24px' }}>Profile Photo & Privacy</h4>
