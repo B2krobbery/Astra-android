@@ -801,9 +801,16 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const sub = ChatService.subscribeToMessages(convo.id, (newMsg) => {
         setActiveConversation(prev => {
           if (!prev) return prev;
-          // Avoid duplicates (since we also insert optimistically)
-          if (prev.messages.some(m => m.id === newMsg.id)) return prev;
-          return { ...prev, messages: [...prev.messages, newMsg] };
+          
+          // Remove any temporary optimistic message with the exact same text that we just sent
+          const filteredMessages = prev.messages.filter(m => 
+            !(m.id.startsWith('temp_') && m.message === newMsg.message && m.isFromUser === newMsg.isFromUser)
+          );
+
+          // Avoid duplicates if the real message was already inserted
+          if (filteredMessages.some(m => m.id === newMsg.id)) return prev;
+          
+          return { ...prev, messages: [...filteredMessages, newMsg] };
         });
         
         setConversations(prevConvos => prevConvos.map(c => {
@@ -828,7 +835,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const userMsg = {
       id: `temp_${Date.now()}`,
-      senderName: userProfile.name,
+      senderName: 'You', // Consistently use 'You' to match real-time incoming messages
       message: text,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       isFromUser: true
