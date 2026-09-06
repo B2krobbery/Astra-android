@@ -19,10 +19,16 @@ export const AuthService = {
     const clientId = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GOOGLE_CLIENT_ID) || ((globalThis as any).process?.env?.VITE_GOOGLE_CLIENT_ID) || '';
 
     if (Capacitor.isNativePlatform()) {
+      if (!clientId) {
+        return {
+          data: null,
+          error: new Error('Google Sign-In is not configured: missing VITE_GOOGLE_CLIENT_ID'),
+          cancelled: false,
+        };
+      }
+
       try {
-        if (clientId) {
-          await GoogleOneTapAuth.initialize({ clientId });
-        }
+        await GoogleOneTapAuth.initialize({ clientId });
 
         // Trigger native Google button flow (Credential Manager / Play Services)
         let result = await GoogleOneTapAuth.signInWithGoogleButtonFlowForNativePlatform();
