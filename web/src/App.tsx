@@ -54,6 +54,22 @@ const AppRoutes: React.FC = () => {
         }
       }
     });
+
+    // Handle Web browser OAuth redirect (implicit flow)
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token')) {
+      const params = new URLSearchParams(hash.substring(1));
+      const accessToken = params.get('access_token');
+      const refreshToken = params.get('refresh_token');
+      if (accessToken && refreshToken) {
+        supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }).then(() => {
+          // Clear hash from URL for cleaner history
+          window.history.replaceState(null, '', window.location.pathname);
+          // Reload page to let AstraContext pick up the session cleanly and redirect
+          window.location.reload();
+        });
+      }
+    }
   }, [navigate]);
 
   return (
@@ -62,6 +78,7 @@ const AppRoutes: React.FC = () => {
       <SplashScreenOverlay />
 
       <Routes>
+        <Route path="/" element={<SplashPage />} />
         <Route path="/splash" element={<SplashPage />} />
         <Route path="/onboarding-typeform" element={<TypeformOnboardingPage />} />
         <Route path="/marriage-onboarding" element={<MarriageOnboardingPage />} />
@@ -80,7 +97,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
         <Route path="/admin/marketing" element={<AdminMarketingPage />} />
         <Route path="/admin" element={<Navigate to="/admin/ai-agents" replace />} />
-        <Route path="*" element={<Navigate to="/splash" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
       {/* Global Verification Modal Overlay */}
