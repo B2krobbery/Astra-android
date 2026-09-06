@@ -47,8 +47,7 @@ export const MARRIAGE_REQUIRED_FIELDS: ReadinessFieldDef[] = [
   { key: 'diet', label: 'Dietary Preference', category: 'Lifestyle', getValue: p => p.diet },
   { key: 'maritalStatus', label: 'Marital Status', category: 'Lifestyle', getValue: p => p.maritalStatus || p.marital_status },
 
-  // Astrology / Birth Inputs
-  { key: 'birthTime', label: 'Exact Birth Time', category: 'Astrology', getValue: p => p.birthTime || p.birth_time },
+  // Astrology / Birth Inputs (Birth time made optional)
   { key: 'birthLocation', label: 'Birth City / Place', category: 'Astrology', getValue: p => p.birthLocation || p.birth_location || p.birthCity },
 
   // Photos

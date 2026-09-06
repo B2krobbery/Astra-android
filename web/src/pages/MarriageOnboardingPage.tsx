@@ -23,6 +23,42 @@ const SECTIONS = [
   'Photo & Privacy',
 ];
 
+const NAKSHATRAS = [
+  { id: 'Ashwini', label: 'Ashwini (Aswathi)' },
+  { id: 'Bharani', label: 'Bharani' },
+  { id: 'Krittika', label: 'Krittika (Karthika)' },
+  { id: 'Rohini', label: 'Rohini' },
+  { id: 'Mrigashira', label: 'Mrigashira (Makayiram)' },
+  { id: 'Ardra', label: 'Ardra (Thiruvathira)' },
+  { id: 'Punarvasu', label: 'Punarvasu (Punartham)' },
+  { id: 'Pushya', label: 'Pushya (Pooyam)' },
+  { id: 'Ashlesha', label: 'Ashlesha (Ayilyam)' },
+  { id: 'Magha', label: 'Magha (Makam)' },
+  { id: 'Purva Phalguni', label: 'Purva Phalguni (Pooram)' },
+  { id: 'Uttara Phalguni', label: 'Uttara Phalguni (Uthram)' },
+  { id: 'Hasta', label: 'Hasta (Atham)' },
+  { id: 'Chitra', label: 'Chitra (Chithira)' },
+  { id: 'Swati', label: 'Swati (Chothi)' },
+  { id: 'Vishakha', label: 'Vishakha (Visakam)' },
+  { id: 'Anuradha', label: 'Anuradha (Anizham)' },
+  { id: 'Jyeshtha', label: 'Jyeshtha (Thrikketta)' },
+  { id: 'Mula', label: 'Mula (Moolam)' },
+  { id: 'Purva Ashadha', label: 'Purva Ashadha (Pooradam)' },
+  { id: 'Uttara Ashadha', label: 'Uttara Ashadha (Uthradam)' },
+  { id: 'Shravana', label: 'Shravana (Thiruvonam)' },
+  { id: 'Dhanishta', label: 'Dhanishta (Avittam)' },
+  { id: 'Shatabhisha', label: 'Shatabhisha (Chathayam)' },
+  { id: 'Purva Bhadrapada', label: 'Purva Bhadrapada (Pooruruttathi)' },
+  { id: 'Uttara Bhadrapada', label: 'Uttara Bhadrapada (Uthrattathi)' },
+  { id: 'Revati', label: 'Revati (Revathi)' }
+];
+
+const RASHIS = [
+  'Mesha (Aries)', 'Vrishabha (Taurus)', 'Mithuna (Gemini)', 'Karka (Cancer)',
+  'Simha (Leo)', 'Kanya (Virgo)', 'Tula (Libra)', 'Vrishchika (Scorpio)',
+  'Dhanu (Sagittarius)', 'Makara (Capricorn)', 'Kumbha (Aquarius)', 'Meena (Pisces)'
+];
+
 export const MarriageOnboardingPage: React.FC = () => {
   const { userProfile, updateProfileInfo, uploadUserProfilePhoto, refreshProfile } = useAstra();
   const navigate = useNavigate();
@@ -72,6 +108,8 @@ export const MarriageOnboardingPage: React.FC = () => {
   // Astro
   const [birthTime, setBirthTime] = useState(userProfile.birthTime || '');
   const [birthCity, setBirthCity] = useState(userProfile.birthCity || userProfile.birthLocation || (userProfile as any).birth_location || '');
+  const [manualNakshatra, setManualNakshatra] = useState(userProfile.nakshatra || '');
+  const [manualRashi, setManualRashi] = useState(userProfile.rashi || '');
 
   // Preferences
   const [preferredReligion, setPreferredReligion] = useState(userProfile.partnerPreferences?.preferredReligion || 'Any');
@@ -133,6 +171,8 @@ export const MarriageOnboardingPage: React.FC = () => {
       
       setBirthTime(userProfile.birthTime || '');
       setBirthCity(userProfile.birthCity || userProfile.birthLocation || (userProfile as any).birth_location || '');
+      setManualNakshatra(userProfile.nakshatra || '');
+      setManualRashi(userProfile.rashi || '');
       
       setPreferredReligion(userProfile.partnerPreferences?.preferredReligion || 'Any');
       setPreferredCaste(userProfile.partnerPreferences?.preferredCaste || 'Any');
@@ -206,16 +246,17 @@ export const MarriageOnboardingPage: React.FC = () => {
       const uid = data.session.user.id;
 
       // Calculate Astrology Chart accurately
-      let nakshatra = userProfile.nakshatra || '';
-      let rashi = userProfile.rashi || '';
+      let nakshatra = manualNakshatra || userProfile.nakshatra || '';
+      let rashi = manualRashi || userProfile.rashi || '';
       let nadi = userProfile.nadi || '';
       let manglik = userProfile.manglik || 'No';
       let pada = 1;
 
-      if (dateOfBirth && birthTime) {
+      // Only auto-calculate if manual overrides are not provided and we have birth time
+      if ((!manualNakshatra || !manualRashi) && dateOfBirth && birthTime) {
         const chart = AstrologyEngine.calculateChart(dateOfBirth, birthTime, birthCity || location);
-        nakshatra = chart.nakshatraName;
-        rashi = chart.rashiName;
+        if (!manualNakshatra) nakshatra = chart.nakshatraName;
+        if (!manualRashi) rashi = chart.rashiName;
         nadi = chart.nadiName;
         manglik = chart.isManglik ? 'Yes' : 'No';
         pada = chart.pada;
@@ -265,16 +306,14 @@ export const MarriageOnboardingPage: React.FC = () => {
         updated_at: new Date().toISOString()
       }).eq('id', uid);
 
-      // 2. Update private_profiles (No invalid columns!)
-      if (birthTime) {
-        await supabase.from('private_profiles').upsert({
-          id: uid,
-          birth_time: birthTime,
-          birth_latitude: coords.lat,
-          birth_longitude: coords.lon,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'id' });
-      }
+      // 2. Update private_profiles
+      await supabase.from('private_profiles').upsert({
+        id: uid,
+        birth_time: birthTime || null,
+        birth_latitude: coords.lat,
+        birth_longitude: coords.lon,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'id' });
 
       // 3. Update Preferences & Tiers
       await supabase.from('preferences').upsert({
@@ -464,7 +503,40 @@ export const MarriageOnboardingPage: React.FC = () => {
             <p style={{ color: '#94A3B8', fontSize: '0.85rem', marginBottom: '16px' }}>
               Used strictly to calculate authentic Sidereal Planetary coordinates, Nakshatra, Rashi, and 36 Guna Milan. Birth time is kept private.
             </p>
-            {renderInput('Exact Birth Time', birthTime, setBirthTime, 'HH:MM (24 hr format, e.g. 14:30)', 'time')}
+            
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94A3B8', marginBottom: '6px' }}>Nakshatra (Birth Star)</label>
+              <select 
+                value={manualNakshatra} 
+                onChange={e => setManualNakshatra(e.target.value)}
+                style={{ width: '100%', padding: '12px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.15)', color: '#FFF', fontSize: '0.9rem' }}
+              >
+                <option value="" style={{ background: '#0F0C1B' }}>✨ Auto-Calculate from Birth Time</option>
+                {NAKSHATRAS.map(n => <option key={n.id} value={n.id} style={{ background: '#0F0C1B' }}>{n.label}</option>)}
+              </select>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: '#94A3B8', marginBottom: '6px' }}>Rashi (Moon Sign)</label>
+              <select 
+                value={manualRashi} 
+                onChange={e => setManualRashi(e.target.value)}
+                style={{ width: '100%', padding: '12px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.15)', color: '#FFF', fontSize: '0.9rem' }}
+              >
+                <option value="" style={{ background: '#0F0C1B' }}>✨ Auto-Calculate from Birth Time</option>
+                {RASHIS.map(r => <option key={r} value={r} style={{ background: '#0F0C1B' }}>{r}</option>)}
+              </select>
+            </div>
+
+            {(!manualNakshatra || !manualRashi) && (
+              <div style={{ padding: '12px', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.2)', marginBottom: '16px' }}>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--accent-amber-light)' }}>
+                  Because you chose auto-calculate, please provide your exact birth time.
+                </p>
+              </div>
+            )}
+
+            {renderInput('Exact Birth Time (Optional)', birthTime, setBirthTime, 'HH:MM (24 hr format, e.g. 14:30)', 'time')}
             {renderInput('Birth City / Place', birthCity, setBirthCity, 'e.g. New Delhi')}
           </div>
         );
