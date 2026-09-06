@@ -37,7 +37,21 @@ export const SplashPage: React.FC = () => {
           if (profile?.onboarding_completed) {
             navigate('/discover');
           } else {
-            if (profile?.intent === 'Marriage') {
+            let finalIntent = profile?.intent;
+            const pendingIntent = localStorage.getItem('pendingIntent');
+            
+            if (pendingIntent) {
+              finalIntent = pendingIntent === 'Login' ? (profile?.intent || 'Marriage') : pendingIntent;
+              localStorage.removeItem('pendingIntent');
+              
+              // Persist the restored intent to the database
+              await supabase.from('profiles').upsert({
+                id: sessionUser.id,
+                intent: finalIntent
+              });
+            }
+
+            if (finalIntent === 'Marriage') {
               navigate('/marriage-onboarding');
             } else {
               navigate('/onboarding-typeform');
@@ -157,6 +171,9 @@ export const SplashPage: React.FC = () => {
     setIsLoading(true);
     setErrorMsg('');
     try {
+      // Save intent to localStorage for Web OAuth redirect recovery
+      localStorage.setItem('pendingIntent', selectedIntent);
+      
       const result = await AuthService.signInWithGoogleNative();
       if (result.cancelled) {
         setIsLoading(false);
