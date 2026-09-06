@@ -86,6 +86,8 @@ export interface Candidate {
   compatibilityNote?: string;
   matchReasons?: string[];
   marriageQuestionnaire?: Record<string, string>;
+  voiceNoteUrl?: string;
+  voiceNotePrompt?: string;
 }
 
 export interface UserProfile {

@@ -131,6 +131,8 @@ export const DiscoveryService = {
         height: p.height,
         diet: p.diet,
         photoPrivacy: p.photo_privacy,
+        voiceNoteUrl: p.voice_note_url,
+        voiceNotePrompt: p.voice_note_prompt,
         regionalCategory: p.region || (() => {
           const loc = (p.location || '').toLowerCase();
           if (loc.includes('kerala')) return 'Kerala';

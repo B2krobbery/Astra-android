@@ -1,23 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, Volume2, Mic } from 'lucide-react';
 
 interface VoiceIntroCardProps {
   candidateName: string;
   durationSeconds?: number;
   promptText?: string;
+  audioUrl?: string;
 }
 
 export const VoiceIntroCard: React.FC<VoiceIntroCardProps> = ({
   candidateName,
   durationSeconds = 15,
-  promptText = "Hi, I'd love to connect and see where this goes!"
+  promptText = "Hi, I'd love to connect and see where this goes!",
+  audioUrl
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Clean up audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  // Sync audioUrl changes
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+      setIsPlaying(false);
+      setProgress(0);
+    }
+  }, [audioUrl]);
+
+  // Fallback timer if no real audioUrl provided
   useEffect(() => {
     let timer: any;
-    if (isPlaying) {
+    if (!audioUrl && isPlaying) {
       timer = setInterval(() => {
         setProgress(prev => {
           if (prev >= 100) {
@@ -27,15 +51,51 @@ export const VoiceIntroCard: React.FC<VoiceIntroCardProps> = ({
           return prev + (100 / (durationSeconds * 10));
         });
       }, 100);
-    } else {
+    } else if (!audioUrl) {
       clearInterval(timer);
     }
     return () => clearInterval(timer);
-  }, [isPlaying, durationSeconds]);
+  }, [isPlaying, durationSeconds, audioUrl]);
 
   const togglePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsPlaying(!isPlaying);
+
+    if (audioUrl) {
+      if (!audioRef.current) {
+        const audio = new Audio(audioUrl);
+        audioRef.current = audio;
+
+        audio.onended = () => {
+          setIsPlaying(false);
+          setProgress(0);
+        };
+
+        audio.ontimeupdate = () => {
+          if (audio.duration && !isNaN(audio.duration)) {
+            setProgress((audio.currentTime / audio.duration) * 100);
+          }
+        };
+
+        audio.onerror = (err) => {
+          console.error("Audio playback error:", err);
+          setIsPlaying(false);
+        };
+      }
+
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        audioRef.current.play().then(() => {
+          setIsPlaying(true);
+        }).catch(err => {
+          console.error("Failed to play audio:", err);
+          setIsPlaying(false);
+        });
+      }
+    } else {
+      setIsPlaying(!isPlaying);
+    }
   };
 
   return (
