@@ -26,40 +26,68 @@ export const DiscoveryService = {
   async mapProfilesToCandidates(profiles: any[]): Promise<Candidate[]> {
     if (!profiles || profiles.length === 0) return [];
 
-    // Fetch photos for all candidates
     const profileIds = profiles.map((p: any) => p.id);
     const { data: photos } = await supabase
       .from('profile_photos')
       .select('user_id, storage_path')
       .in('user_id', profileIds);
 
-    // Fetch Signed URLs for all photos in one batch
-    let signedUrlsMap: Record<string, string> = {};
-    if (photos && photos.length > 0) {
-      const pathsToSign = photos.map(p => p.storage_path).filter(p => !p.startsWith('http'));
-      if (pathsToSign.length > 0) {
-        const { data: signedUrls } = await supabase.storage.from('avatars').createSignedUrls(pathsToSign, 3600);
-        if (signedUrls) {
-          signedUrls.forEach(su => {
-            if (su.signedUrl) signedUrlsMap[su.path || ""] = su.signedUrl;
-          });
+    // Build map of user_id -> storage_path[] (checking both profiles.avatar_storage_path and profile_photos)
+    const userPhotoPathsMap: Record<string, string[]> = {};
+    profiles.forEach((p: any) => {
+      userPhotoPathsMap[p.id] = [];
+      if (p.avatar_storage_path) {
+        userPhotoPathsMap[p.id].push(p.avatar_storage_path);
+      }
+    });
+
+    photos?.forEach((photo: any) => {
+      if (photo.user_id && photo.storage_path) {
+        if (!userPhotoPathsMap[photo.user_id]) userPhotoPathsMap[photo.user_id] = [];
+        if (!userPhotoPathsMap[photo.user_id].includes(photo.storage_path)) {
+          userPhotoPathsMap[photo.user_id].push(photo.storage_path);
         }
       }
+    });
+
+    // Collect all distinct paths to sign
+    const allPaths: string[] = [];
+    Object.values(userPhotoPathsMap).forEach(paths => {
+      paths.forEach(p => {
+        if (p && !allPaths.includes(p) && !p.startsWith('http')) {
+          allPaths.push(p);
+        }
+      });
+    });
+
+    // Sign URLs by index mapping with publicUrl fallback
+    const signedUrlsMap: Record<string, string> = {};
+    if (allPaths.length > 0) {
+      const { data: signedUrls } = await supabase.storage.from('avatars').createSignedUrls(allPaths, 3600);
+      allPaths.forEach((path, i) => {
+        if (signedUrls && signedUrls[i]?.signedUrl) {
+          signedUrlsMap[path] = signedUrls[i].signedUrl;
+        } else {
+          const { data: pubData } = supabase.storage.from('avatars').getPublicUrl(path);
+          if (pubData?.publicUrl) {
+            signedUrlsMap[path] = pubData.publicUrl;
+          }
+        }
+      });
     }
 
     return profiles.map((p: any) => {
-      // Find all photos for this profile
-      const userPhotos = photos?.filter(photo => photo.user_id === p.id) || [];
-      const photoUrls = userPhotos.length > 0 
-        ? userPhotos.map(photo => {
-            if (photo.storage_path.startsWith('http')) {
-              return photo.storage_path;
-            }
-            return signedUrlsMap[photo.storage_path] || ''; // Use signed URL
-          }).filter(url => url !== '')
-        : [`https://ui-avatars.com/api/?name=${encodeURIComponent(p.display_name || 'User')}&background=1E1836&color=F59E0B&size=800`]; // Fallback
+      const paths = userPhotoPathsMap[p.id] || [];
+      const photoUrls: string[] = [];
 
-      // If no valid signed URLs could be loaded (due to RLS or missing files), show fallback
+      paths.forEach(path => {
+        if (path.startsWith('http')) {
+          photoUrls.push(path);
+        } else if (signedUrlsMap[path]) {
+          photoUrls.push(signedUrlsMap[path]);
+        }
+      });
+
       if (photoUrls.length === 0) {
         photoUrls.push(`https://ui-avatars.com/api/?name=${encodeURIComponent(p.display_name || 'User')}&background=1E1836&color=F59E0B&size=800`);
       }
