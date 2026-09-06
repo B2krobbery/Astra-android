@@ -28,7 +28,8 @@ export const DiscoverFeedPage: React.FC = () => {
     setIsPreferenceStrictFilterOn,
     passedCandidatesHistory,
     rewindCandidate,
-    resetFeed
+    resetFeed,
+    candidates
   } = useAstra();
 
   const toggleLanguage = () => {
@@ -412,6 +413,31 @@ export const DiscoverFeedPage: React.FC = () => {
             <p style={{ color: themeMode === 'LIGHT' ? '#475569' : '#94A3B8', fontSize: '0.9rem', marginTop: '8px', maxWidth: '280px', margin: '8px auto 0' }}>
               {t('check_back_tomorrow')}
             </p>
+
+            {userProfile.regionalPreference !== 'ALL' && candidates.length > 0 && (
+              <button
+                onClick={() => setRegionalPreference('ALL')}
+                style={{
+                  marginTop: '16px',
+                  padding: '10px 20px',
+                  borderRadius: '9999px',
+                  background: 'linear-gradient(135deg, var(--accent-amber), #D97706)',
+                  color: '#0F0C1B',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Globe size={16} /> Show All Regions ({candidates.length} profiles available)
+              </button>
+            )}
+
+            <br />
             <button
               onClick={() => {
                 const btn = document.getElementById('reset-feed-btn');
@@ -423,7 +449,7 @@ export const DiscoverFeedPage: React.FC = () => {
               }}
               id="reset-feed-btn"
               style={{
-                marginTop: '24px',
+                marginTop: '16px',
                 padding: '8px 16px',
                 borderRadius: '9999px',
                 background: 'rgba(245, 158, 11, 0.1)',

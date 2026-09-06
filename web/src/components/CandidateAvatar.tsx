@@ -16,7 +16,7 @@ export const CandidateAvatar: React.FC<CandidateAvatarProps> = ({
   isVerified = true,
   onClick
 }) => {
-  const [imgError, setImgError] = useState(false);
+  const [imgError, setImgError] = React.useState(false);
 
   return (
     <div

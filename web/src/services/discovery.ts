@@ -4,7 +4,10 @@ import { Candidate } from '../types';
 export const DiscoveryService = {
   async getCandidates(filters: any = {}): Promise<Candidate[]> {
     const { data: profiles, error } = await supabase.rpc('get_discovery_candidates', { p_filters: filters });
-    if (error) throw error;
+    if (error) {
+      console.error('[DiscoveryService] get_discovery_candidates error:', error.message, error.details, error.hint);
+      return [];
+    }
     return DiscoveryService.mapProfilesToCandidates(profiles || []);
   },
 

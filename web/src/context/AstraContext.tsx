@@ -1,6 +1,6 @@
 import { calculateMarriageReadiness } from '../utils/profileReadiness';
 import { PhotoService, PhotoRequestRecord } from '../services/PhotoService';
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 
 import {
   UserProfile,
@@ -129,33 +129,50 @@ const AstraContext = createContext<AstraContextType | undefined>(undefined);
 export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Supabase Phase 1 State
   const [sessionUser, setSessionUser] = useState<any | null>(null);
+  const isUploadingPhoto = useRef(false);
   
   
-  const loadBackendData = async () => {
-    if (!sessionUser) return;
+  // Keep a stable ref to the current sessionUser so loadBackendData always has fresh auth
+  const sessionUserRef = useRef<any>(null);
+  useEffect(() => { sessionUserRef.current = sessionUser; }, [sessionUser]);
+
+  const loadBackendData = useCallback(async () => {
+    const currentUser = sessionUserRef.current;
+    if (!currentUser) return;
     try {
-      const dbProfile = await ProfileService.getProfile(sessionUser.id);
+      const dbProfile = await ProfileService.getProfile(currentUser.id);
       if (dbProfile) {
          let photoUrl = undefined;
-         const { data: photoData } = await supabase.from('profile_photos').select('storage_path').eq('user_id', sessionUser.id).eq('is_primary', true).maybeSingle();
-         if (photoData && photoData.storage_path) {
-           if (photoData.storage_path.startsWith('http')) {
-             photoUrl = photoData.storage_path;
-           } else {
-             const { data: signedData } = await supabase.storage.from('avatars').createSignedUrl(photoData.storage_path, 3600);
-             if (signedData) photoUrl = signedData.signedUrl;
+
+         // Primary source: avatar_storage_path stored directly on profiles (reliable)
+         const avatarPath = dbProfile.avatar_storage_path;
+         if (avatarPath) {
+           const { data: signedData } = await supabase.storage.from('avatars').createSignedUrl(avatarPath, 3600);
+           if (signedData) photoUrl = signedData.signedUrl;
+         }
+
+         // Fallback: profile_photos table (for backward compat / other users)
+         if (!photoUrl) {
+           const { data: photoData } = await supabase.from('profile_photos').select('storage_path').eq('user_id', currentUser.id).eq('is_primary', true).maybeSingle();
+           if (photoData && photoData.storage_path) {
+             if (photoData.storage_path.startsWith('http')) {
+               photoUrl = photoData.storage_path;
+             } else {
+               const { data: signedData } = await supabase.storage.from('avatars').createSignedUrl(photoData.storage_path, 3600);
+               if (signedData) photoUrl = signedData.signedUrl;
+             }
            }
          }
 
-         const { data: privateProfileData } = await supabase.from('private_profiles').select('birth_time').eq('id', sessionUser.id).maybeSingle();
+         const { data: privateProfileData } = await supabase.from('private_profiles').select('birth_time').eq('id', currentUser.id).maybeSingle();
          const fetchedBirthTime = privateProfileData?.birth_time || '';
 
-         const { data: preferencesData } = await supabase.from('preferences').select('preferred_education, preferred_location, preferred_religion, preferred_caste, preferred_sub_caste, preferred_gotra, tier_religion, tier_caste, tier_sub_caste, tier_gotra, tier_diet').eq('user_id', sessionUser.id).maybeSingle();
+         const { data: preferencesData } = await supabase.from('preferences').select('preferred_education, preferred_location, preferred_religion, preferred_caste, preferred_sub_caste, preferred_gotra, tier_religion, tier_caste, tier_sub_caste, tier_gotra, tier_diet').eq('user_id', currentUser.id).maybeSingle();
 
          const readinessResult = calculateMarriageReadiness({ ...dbProfile, birth_time: fetchedBirthTime }, photoUrl);
          const completionPercentage = readinessResult.percentage;
 
-         setUserProfile({
+         setUserProfile((prev: any) => ({
            ...dbProfile,
            name: dbProfile.display_name || '',
            dateOfBirth: dbProfile.date_of_birth,
@@ -185,7 +202,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
            lookingFor: dbProfile.looking_for || [],
            regionalPreference: dbProfile.regional_preference,
            bio: dbProfile.bio,
-           photoUrl: photoUrl,
+           photoUrl: isUploadingPhoto.current ? prev.photoUrl : photoUrl,
            hasVoiceNote: !!dbProfile.voice_note_url,
            voiceNoteUrl: dbProfile.voice_note_url,
            voiceNotePrompt: dbProfile.voice_note_prompt,
@@ -204,22 +221,12 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
              tierGotra: preferencesData?.tier_gotra,
              tierDiet: preferencesData?.tier_diet
            }
-         } as any);
+         } as any));
       }
-      
-      
-      // Construct discovery filters from preferences
-      const filters: any = {};
-      if (userProfile.partnerPreferences?.tiers) {
-        userProfile.partnerPreferences.tiers.forEach((t: any) => {
-          if (t.tier === 'MUST_HAVE' || t.tier === 'PREFERRED') {
-             filters[t.attributeName] = t.attributeValue;
-          }
-        });
-      }
-      const dbCandidates = await DiscoveryService.getCandidates(filters);
 
-      if (dbCandidates) {
+      // Load discovery candidates
+      let dbCandidates = await DiscoveryService.getCandidates({});
+      if (dbCandidates && dbCandidates.length > 0) {
          setCandidates(dbCandidates as any);
       }
       
@@ -238,13 +245,14 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setSentRequests(dbSent as any);
       }
     } catch (e) {
-      console.error(e);
+      console.error('[loadBackendData] error:', e);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (sessionUser) loadBackendData();
-  }, [sessionUser]);
+  }, [sessionUser, loadBackendData]);
 
   useEffect(() => {
     AuthService.getSession().then(({ data: { session } }) => {
@@ -307,7 +315,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const uploadUserProfilePhoto = async (file: File) => {
-    // Optimistic UI update
+    // Optimistic UI update with local blob URL
     const objectUrl = URL.createObjectURL(file);
     setUserProfile((prev: any) => ({
       ...prev,
@@ -317,8 +325,9 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     if (!sessionUser) return;
 
+    isUploadingPhoto.current = true;
     try {
-      // 1. Upload to Supabase Storage (avatars bucket)
+      // 1. Upload file to Supabase Storage (avatars bucket)
       const fileExt = file.name.split('.').pop();
       const filePath = `${sessionUser.id}/avatar_${Date.now()}.${fileExt}`;
       
@@ -327,32 +336,52 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) {
-        console.error('Error uploading photo:', uploadError);
+        console.error('Error uploading photo to storage:', uploadError);
         return;
       }
 
-      // 2. Get Signed URL for immediate display
+      // 2. Store path directly on profiles table (simple UPDATE, same RLS as all other profile edits)
+      const { error: profileUpdateError } = await supabase
+        .from('profiles')
+        .update({ avatar_storage_path: filePath, updated_at: new Date().toISOString() })
+        .eq('id', sessionUser.id);
+
+      if (profileUpdateError) {
+        console.error('Error saving avatar path to profile:', profileUpdateError);
+        return;
+      }
+
+      // 3. Also keep profile_photos in sync (best-effort, non-blocking)
+      supabase.from('profile_photos')
+        .update({ storage_path: filePath })
+        .eq('user_id', sessionUser.id)
+        .eq('is_primary', true)
+        .then(({ error }) => {
+          if (error) {
+            // If update found no rows, insert
+            supabase.from('profile_photos').insert({
+              user_id: sessionUser.id,
+              storage_path: filePath,
+              is_primary: true
+            }).then(({ error: ie }) => {
+              if (ie) console.error('profile_photos sync error:', ie);
+            });
+          }
+        });
+
+      // 4. Create signed URL and update local state
       const { data: signedData } = await supabase.storage
         .from('avatars')
         .createSignedUrl(filePath, 3600);
 
-      // Remove existing photos (since we only support 1 primary photo currently)
-      await supabase.from('profile_photos').delete().eq('user_id', sessionUser.id);
-      
-      // Insert the new photo using the file path, NOT the public URL
-      await supabase.from('profile_photos').insert({
-        user_id: sessionUser.id,
-        storage_path: filePath,
-        is_primary: true
-      });
-
-      // Update local state with the actual signed URL
       setUserProfile((prev: any) => ({
         ...prev,
         photoUrl: signedData?.signedUrl || objectUrl
       }));
     } catch (e) {
       console.error('Failed to upload user photo to Supabase', e);
+    } finally {
+      isUploadingPhoto.current = false;
     }
   };
 
@@ -448,6 +477,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Regional Prefs
     const userRegionalPref = userProfile.regionalPreference || 'ALL';
     if (userRegionalPref === 'ALL') return true;
+    if (!c.regionalCategory || c.regionalCategory === 'ALL') return true;
     
     // Map the enum keys to the human readable strings used in the DB
     const regionalMapping: Record<string, string> = {
@@ -462,9 +492,9 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     const mappedPref = regionalMapping[userRegionalPref] || userRegionalPref;
     if (userRegionalPref === 'KERALA') {
-      return c.regionalCategory === 'Kerala' || c.regionalCategory === 'South India';
+      return c.regionalCategory === 'Kerala' || c.regionalCategory === 'South India' || c.regionalCategory === 'ALL';
     }
-    return c.regionalCategory === mappedPref;
+    return c.regionalCategory === mappedPref || c.regionalCategory === 'ALL';
   });
 
   const activeCandidateList = filteredCandidates;
