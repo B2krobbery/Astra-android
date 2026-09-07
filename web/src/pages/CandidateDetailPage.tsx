@@ -1,16 +1,34 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAstra } from '../context/AstraContext';
-import { ArrowLeft, Sparkles, MapPin, Briefcase, GraduationCap, ShieldCheck, CheckCircle2, Globe } from 'lucide-react';
+import { ArrowLeft, Sparkles, MapPin, Briefcase, GraduationCap, ShieldCheck, CheckCircle2, Globe, UserX, AlertTriangle } from 'lucide-react';
 import { VerificationBadge } from '../components/VerificationBadge';
 import { VerificationType } from '../types';
 import { PassCircleButton, LikeCircleButton, CosmicCheckButton } from '../components/AstraButtons';
 
 export const CandidateDetailPage: React.FC = () => {
   const navigate = useNavigate();
-  const { selectedCandidate, likeCandidate, passCandidate, checkCompatibility, openChaanbean, t } = useAstra();
+  const { selectedCandidate, likeCandidate, passCandidate, checkCompatibility, openChaanbean, conversations, unfriendCandidate, t } = useAstra();
+  const [showUnfriendModal, setShowUnfriendModal] = useState(false);
+  const [isUnfriending, setIsUnfriending] = useState(false);
+
   const candidate = selectedCandidate;
   if (!candidate) return null;
+
+  const isFriend = conversations.some(c => c.candidate.id === candidate.id);
+
+  const handleConfirmUnfriend = async () => {
+    setIsUnfriending(true);
+    try {
+      await unfriendCandidate(candidate.id);
+      setShowUnfriendModal(false);
+      navigate('/matches');
+    } catch (e) {
+      console.error('Failed to unfriend:', e);
+    } finally {
+      setIsUnfriending(false);
+    }
+  };
 
   return (
     <div
@@ -29,7 +47,11 @@ export const CandidateDetailPage: React.FC = () => {
           position: 'absolute',
           top: '16px',
           left: '16px',
-          zIndex: 10
+          right: '16px',
+          zIndex: 10,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
         }}
       >
         <button
@@ -50,6 +72,28 @@ export const CandidateDetailPage: React.FC = () => {
         >
           <ArrowLeft size={20} />
         </button>
+
+        {isFriend && (
+          <button
+            onClick={() => setShowUnfriendModal(true)}
+            style={{
+              background: 'rgba(239, 68, 68, 0.2)',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(239, 68, 68, 0.4)',
+              borderRadius: '9999px',
+              padding: '6px 14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              color: '#EF4444',
+              fontWeight: 700,
+              fontSize: '0.75rem',
+              cursor: 'pointer'
+            }}
+          >
+            <UserX size={14} /> Unfriend
+          </button>
+        )}
       </div>
 
       {/* Main Image Header */}
@@ -303,6 +347,86 @@ export const CandidateDetailPage: React.FC = () => {
           size={64}
         />
       </div>
+
+      {/* Unfriend Confirmation Modal */}
+      {showUnfriendModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 100,
+            background: 'rgba(15, 12, 27, 0.85)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px'
+          }}
+        >
+          <div
+            style={{
+              width: '100%',
+              maxWidth: '340px',
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '24px',
+              padding: '24px',
+              textAlign: 'center',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)'
+            }}
+          >
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(239, 68, 68, 0.15)', border: '2px solid #EF4444', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <AlertTriangle size={28} color="#EF4444" />
+            </div>
+
+            <h3 className="heading-font" style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
+              Unfriend {candidate.name}?
+            </h3>
+
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: '24px' }}>
+              This will remove <strong>{candidate.name}</strong> from your Friend List and clear your connection.
+            </p>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => setShowUnfriendModal(false)}
+                disabled={isUnfriending}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  borderRadius: '9999px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid var(--border-color)',
+                  color: 'var(--text-primary)',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmUnfriend}
+                disabled={isUnfriending}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  borderRadius: '9999px',
+                  background: 'linear-gradient(135deg, #EF4444, #B91C1C)',
+                  border: 'none',
+                  color: '#FFF',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+                }}
+              >
+                {isUnfriending ? 'Unfriending...' : 'Unfriend'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

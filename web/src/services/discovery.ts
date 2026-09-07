@@ -191,5 +191,11 @@ export const DiscoveryService = {
       .eq('actor_id', actorId);
       
     if (error) throw error;
+  },
+
+  async unmatchCandidate(targetId: string) {
+    const { data, error } = await supabase.rpc('unmatch_candidate', { p_target_id: targetId });
+    if (error) throw error;
+    return data;
   }
 };

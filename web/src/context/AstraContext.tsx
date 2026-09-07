@@ -84,6 +84,7 @@ interface AstraContextType {
   sentRequests: Candidate[];
   rewindCandidate: () => void;
   resetFeed: () => Promise<void>;
+  unfriendCandidate: (targetId: string) => Promise<void>;
   lastMatchedCandidate: Candidate | null;
 
   isAnalyzingCompatibility: boolean;
@@ -774,6 +775,20 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const unfriendCandidate = async (targetId: string) => {
+    try {
+      setConversations(prev => prev.filter(c => c.candidate.id !== targetId));
+      setPendingRequests(prev => prev.filter(c => c.id !== targetId));
+      setSentRequests(prev => prev.filter(c => c.id !== targetId));
+      
+      await DiscoveryService.unmatchCandidate(targetId);
+
+      await loadBackendData();
+    } catch (e) {
+      console.error('Error unfriending candidate:', e);
+    }
+  };
+
   const checkCompatibility = (candidate: Candidate, onAnalyzed: () => void) => {
     setSelectedCandidate(candidate);
     setIsAnalyzingCompatibility(true);
@@ -1033,6 +1048,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         sentRequests,
         rewindCandidate,
         resetFeed,
+        unfriendCandidate,
         lastMatchedCandidate,
         isAnalyzingCompatibility,
         currentCompatibility,
