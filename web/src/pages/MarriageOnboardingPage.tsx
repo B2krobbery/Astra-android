@@ -87,6 +87,9 @@ export const MarriageOnboardingPage: React.FC = () => {
   const [state, setState] = useState((userProfile as any).state || '');
   const [cityDistrict, setCityDistrict] = useState((userProfile as any).cityDistrict || (userProfile as any).city_district || '');
   const [gotra, setGotra] = useState(userProfile.gotra || '');
+  const [motherFatherGotra, setMotherFatherGotra] = useState(userProfile.motherFatherGotra || (userProfile as any).mother_father_gotra || '');
+  const [fatherMotherGotra, setFatherMotherGotra] = useState(userProfile.fatherMotherGotra || (userProfile as any).father_mother_gotra || '');
+  const [motherMotherGotra, setMotherMotherGotra] = useState(userProfile.motherMotherGotra || (userProfile as any).mother_mother_gotra || '');
   
   // Education & Career
   const [education10th, setEducation10th] = useState(userProfile.education10th || '');
@@ -155,6 +158,9 @@ export const MarriageOnboardingPage: React.FC = () => {
       setState((userProfile as any).state || '');
       setCityDistrict((userProfile as any).cityDistrict || (userProfile as any).city_district || '');
       setGotra(userProfile.gotra || '');
+      setMotherFatherGotra(userProfile.motherFatherGotra || (userProfile as any).mother_father_gotra || '');
+      setFatherMotherGotra(userProfile.fatherMotherGotra || (userProfile as any).father_mother_gotra || '');
+      setMotherMotherGotra(userProfile.motherMotherGotra || (userProfile as any).mother_mother_gotra || '');
       
       setEducation10th(userProfile.education10th || '');
       setEducation12th(userProfile.education12th || '');
@@ -285,6 +291,9 @@ export const MarriageOnboardingPage: React.FC = () => {
         state,
         city_district: cityDistrict,
         gotra,
+        mother_father_gotra: motherFatherGotra,
+        father_mother_gotra: fatherMotherGotra,
+        mother_mother_gotra: motherMotherGotra,
         education_10th: education10th,
         education_12th: education12th,
         higher_education: higherEducation,
@@ -467,7 +476,15 @@ export const MarriageOnboardingPage: React.FC = () => {
             {renderSelect('Cultural Region', region, setRegion, ['North India', 'South India', 'West India', 'East India', 'Central India', 'Kerala', 'NRI'])}
             {renderInput('State', state, setState, 'e.g. Maharashtra')}
             {renderInput('City / District', cityDistrict, setCityDistrict, 'e.g. Pune')}
-            {renderInput('Gotra', gotra, setGotra, 'e.g. Kashyapa, Vatsa, Bharadwaja')}
+            <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+              <h5 style={{ color: 'var(--accent-amber-light)', fontSize: '0.85rem', fontWeight: 700, marginBottom: '12px' }}>
+                🏛️ Ancestral Gotra Lineage (4 Gotras)
+              </h5>
+              {renderInput("Father's Father Gotra (Main Gotra)", gotra, setGotra, 'e.g. Kashyapa, Bharadwaja')}
+              {renderInput("Father's Mother Gotra", fatherMotherGotra, setFatherMotherGotra, 'e.g. Vatsa, Harita')}
+              {renderInput("Mother's Father Gotra", motherFatherGotra, setMotherFatherGotra, 'e.g. Kaushika, Vashistha')}
+              {renderInput("Mother's Mother Gotra", motherMotherGotra, setMotherMotherGotra, 'e.g. Gargya, Gautam')}
+            </div>
           </div>
         );
       case 3: // Education & Career

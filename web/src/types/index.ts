@@ -76,6 +76,9 @@ export interface Candidate {
   photoPrivacy?: string;
   subCaste?: string;
   gotra?: string;
+  motherFatherGotra?: string;
+  fatherMotherGotra?: string;
+  motherMotherGotra?: string;
   height?: string;
   diet?: string;
   compatibilityScore: number;
@@ -130,6 +133,9 @@ export interface UserProfile {
   caste?: string;
   subCaste?: string;
   gotra?: string;
+  motherFatherGotra?: string;
+  fatherMotherGotra?: string;
+  motherMotherGotra?: string;
   region?: string;
   state?: string;
   cityDistrict?: string;

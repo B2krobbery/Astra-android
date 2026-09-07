@@ -128,6 +128,9 @@ export const DiscoveryService = {
         manglik: p.manglik,
         subCaste: p.sub_caste,
         gotra: p.gotra,
+        motherFatherGotra: p.mother_father_gotra,
+        fatherMotherGotra: p.father_mother_gotra,
+        motherMotherGotra: p.mother_mother_gotra,
         height: p.height,
         diet: p.diet,
         alcohol: p.alcohol_frequency,
@@ -136,7 +139,7 @@ export const DiscoveryService = {
         voiceNoteUrl: p.voice_note_url,
         voiceNotePrompt: p.voice_note_prompt,
         healthStatus: p.health_status,
-        healthCondition: p.pre_existing_conditions || p.health_status || undefined,
+        healthCondition: p.pre_existing_conditions || undefined,
         regionalCategory: p.region || (() => {
           const loc = (p.location || '').toLowerCase();
           if (loc.includes('kerala')) return 'Kerala';

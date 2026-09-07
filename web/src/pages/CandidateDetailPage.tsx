@@ -207,6 +207,48 @@ export const CandidateDetailPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Ancestral 4-Gotra Lineage Card */}
+        {(candidate.gotra || candidate.motherFatherGotra || candidate.fatherMotherGotra || candidate.motherMotherGotra || candidate.religion || candidate.caste) && (
+          <div
+            style={{
+              padding: '16px',
+              borderRadius: '20px',
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              marginBottom: '20px'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h3 className="heading-font" style={{ fontSize: '0.9rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                🏛️ Ancestral Gotra Lineage (4 Gotras)
+              </h3>
+              {(candidate.religion || candidate.caste) && (
+                <span style={{ fontSize: '0.75rem', color: 'var(--accent-amber-light)', background: 'rgba(245, 158, 11, 0.12)', padding: '2px 8px', borderRadius: '6px' }}>
+                  {[candidate.religion, candidate.caste, candidate.subCaste].filter(Boolean).join(' • ')}
+                </span>
+              )}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div style={{ background: 'rgba(0,0,0,0.2)', padding: '8px 12px', borderRadius: '10px' }}>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>👴 Father's Father (Main)</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#F3F4F6' }}>{candidate.gotra || 'Not Specified'}</span>
+              </div>
+              <div style={{ background: 'rgba(0,0,0,0.2)', padding: '8px 12px', borderRadius: '10px' }}>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>👵 Father's Mother</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#F3F4F6' }}>{candidate.fatherMotherGotra || 'Not Specified'}</span>
+              </div>
+              <div style={{ background: 'rgba(0,0,0,0.2)', padding: '8px 12px', borderRadius: '10px' }}>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>👴 Mother's Father</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#F3F4F6' }}>{candidate.motherFatherGotra || 'Not Specified'}</span>
+              </div>
+              <div style={{ background: 'rgba(0,0,0,0.2)', padding: '8px 12px', borderRadius: '10px' }}>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>👵 Mother's Mother</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#F3F4F6' }}>{candidate.motherMotherGotra || 'Not Specified'}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Verification Badges */}
         <div style={{ marginBottom: '20px' }}>
           <h3 className="heading-font" style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '10px' }}>
@@ -267,42 +309,53 @@ export const CandidateDetailPage: React.FC = () => {
                   🚬 Smoking: {candidate.smoking}
                 </span>
               )}
+              {/* Health Status Pill */}
               {(() => {
-                const text = (candidate.healthCondition || candidate.healthStatus || '').trim();
-                const lower = text.toLowerCase();
-                let label = text || 'Not Disclosed';
-                let isWarning = false;
-                let bg = 'rgba(59, 130, 246, 0.12)';
-                let border = 'rgba(59, 130, 246, 0.3)';
-                let color = '#93c5fd';
+                const statusText = (candidate.healthStatus || '').trim();
+                const lower = statusText.toLowerCase();
+                let statusLabel = 'Not Disclosed';
+                let sBg = 'rgba(59, 130, 246, 0.12)';
+                let sBorder = 'rgba(59, 130, 246, 0.3)';
+                let sColor = '#93c5fd';
 
-                if (!text) {
-                  label = 'Not Disclosed';
-                } else if (lower.includes('private') || lower.includes('inquiry')) {
-                  label = 'Disclosed Privately';
-                  bg = 'rgba(245, 158, 11, 0.15)';
-                  border = 'rgba(245, 158, 11, 0.3)';
-                  color = '#fde68a';
+                if (lower.includes('private') || lower.includes('inquiry')) {
+                  statusLabel = 'Disclosed Privately';
+                  sBg = 'rgba(245, 158, 11, 0.15)';
+                  sBorder = 'rgba(245, 158, 11, 0.3)';
+                  sColor = '#fde68a';
                 } else if (lower.includes('excellent')) {
-                  label = 'Excellent';
-                  bg = 'rgba(34, 197, 94, 0.12)';
-                  border = 'rgba(34, 197, 94, 0.3)';
-                  color = '#86efac';
+                  statusLabel = 'Excellent';
+                  sBg = 'rgba(34, 197, 94, 0.12)';
+                  sBorder = 'rgba(34, 197, 94, 0.3)';
+                  sColor = '#86efac';
                 } else if (lower === 'good') {
-                  label = 'Good';
-                } else if (lower === 'none' || lower.includes('no issues') || lower.includes('no known')) {
-                  label = 'No Known Conditions';
-                  bg = 'rgba(34, 197, 94, 0.12)';
-                  border = 'rgba(34, 197, 94, 0.3)';
-                  color = '#86efac';
-                } else {
-                  isWarning = true;
-                  bg = 'rgba(239, 68, 68, 0.12)';
-                  border = 'rgba(239, 68, 68, 0.3)';
-                  color = '#fca5a5';
+                  statusLabel = 'Good';
+                } else if (statusText) {
+                  statusLabel = statusText;
                 }
 
-                const showDisclosureBox = isWarning && text.length > 0;
+                return (
+                  <span style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '5px 12px',
+                    borderRadius: '9999px',
+                    background: sBg,
+                    border: `1px solid ${sBorder}`,
+                    fontSize: '0.78rem',
+                    color: sColor
+                  }}>
+                    🏥 Health: {statusLabel}
+                  </span>
+                );
+              })()}
+
+              {/* Disease / Pre-existing Condition Pill — always visible */}
+              {(() => {
+                const condText = (candidate.healthCondition || '').trim();
+                const hasText = condText.length > 0;
+                const displayLabel = hasText ? condText : 'None';
 
                 return (
                   <>
@@ -312,18 +365,18 @@ export const CandidateDetailPage: React.FC = () => {
                       gap: '4px',
                       padding: '5px 12px',
                       borderRadius: '9999px',
-                      background: bg,
-                      border: `1px solid ${border}`,
+                      background: hasText ? 'rgba(239, 68, 68, 0.12)' : 'rgba(100, 116, 139, 0.12)',
+                      border: hasText ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(100, 116, 139, 0.25)',
                       fontSize: '0.78rem',
-                      color: color
+                      color: hasText ? '#fca5a5' : '#94a3b8'
                     }}>
-                      🏥 Health: {label}
+                      🦠 Disease: {displayLabel}
                     </span>
-                    {showDisclosureBox && (
+                    {hasText && (
                       <div style={{ width: '100%', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px', marginTop: '10px' }}>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>🏥 Pre-existing Health Condition Disclosure</span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>🏥 Pre-existing Disease / Medical Condition Disclosure</span>
                         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
-                          {text}
+                          {condText}
                         </p>
                       </div>
                     )}
