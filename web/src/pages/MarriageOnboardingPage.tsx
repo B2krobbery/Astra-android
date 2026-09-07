@@ -485,8 +485,8 @@ export const MarriageOnboardingPage: React.FC = () => {
             <h4 style={{ color: 'white', marginBottom: '24px' }}>Health & Lifestyle</h4>
             {renderSelect('Health Status', healthStatus, setHealthStatus, ['Excellent (No issues)', 'Good', 'Disclosed under private inquiry'])}
             {renderSelect('Diet Preference', diet, setDiet, ['Vegetarian', 'Eggetarian', 'Non-Vegetarian', 'Vegan', 'Jain Vegetarian'])}
-            {renderSelect('Alcohol Habit', alcohol, setAlcohol, ['Never', 'Socially', 'Occasionally'])}
-            {renderSelect('Smoking Habit', smoking, setSmoking, ['Never', 'Occasionally'])}
+            {renderSelect('Alcohol Habit', alcohol, setAlcohol, ['Never', 'Socially', 'Occasionally', 'Daily'])}
+            {renderSelect('Smoking Habit', smoking, setSmoking, ['Never', 'Occasionally', 'Daily'])}
           </div>
         );
       case 5: // Family & Marriage
