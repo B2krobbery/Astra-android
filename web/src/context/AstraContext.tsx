@@ -228,16 +228,26 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
              tierReligion: preferencesData?.tier_religion,
              tierCaste: preferencesData?.tier_caste,
              tierSubCaste: preferencesData?.tier_sub_caste,
-             tierGotra: preferencesData?.tier_gotra,
-             tierDiet: preferencesData?.tier_diet
+             tierGotra: preferencesData?.tier_gotra
            }
          } as any));
-      }
 
-      // Load discovery candidates
-      let dbCandidates = await DiscoveryService.getCandidates({});
-      if (dbCandidates && dbCandidates.length > 0) {
-         setCandidates(dbCandidates as any);
+          // Load discovery candidates — pass must_have / deal_breaker tiers to the RPC
+          const initFilters: Record<string, any> = {};
+          const mustHave: Record<string, string> = {};
+          const dealBreaker: Record<string, string> = {};
+          if (preferencesData?.tier_religion === 'MUST_HAVE' && preferencesData?.preferred_religion) mustHave['religion'] = preferencesData.preferred_religion;
+          if (preferencesData?.tier_caste === 'MUST_HAVE' && preferencesData?.preferred_caste) mustHave['caste'] = preferencesData.preferred_caste;
+          if (preferencesData?.tier_sub_caste === 'MUST_HAVE' && preferencesData?.preferred_sub_caste) mustHave['sub_caste'] = preferencesData.preferred_sub_caste;
+          if (preferencesData?.tier_religion === 'DEAL_BREAKER' && preferencesData?.preferred_religion) dealBreaker['religion'] = preferencesData.preferred_religion;
+          if (preferencesData?.tier_caste === 'DEAL_BREAKER' && preferencesData?.preferred_caste) dealBreaker['caste'] = preferencesData.preferred_caste;
+          if (preferencesData?.tier_sub_caste === 'DEAL_BREAKER' && preferencesData?.preferred_sub_caste) dealBreaker['sub_caste'] = preferencesData.preferred_sub_caste;
+          if (Object.keys(mustHave).length > 0) initFilters['must_have'] = mustHave;
+          if (Object.keys(dealBreaker).length > 0) initFilters['deal_breaker'] = dealBreaker;
+          let dbCandidates = await DiscoveryService.getCandidates(initFilters);
+          if (dbCandidates && dbCandidates.length > 0) {
+             setCandidates(dbCandidates as any);
+          }
       }
       
       const dbConversations = await ChatService.getConversations();
@@ -468,15 +478,36 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Filter by Intent strictly
     if (userProfile.intent && c.intent && userProfile.intent !== c.intent) return false;
 
-    // Strict Partner Preferences Check
+    // Strict Partner Preferences — honour tiers (MUST_HAVE = hard filter, DEAL_BREAKER = hard exclude)
     if (isPreferenceStrictFilterOn && userProfile.partnerPreferences) {
       const prefs = userProfile.partnerPreferences;
-      
+
       if (userProfile.intent === 'Marriage') {
-        if (prefs.preferredReligion && prefs.preferredReligion !== 'Any' && c.religion !== prefs.preferredReligion) return false;
-        if (prefs.preferredCaste && prefs.preferredCaste !== 'Any' && c.caste !== prefs.preferredCaste) return false;
+        // MUST_HAVE: hard include filters
+        if (prefs.tierReligion === 'MUST_HAVE' && prefs.preferredReligion && prefs.preferredReligion !== 'Any') {
+          if (!c.religion || !c.religion.toLowerCase().includes(prefs.preferredReligion.toLowerCase())) return false;
+        }
+        if (prefs.tierCaste === 'MUST_HAVE' && prefs.preferredCaste && prefs.preferredCaste !== 'Any') {
+          if (!c.caste || !c.caste.toLowerCase().includes(prefs.preferredCaste.toLowerCase())) return false;
+        }
+        if (prefs.tierSubCaste === 'MUST_HAVE' && prefs.preferredSubCaste && prefs.preferredSubCaste !== 'Any') {
+          if (!c.subCaste || !c.subCaste.toLowerCase().includes(prefs.preferredSubCaste.toLowerCase())) return false;
+        }
+        // (no standalone preferredDiet field in preferences — diet tier managed at DB level)
+        // DEAL_BREAKER: hard exclude filters
+        if (prefs.tierReligion === 'DEAL_BREAKER' && prefs.preferredReligion && prefs.preferredReligion !== 'Any') {
+          if (c.religion && c.religion.toLowerCase().includes(prefs.preferredReligion.toLowerCase())) return false;
+        }
+        if (prefs.tierCaste === 'DEAL_BREAKER' && prefs.preferredCaste && prefs.preferredCaste !== 'Any') {
+          if (c.caste && c.caste.toLowerCase().includes(prefs.preferredCaste.toLowerCase())) return false;
+        }
+        if (prefs.tierSubCaste === 'DEAL_BREAKER' && prefs.preferredSubCaste && prefs.preferredSubCaste !== 'Any') {
+          if (c.subCaste && c.subCaste.toLowerCase().includes(prefs.preferredSubCaste.toLowerCase())) return false;
+        }
+        // (no standalone preferredDiet field in preferences — diet tier managed at DB level)
       } else {
-        if (prefs.preferredEducation && prefs.preferredEducation !== 'Any' && !c.education.includes(prefs.preferredEducation)) return false;
+        // Dating mode filters
+        if (prefs.preferredEducation && prefs.preferredEducation !== 'Any' && !c.education?.includes(prefs.preferredEducation)) return false;
         if (prefs.preferredLocation && prefs.preferredLocation !== 'Any' && c.location !== prefs.preferredLocation) return false;
       }
     }
@@ -714,7 +745,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           const [dbConversations, dbCandidates, dbPending, dbSent] = await Promise.all([
             
             ChatService.getConversations(),
-            DiscoveryService.getCandidates(), // We should ideally pass filters here too, but this is init.
+            DiscoveryService.getCandidates(),
             DiscoveryService.getPendingRequests(),
 
             DiscoveryService.getSentRequests()
