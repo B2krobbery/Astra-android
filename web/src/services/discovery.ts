@@ -130,6 +130,8 @@ export const DiscoveryService = {
         gotra: p.gotra,
         height: p.height,
         diet: p.diet,
+        alcohol: p.alcohol_frequency,
+        smoking: p.smoking_frequency,
         photoPrivacy: p.photo_privacy,
         voiceNoteUrl: p.voice_note_url,
         voiceNotePrompt: p.voice_note_prompt,

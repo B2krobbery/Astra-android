@@ -234,6 +234,51 @@ export const CandidateDetailPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Health & Lifestyle */}
+        {(candidate.diet || candidate.alcohol || candidate.smoking || candidate.healthCondition) && (
+          <div
+            style={{
+              marginBottom: '20px',
+              padding: '16px',
+              borderRadius: '16px',
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.1)'
+            }}
+          >
+            <h3
+              className="heading-font"
+              style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '12px', color: 'var(--text-primary)' }}
+            >
+              🌿 Health &amp; Lifestyle
+            </h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: candidate.healthCondition ? '12px' : '0' }}>
+              {candidate.diet && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 12px', borderRadius: '9999px', background: 'rgba(34, 197, 94, 0.12)', border: '1px solid rgba(34, 197, 94, 0.3)', fontSize: '0.78rem', color: '#86efac' }}>
+                  🥗 {candidate.diet}
+                </span>
+              )}
+              {candidate.alcohol && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 12px', borderRadius: '9999px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)', fontSize: '0.78rem', color: '#fde68a' }}>
+                  🍷 Alcohol: {candidate.alcohol}
+                </span>
+              )}
+              {candidate.smoking && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 12px', borderRadius: '9999px', background: 'rgba(148, 163, 184, 0.1)', border: '1px solid rgba(148, 163, 184, 0.25)', fontSize: '0.78rem', color: '#cbd5e1' }}>
+                  🚬 Smoking: {candidate.smoking}
+                </span>
+              )}
+            </div>
+            {candidate.healthCondition && (
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>🏥 Health Disclosure</span>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
+                  {candidate.healthCondition}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Bio */}
         <div style={{ marginBottom: '20px' }}>
           <h3 className="heading-font" style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '8px' }}>
@@ -304,28 +349,6 @@ export const CandidateDetailPage: React.FC = () => {
           </div>
         )}
 
-
-        {candidate.healthCondition && (
-          <div
-            style={{
-              marginBottom: '24px',
-              padding: '16px',
-              borderRadius: '16px',
-              background: 'rgba(34, 197, 94, 0.06)',
-              border: '1px solid rgba(34, 197, 94, 0.2)'
-            }}
-          >
-            <h3
-              className="heading-font"
-              style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '8px', color: 'var(--text-primary)' }}
-            >
-              🏥 Health Disclosure
-            </h3>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
-              {candidate.healthCondition}
-            </p>
-          </div>
-        )}
 
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
           <CosmicCheckButton

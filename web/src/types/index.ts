@@ -89,6 +89,8 @@ export interface Candidate {
   voiceNoteUrl?: string;
   voiceNotePrompt?: string;
   healthCondition?: string;
+  alcohol?: string;
+  smoking?: string;
 }
 
 export interface UserProfile {
