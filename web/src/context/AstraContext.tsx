@@ -239,9 +239,11 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           if (preferencesData?.tier_religion === 'MUST_HAVE' && preferencesData?.preferred_religion) mustHave['religion'] = preferencesData.preferred_religion;
           if (preferencesData?.tier_caste === 'MUST_HAVE' && preferencesData?.preferred_caste) mustHave['caste'] = preferencesData.preferred_caste;
           if (preferencesData?.tier_sub_caste === 'MUST_HAVE' && preferencesData?.preferred_sub_caste) mustHave['sub_caste'] = preferencesData.preferred_sub_caste;
+          if (preferencesData?.tier_gotra === 'MUST_HAVE' && preferencesData?.preferred_gotra) mustHave['gotra'] = preferencesData.preferred_gotra;
           if (preferencesData?.tier_religion === 'DEAL_BREAKER' && preferencesData?.preferred_religion) dealBreaker['religion'] = preferencesData.preferred_religion;
           if (preferencesData?.tier_caste === 'DEAL_BREAKER' && preferencesData?.preferred_caste) dealBreaker['caste'] = preferencesData.preferred_caste;
           if (preferencesData?.tier_sub_caste === 'DEAL_BREAKER' && preferencesData?.preferred_sub_caste) dealBreaker['sub_caste'] = preferencesData.preferred_sub_caste;
+          if (preferencesData?.tier_gotra === 'DEAL_BREAKER' && preferencesData?.preferred_gotra) dealBreaker['gotra'] = preferencesData.preferred_gotra;
           if (Object.keys(mustHave).length > 0) initFilters['must_have'] = mustHave;
           if (Object.keys(dealBreaker).length > 0) initFilters['deal_breaker'] = dealBreaker;
           let dbCandidates = await DiscoveryService.getCandidates(initFilters);
@@ -493,7 +495,30 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (prefs.tierSubCaste === 'MUST_HAVE' && prefs.preferredSubCaste && prefs.preferredSubCaste !== 'Any') {
           if (!c.subCaste || !c.subCaste.toLowerCase().includes(prefs.preferredSubCaste.toLowerCase())) return false;
         }
-        // (no standalone preferredDiet field in preferences — diet tier managed at DB level)
+        // Gotra 4-lineage extraction for exogamy & matching
+        const userGotras = [
+          userProfile.gotra,
+          userProfile.fatherMotherGotra,
+          userProfile.motherFatherGotra,
+          userProfile.motherMotherGotra,
+        ].filter((g): g is string => Boolean(g && g.trim())).map(g => g.trim().toLowerCase());
+
+        const candidateGotras = [
+          c.gotra,
+          c.fatherMotherGotra,
+          c.motherFatherGotra,
+          c.motherMotherGotra,
+        ].filter((g): g is string => Boolean(g && g.trim())).map(g => g.trim().toLowerCase());
+
+        if (prefs.tierGotra === 'MUST_HAVE' && prefs.preferredGotra && prefs.preferredGotra !== 'Any') {
+          if (prefs.preferredGotra === 'Any (Except My Own)') {
+            if (userGotras.some(ug => candidateGotras.includes(ug))) return false;
+          } else {
+            const target = prefs.preferredGotra.trim().toLowerCase();
+            if (!candidateGotras.some(cg => cg.includes(target))) return false;
+          }
+        }
+
         // DEAL_BREAKER: hard exclude filters
         if (prefs.tierReligion === 'DEAL_BREAKER' && prefs.preferredReligion && prefs.preferredReligion !== 'Any') {
           if (c.religion && c.religion.toLowerCase().includes(prefs.preferredReligion.toLowerCase())) return false;
@@ -504,7 +529,14 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (prefs.tierSubCaste === 'DEAL_BREAKER' && prefs.preferredSubCaste && prefs.preferredSubCaste !== 'Any') {
           if (c.subCaste && c.subCaste.toLowerCase().includes(prefs.preferredSubCaste.toLowerCase())) return false;
         }
-        // (no standalone preferredDiet field in preferences — diet tier managed at DB level)
+        if (prefs.tierGotra === 'DEAL_BREAKER' && prefs.preferredGotra && prefs.preferredGotra !== 'Any') {
+          if (prefs.preferredGotra === 'Any (Except My Own)') {
+            if (userGotras.some(ug => candidateGotras.includes(ug))) return false;
+          } else {
+            const target = prefs.preferredGotra.trim().toLowerCase();
+            if (candidateGotras.some(cg => cg.includes(target))) return false;
+          }
+        }
       } else {
         // Dating mode filters
         if (prefs.preferredEducation && prefs.preferredEducation !== 'Any' && !c.education?.includes(prefs.preferredEducation)) return false;

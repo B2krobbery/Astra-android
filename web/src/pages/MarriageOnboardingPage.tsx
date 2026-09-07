@@ -8,6 +8,7 @@ import { calculateMarriageReadiness } from '../utils/profileReadiness';
 import { AstrologyEngine } from '../data/astrologyEngine';
 
 import { indianReligions } from '../data/indianCastes';
+import { commonGotras } from '../data/indianSubcastesGotras';
 
 const SECTIONS = [
   'Basic Info',
@@ -687,14 +688,21 @@ export const MarriageOnboardingPage: React.FC = () => {
             <div style={{ padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', marginBottom: '16px' }}>
               <h5 style={{ color: '#E2E8F0', margin: '0 0 8px 0' }}>Gotra Preference</h5>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <select 
+                <input 
+                  list="gotra-preference-list"
+                  type="text"
                   value={preferredGotra} 
                   onChange={e => setPreferredGotra(e.target.value)}
+                  placeholder="e.g. Any, Any (Except My Own), Bharadwaja..."
                   style={{ flex: 1, minWidth: 0, width: '100%', boxSizing: 'border-box', padding: '10px', borderRadius: '8px', background: '#0F0C1B', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF' }}
-                >
-                  <option value="Any">Any Gotra</option>
-                  <option value="Any (Except My Own)">Any (Except My Own)</option>
-                </select>
+                />
+                <datalist id="gotra-preference-list">
+                  <option value="Any" />
+                  <option value="Any (Except My Own)" />
+                  {commonGotras.map(g => (
+                    <option key={g} value={g} />
+                  ))}
+                </datalist>
                 <select 
                   value={gotraTier} 
                   onChange={e => setGotraTier(e.target.value as any)}
