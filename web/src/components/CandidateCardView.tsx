@@ -353,7 +353,7 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
           </div>
           {candidate.intent === 'Marriage' && candidate.religion && candidate.caste && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Sparkles size={15} color="var(--accent-indigo)" /> {candidate.religion}, {candidate.caste}
+              <Sparkles size={15} color="var(--accent-indigo)" /> {candidate.religion}, {candidate.caste}{candidate.subCaste ? ` • ${candidate.subCaste}` : ''}
             </div>
           )}
         </div>
