@@ -5,7 +5,7 @@ import { ArrowLeft, ScrollText, CheckCircle2, Truck, Sparkles, ShoppingBag, MapP
 import { PrimaryButton, SecondaryOutlineButton } from '../components/AstraButtons';
 
 const TEMPLATES = [
-  { id: 'vedic-gold', name: 'Vedic Gold ✨', bg: 'linear-gradient(135deg, #422006 0%, #1E1B4B 100%)', border: '#F59E0B' },
+  { id: 'vedic-gold', name: 'Vedic Gold ✨', bg: 'linear-gradient(135deg, #422006 0%, #1E1B4B 100%)', border: '#D4AF37' },
   { id: 'royal-maratha', name: 'Royal Maratha 👑', bg: 'linear-gradient(135deg, #4C0519 0%, #1E1B4B 100%)', border: '#F43F5E' },
   { id: 'kerala-lotus', name: 'Kerala Lotus 🪷', bg: 'linear-gradient(135deg, #064E3B 0%, #065F46 100%)', border: '#34D399' },
   { id: 'pastel-floral', name: 'Pastel Rose 🌸', bg: 'linear-gradient(135deg, #831843 0%, #500724 100%)', border: '#F472B6' }
@@ -46,7 +46,7 @@ export const DigitalWeddingCardPage: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
-          background: themeMode === 'LIGHT' ? 'rgba(255, 245, 247, 0.85)' : 'rgba(15, 12, 27, 0.85)',
+          background: themeMode === 'LIGHT' ? 'rgba(255, 245, 247, 0.85)' : 'rgba(11, 11, 14, 0.85)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           borderBottom: '1px solid var(--border-color)',
@@ -159,9 +159,9 @@ export const DigitalWeddingCardPage: React.FC = () => {
                 marginTop: '4px',
                 padding: '10px 14px',
                 borderRadius: '12px',
-                background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0F0C1B',
+                background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0B0B0E',
                 border: '1px solid var(--border-color)',
-                color: themeMode === 'LIGHT' ? '#0F0C1B' : '#FFF',
+                color: themeMode === 'LIGHT' ? '#0B0B0E' : '#FFF',
                 fontSize: '0.85rem'
               }}
             />
@@ -178,9 +178,9 @@ export const DigitalWeddingCardPage: React.FC = () => {
                 marginTop: '4px',
                 padding: '10px 14px',
                 borderRadius: '12px',
-                background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0F0C1B',
+                background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0B0B0E',
                 border: '1px solid var(--border-color)',
-                color: themeMode === 'LIGHT' ? '#0F0C1B' : '#FFF',
+                color: themeMode === 'LIGHT' ? '#0B0B0E' : '#FFF',
                 fontSize: '0.85rem'
               }}
             />
@@ -217,9 +217,9 @@ export const DigitalWeddingCardPage: React.FC = () => {
                 marginTop: '4px',
                 padding: '10px 14px',
                 borderRadius: '12px',
-                background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0F0C1B',
+                background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0B0B0E',
                 border: '1px solid var(--border-color)',
-                color: themeMode === 'LIGHT' ? '#0F0C1B' : '#FFF',
+                color: themeMode === 'LIGHT' ? '#0B0B0E' : '#FFF',
                 fontSize: '0.85rem'
               }}
             >
@@ -241,9 +241,9 @@ export const DigitalWeddingCardPage: React.FC = () => {
                 marginTop: '4px',
                 padding: '10px 14px',
                 borderRadius: '12px',
-                background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0F0C1B',
+                background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0B0B0E',
                 border: '1px solid var(--border-color)',
-                color: themeMode === 'LIGHT' ? '#0F0C1B' : '#FFF',
+                color: themeMode === 'LIGHT' ? '#0B0B0E' : '#FFF',
                 fontSize: '0.85rem'
               }}
             />

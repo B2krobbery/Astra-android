@@ -89,7 +89,7 @@ export const DiscoveryService = {
       });
 
       if (photoUrls.length === 0) {
-        photoUrls.push(`https://ui-avatars.com/api/?name=${encodeURIComponent(p.display_name || 'User')}&background=1E1836&color=F59E0B&size=800`);
+        photoUrls.push(`https://ui-avatars.com/api/?name=${encodeURIComponent(p.display_name || 'User')}&background=181822&color=D4AF37&size=800`);
       }
 
       // Calculate age from date_of_birth

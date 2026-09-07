@@ -230,7 +230,7 @@ export const UserVoiceRecorderCard: React.FC = () => {
             marginTop: '4px',
             padding: '10px 14px',
             borderRadius: '14px',
-            background: '#0F0C1B',
+            background: '#0B0B0E',
             border: '1px solid var(--border-color)',
             color: '#FFF',
             fontSize: '0.8rem'
@@ -310,11 +310,11 @@ export const UserVoiceRecorderCard: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#0F0C1B',
+                color: '#0B0B0E',
                 cursor: isUploading ? 'not-allowed' : 'pointer'
               }}
             >
-              {isPlaying ? <Pause size={18} fill="#0F0C1B" /> : <Play size={18} fill="#0F0C1B" style={{ marginLeft: 2 }} />}
+              {isPlaying ? <Pause size={18} fill="#0B0B0E" /> : <Play size={18} fill="#0B0B0E" style={{ marginLeft: 2 }} />}
             </button>
 
             {/* Waveform Visualization */}
@@ -361,7 +361,7 @@ export const UserVoiceRecorderCard: React.FC = () => {
             borderRadius: '16px',
             background: isUploading ? '#333' : 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
             border: 'none',
-            color: isUploading ? '#666' : '#0F0C1B',
+            color: isUploading ? '#666' : '#0B0B0E',
             fontWeight: 800,
             fontSize: '0.88rem',
             display: 'flex',

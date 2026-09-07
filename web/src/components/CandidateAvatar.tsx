@@ -59,7 +59,7 @@ export const CandidateAvatar: React.FC<CandidateAvatarProps> = ({
               width: '100%',
               height: '100%',
               borderRadius: '50%',
-              background: '#0F0C1B',
+              background: '#0B0B0E',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -90,7 +90,7 @@ export const CandidateAvatar: React.FC<CandidateAvatarProps> = ({
           }}
           title="Verified Profile"
         >
-          <ShieldCheck size={size * 0.22} color="#0F0C1B" />
+          <ShieldCheck size={size * 0.22} color="#0B0B0E" />
         </div>
       )}
     </div>

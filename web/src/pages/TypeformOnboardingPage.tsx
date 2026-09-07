@@ -131,16 +131,16 @@ export const TypeformOnboardingPage: React.FC = () => {
     switch (step) {
       case 1:
       case 2:
-        return 'linear-gradient(135deg, #1A1432 0%, #0F0C1B 100%)';
+        return 'linear-gradient(135deg, #151520 0%, #0B0B0E 100%)';
       case 3:
       case 4:
-        return 'linear-gradient(135deg, #161B33 0%, #0F0C1B 100%)';
+        return 'linear-gradient(135deg, #161A2E 0%, #0B0B0E 100%)';
       case 5:
       case 6:
       case 7:
-        return 'linear-gradient(135deg, #2A0E1A 0%, #0F0C1B 100%)';
+        return 'linear-gradient(135deg, #1E1525 0%, #0B0B0E 100%)';
       default:
-        return '#0F0C1B';
+        return '#0B0B0E';
     }
   };
 
@@ -447,7 +447,7 @@ export const TypeformOnboardingPage: React.FC = () => {
                   borderRadius: '9999px',
                   background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
                   border: 'none',
-                  color: '#0F0C1B',
+                  color: '#0B0B0E',
                   fontWeight: 800,
                   fontSize: '0.9rem',
                   display: 'inline-flex',
@@ -581,7 +581,7 @@ export const TypeformOnboardingPage: React.FC = () => {
           borderRadius: '9999px',
           border: 'none',
           background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
-          color: '#0F0C1B',
+          color: '#0B0B0E',
           fontWeight: 800,
           fontSize: '1rem',
           display: 'flex',

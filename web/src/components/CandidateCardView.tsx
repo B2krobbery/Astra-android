@@ -227,7 +227,7 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(to bottom, transparent 35%, rgba(15, 12, 27, 0.85) 70%, #0F0C1B 100%)',
+          background: 'linear-gradient(to bottom, transparent 35%, rgba(11, 11, 14, 0.88) 70%, #0B0B0E 100%)',
           pointerEvents: 'none'
         }}
       />
@@ -240,18 +240,18 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
           right: '16px',
           padding: '6px 14px',
           borderRadius: '9999px',
-          background: 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
-          color: '#0F0C1B',
+          background: 'linear-gradient(135deg, #D4AF37 0%, #B8942E 100%)',
+          color: '#0B0B0E',
           fontWeight: 800,
           fontSize: '0.8rem',
           display: 'flex',
           alignItems: 'center',
           gap: '6px',
-          boxShadow: 'var(--shadow-cosmic)',
+          boxShadow: '0 4px 16px rgba(212, 175, 55, 0.25)',
           zIndex: 25
         }}
       >
-        <Sparkles size={14} fill="#0F0C1B" />
+        <Sparkles size={14} fill="#0B0B0E" />
         {candidate.compatibilityScore}% {candidate.intent === 'Marriage' ? 'Kundali Match' : 'Match'}
       </div>
 
@@ -346,9 +346,9 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
             style={{
               padding: '12px 16px',
               borderRadius: '9999px',
-              background: 'var(--accent-amber)',
+              background: 'linear-gradient(135deg, #D4AF37 0%, #B8942E 100%)',
               border: 'none',
-              color: '#0F0C1B',
+              color: '#0B0B0E',
               fontWeight: 800,
               fontSize: '0.8rem',
               display: 'flex',

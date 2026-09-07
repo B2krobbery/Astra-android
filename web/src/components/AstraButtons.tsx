@@ -15,8 +15,8 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({ children, fullWidt
       padding: '14px 24px',
       borderRadius: '9999px',
       border: 'none',
-      background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
-      color: '#0F0C1B',
+      background: 'linear-gradient(135deg, #D4AF37 0%, #B8942E 100%)',
+      color: '#0B0B0E',
       fontWeight: 800,
       fontSize: '0.95rem',
       cursor: 'pointer',
@@ -24,7 +24,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({ children, fullWidt
       alignItems: 'center',
       justifyContent: 'center',
       gap: '8px',
-      boxShadow: '0 8px 24px rgba(245, 158, 11, 0.35)',
+      boxShadow: '0 8px 24px rgba(212, 175, 55, 0.28),  0 2px 8px rgba(0,0,0,0.4)',
       transition: 'transform 0.15s ease, opacity 0.15s ease',
       ...style
     }}

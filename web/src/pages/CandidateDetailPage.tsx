@@ -57,7 +57,7 @@ export const CandidateDetailPage: React.FC = () => {
         <button
           onClick={() => navigate(-1)}
           style={{
-            background: 'rgba(15, 12, 27, 0.6)',
+            background: 'rgba(11, 11, 14, 0.6)',
             backdropFilter: 'blur(8px)',
             border: '1px solid rgba(255, 255, 255, 0.2)',
             borderRadius: '50%',
@@ -118,7 +118,7 @@ export const CandidateDetailPage: React.FC = () => {
               padding: '8px 16px',
               borderRadius: '9999px',
               background: 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
-              color: '#0F0C1B',
+              color: '#0B0B0E',
               fontWeight: 800,
               fontSize: '0.85rem',
               display: 'flex',
@@ -127,7 +127,7 @@ export const CandidateDetailPage: React.FC = () => {
               boxShadow: 'var(--shadow-cosmic)'
             }}
           >
-            <Sparkles size={16} fill="#0F0C1B" />
+            <Sparkles size={16} fill="#0B0B0E" />
             {candidate.compatibilityScore}% {t('compatibility_score')}
           </div>
         </div>
@@ -510,7 +510,7 @@ export const CandidateDetailPage: React.FC = () => {
             position: 'fixed',
             inset: 0,
             zIndex: 100,
-            background: 'rgba(15, 12, 27, 0.85)',
+            background: 'rgba(11, 11, 14, 0.85)',
             backdropFilter: 'blur(8px)',
             display: 'flex',
             alignItems: 'center',

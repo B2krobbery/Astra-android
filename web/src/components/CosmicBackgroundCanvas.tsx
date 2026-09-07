@@ -77,9 +77,9 @@ export const CosmicBackgroundCanvas: React.FC = () => {
 
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(252, 211, 77, ${Math.max(0.1, Math.min(1, star.alpha))})`;
-        ctx.shadowBlur = star.radius * 4;
-        ctx.shadowColor = '#F59E0B';
+        ctx.fillStyle = `rgba(212, 175, 55, ${Math.max(0.1, Math.min(1, star.alpha))})`;
+        ctx.shadowBlur = star.radius * 3;
+        ctx.shadowColor = '#D4AF37';
         ctx.fill();
       });
 

@@ -375,7 +375,7 @@ export const MarriageOnboardingPage: React.FC = () => {
         onChange={e => setter(e.target.value)}
         style={{ width: '100%', padding: '12px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.15)', color: '#FFF', fontSize: '0.9rem' }}
       >
-        {options.map(opt => <option key={opt} value={opt} style={{ background: '#0F0C1B' }}>{opt}</option>)}
+        {options.map(opt => <option key={opt} value={opt} style={{ background: '#0B0B0E' }}>{opt}</option>)}
       </select>
     </div>
   );
@@ -530,8 +530,8 @@ export const MarriageOnboardingPage: React.FC = () => {
                 onChange={e => setManualNakshatra(e.target.value)}
                 style={{ width: '100%', padding: '12px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.15)', color: '#FFF', fontSize: '0.9rem' }}
               >
-                <option value="" style={{ background: '#0F0C1B' }}>✨ Auto-Calculate from Birth Time</option>
-                {NAKSHATRAS.map(n => <option key={n.id} value={n.id} style={{ background: '#0F0C1B' }}>{n.label}</option>)}
+                <option value="" style={{ background: '#0B0B0E' }}>✨ Auto-Calculate from Birth Time</option>
+                {NAKSHATRAS.map(n => <option key={n.id} value={n.id} style={{ background: '#0B0B0E' }}>{n.label}</option>)}
               </select>
             </div>
 
@@ -542,8 +542,8 @@ export const MarriageOnboardingPage: React.FC = () => {
                 onChange={e => setManualRashi(e.target.value)}
                 style={{ width: '100%', padding: '12px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.15)', color: '#FFF', fontSize: '0.9rem' }}
               >
-                <option value="" style={{ background: '#0F0C1B' }}>✨ Auto-Calculate from Birth Time</option>
-                {RASHIS.map(r => <option key={r} value={r} style={{ background: '#0F0C1B' }}>{r}</option>)}
+                <option value="" style={{ background: '#0B0B0E' }}>✨ Auto-Calculate from Birth Time</option>
+                {RASHIS.map(r => <option key={r} value={r} style={{ background: '#0B0B0E' }}>{r}</option>)}
               </select>
             </div>
 
@@ -606,7 +606,7 @@ export const MarriageOnboardingPage: React.FC = () => {
                 <select 
                   value={preferredReligion} 
                   onChange={e => setPreferredReligion(e.target.value)}
-                  style={{ flex: 1, minWidth: 0, width: '100%', boxSizing: 'border-box', padding: '10px', borderRadius: '8px', background: '#0F0C1B', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF' }}
+                  style={{ flex: 1, minWidth: 0, width: '100%', boxSizing: 'border-box', padding: '10px', borderRadius: '8px', background: '#0B0B0E', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF' }}
                 >
                   <option value="Any">Any Religion</option>
                   {indianReligions.map(r => <option key={r.name} value={r.name}>{r.name}</option>)}
@@ -614,7 +614,7 @@ export const MarriageOnboardingPage: React.FC = () => {
                 <select 
                   value={religionTier} 
                   onChange={e => setReligionTier(e.target.value as any)}
-                  style={{ width: '130px', flexShrink: 0, padding: '10px', borderRadius: '8px', background: '#0F0C1B', border: '1px solid var(--accent-amber)', color: 'var(--accent-amber-light)', fontWeight: 700, boxSizing: 'border-box' }}
+                  style={{ width: '130px', flexShrink: 0, padding: '10px', borderRadius: '8px', background: '#0B0B0E', border: '1px solid var(--accent-amber)', color: 'var(--accent-amber-light)', fontWeight: 700, boxSizing: 'border-box' }}
                 >
                   <option value="MUST_HAVE">MUST HAVE</option>
                   <option value="PREFERRED">PREFERRED</option>
@@ -630,7 +630,7 @@ export const MarriageOnboardingPage: React.FC = () => {
                 <select
                   value={preferredCaste}
                   onChange={e => { setPreferredCaste(e.target.value); setPreferredSubCaste('Any'); }}
-                  style={{ flex: 1, minWidth: 0, width: '100%', boxSizing: 'border-box', padding: '10px', borderRadius: '8px', background: '#0F0C1B', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF' }}
+                  style={{ flex: 1, minWidth: 0, width: '100%', boxSizing: 'border-box', padding: '10px', borderRadius: '8px', background: '#0B0B0E', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF' }}
                 >
                   <option value="Any">Any Caste</option>
                   {indianReligions.find(r => r.name === (preferredReligion === 'Any' ? religion : preferredReligion))?.castes.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
@@ -638,7 +638,7 @@ export const MarriageOnboardingPage: React.FC = () => {
                 <select 
                   value={casteTier} 
                   onChange={e => setCasteTier(e.target.value as any)}
-                  style={{ width: '130px', flexShrink: 0, padding: '10px', borderRadius: '8px', background: '#0F0C1B', border: '1px solid var(--accent-amber)', color: 'var(--accent-amber-light)', fontWeight: 700, boxSizing: 'border-box' }}
+                  style={{ width: '130px', flexShrink: 0, padding: '10px', borderRadius: '8px', background: '#0B0B0E', border: '1px solid var(--accent-amber)', color: 'var(--accent-amber-light)', fontWeight: 700, boxSizing: 'border-box' }}
                 >
                   <option value="MUST_HAVE">MUST HAVE</option>
                   <option value="PREFERRED">PREFERRED</option>
@@ -655,7 +655,7 @@ export const MarriageOnboardingPage: React.FC = () => {
                   <select
                     value={preferredSubCaste}
                     onChange={e => setPreferredSubCaste(e.target.value)}
-                    style={{ flex: 1, minWidth: 0, width: '100%', boxSizing: 'border-box', padding: '10px', borderRadius: '8px', background: '#0F0C1B', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF' }}
+                    style={{ flex: 1, minWidth: 0, width: '100%', boxSizing: 'border-box', padding: '10px', borderRadius: '8px', background: '#0B0B0E', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF' }}
                   >
                     <option value="Any">Any Sub-Caste</option>
                     {indianReligions.find(r => r.name === (preferredReligion === 'Any' ? religion : preferredReligion))?.castes.find(c => c.name === preferredCaste)?.subCastes.map(sc => <option key={sc} value={sc}>{sc}</option>)}
@@ -672,7 +672,7 @@ export const MarriageOnboardingPage: React.FC = () => {
                 <select 
                   value={subCasteTier} 
                   onChange={e => setSubCasteTier(e.target.value as any)}
-                  style={{ width: '130px', flexShrink: 0, padding: '10px', borderRadius: '8px', background: '#0F0C1B', border: '1px solid var(--accent-amber)', color: 'var(--accent-amber-light)', fontWeight: 700, boxSizing: 'border-box' }}
+                  style={{ width: '130px', flexShrink: 0, padding: '10px', borderRadius: '8px', background: '#0B0B0E', border: '1px solid var(--accent-amber)', color: 'var(--accent-amber-light)', fontWeight: 700, boxSizing: 'border-box' }}
                 >
                   <option value="MUST_HAVE">MUST HAVE</option>
                   <option value="PREFERRED">PREFERRED</option>
@@ -691,7 +691,7 @@ export const MarriageOnboardingPage: React.FC = () => {
                   value={preferredGotra} 
                   onChange={e => setPreferredGotra(e.target.value)}
                   placeholder="e.g. Any, Any (Except My Own), Bharadwaja..."
-                  style={{ flex: 1, minWidth: 0, width: '100%', boxSizing: 'border-box', padding: '10px', borderRadius: '8px', background: '#0F0C1B', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF' }}
+                  style={{ flex: 1, minWidth: 0, width: '100%', boxSizing: 'border-box', padding: '10px', borderRadius: '8px', background: '#0B0B0E', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF' }}
                 />
                 <datalist id="gotra-preference-list">
                   <option value="Any" />
@@ -703,7 +703,7 @@ export const MarriageOnboardingPage: React.FC = () => {
                 <select 
                   value={gotraTier} 
                   onChange={e => setGotraTier(e.target.value as any)}
-                  style={{ width: '130px', flexShrink: 0, padding: '10px', borderRadius: '8px', background: '#0F0C1B', border: '1px solid #F43F5E', color: '#FDA4AF', fontWeight: 700, boxSizing: 'border-box' }}
+                  style={{ width: '130px', flexShrink: 0, padding: '10px', borderRadius: '8px', background: '#0B0B0E', border: '1px solid #F43F5E', color: '#FDA4AF', fontWeight: 700, boxSizing: 'border-box' }}
                 >
                   <option value="MUST_HAVE">MUST HAVE</option>
                   <option value="PREFERRED">PREFERRED</option>
@@ -719,7 +719,7 @@ export const MarriageOnboardingPage: React.FC = () => {
                 <select 
                   value={preferredDiet} 
                   onChange={e => setPreferredDiet(e.target.value)}
-                  style={{ flex: 1, minWidth: 0, width: '100%', boxSizing: 'border-box', padding: '10px', borderRadius: '8px', background: '#0F0C1B', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF' }}
+                  style={{ flex: 1, minWidth: 0, width: '100%', boxSizing: 'border-box', padding: '10px', borderRadius: '8px', background: '#0B0B0E', border: '1px solid rgba(255,255,255,0.2)', color: '#FFF' }}
                 >
                   <option value="Any">Any Diet</option>
                   <option value="Vegetarian">Strictly Vegetarian</option>
@@ -728,7 +728,7 @@ export const MarriageOnboardingPage: React.FC = () => {
                 <select 
                   value={dietTier} 
                   onChange={e => setDietTier(e.target.value as any)}
-                  style={{ width: '130px', flexShrink: 0, padding: '10px', borderRadius: '8px', background: '#0F0C1B', border: '1px solid #F43F5E', color: '#FDA4AF', fontWeight: 700, boxSizing: 'border-box' }}
+                  style={{ width: '130px', flexShrink: 0, padding: '10px', borderRadius: '8px', background: '#0B0B0E', border: '1px solid #F43F5E', color: '#FDA4AF', fontWeight: 700, boxSizing: 'border-box' }}
                 >
                   <option value="MUST_HAVE">MUST HAVE</option>
                   <option value="PREFERRED">PREFERRED</option>
@@ -804,7 +804,7 @@ export const MarriageOnboardingPage: React.FC = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0F0C1B', color: '#FFF', padding: '24px 16px 80px' }}>
+    <div style={{ minHeight: '100vh', background: '#0B0B0E', color: '#FFF', padding: '24px 16px 80px' }}>
       <div style={{ maxWidth: '480px', margin: '0 auto' }}>
         
         {/* Top Header & Progress */}
@@ -835,7 +835,7 @@ export const MarriageOnboardingPage: React.FC = () => {
               style={{ 
                 width: `${readiness.percentage}%`, 
                 height: '100%', 
-                background: readiness.isComplete ? '#10B981' : 'linear-gradient(90deg, #F59E0B, #10B981)',
+                background: readiness.isComplete ? '#10B981' : 'linear-gradient(90deg, #D4AF37, #10B981)',
                 transition: 'width 0.3s ease'
               }} 
             />

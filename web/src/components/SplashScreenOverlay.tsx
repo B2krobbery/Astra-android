@@ -52,7 +52,7 @@ export const SplashScreenOverlay: React.FC = () => {
         position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        background: '#0F0C1B',
+        background: '#0B0B0E',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -114,7 +114,7 @@ export const SplashScreenOverlay: React.FC = () => {
           fontSize: '2.5rem',
           fontWeight: 900,
           letterSpacing: '0.12em',
-          background: 'linear-gradient(135deg, #FDE68A 0%, #F59E0B 50%, #D97706 100%)',
+          background: 'linear-gradient(135deg, #E2C872 0%, #D4AF37 50%, #B8942E 100%)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           marginBottom: '6px',
@@ -154,7 +154,7 @@ export const SplashScreenOverlay: React.FC = () => {
           style={{
             height: '100%',
             width: `${progress}%`,
-            background: 'linear-gradient(90deg, #F59E0B 0%, #FBBF24 100%)',
+            background: 'linear-gradient(90deg, #D4AF37 0%, #E2C872 100%)',
             borderRadius: '9999px',
             transition: 'width 0.08s ease-out',
             boxShadow: '0 0 12px rgba(245, 158, 11, 0.8)'

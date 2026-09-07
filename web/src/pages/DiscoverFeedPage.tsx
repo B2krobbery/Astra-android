@@ -56,7 +56,7 @@ export const DiscoverFeedPage: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         overflowY: 'auto',
-        background: themeMode === 'LIGHT' ? '#FFF5F7' : '#0F0C1B'
+        background: themeMode === 'LIGHT' ? '#FFF5F7' : '#0B0B0E'
       }}
     >
       <FloatingHeartsBackground />
@@ -70,7 +70,7 @@ export const DiscoverFeedPage: React.FC = () => {
           maxWidth: '480px',
           margin: '0 auto',
           zIndex: 40,
-          background: themeMode === 'LIGHT' ? 'rgba(255, 245, 247, 0.78)' : 'rgba(15, 12, 27, 0.78)',
+          background: themeMode === 'LIGHT' ? 'rgba(255, 245, 247, 0.78)' : 'rgba(11, 11, 14, 0.78)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           borderBottom: '1px solid rgba(245, 158, 11, 0.25)',
@@ -378,12 +378,12 @@ export const DiscoverFeedPage: React.FC = () => {
                 <span style={{ color: 'var(--accent-amber-light)' }}>{userProfile.completionPercentage}%</span>
               </div>
               <div style={{ width: '100%', height: '8px', background: 'rgba(0,0,0,0.5)', borderRadius: '4px', overflow: 'hidden' }}>
-                <div style={{ width: `${userProfile.completionPercentage}%`, height: '100%', background: 'linear-gradient(90deg, #F59E0B, #10B981)' }} />
+                <div style={{ width: `${userProfile.completionPercentage}%`, height: '100%', background: 'linear-gradient(90deg, #D4AF37, #10B981)' }} />
               </div>
             </div>
             <button
               onClick={() => navigate('/marriage-onboarding')}
-              style={{ padding: '14px 32px', borderRadius: '9999px', background: 'linear-gradient(135deg, var(--accent-amber), #D97706)', color: '#0F0C1B', fontWeight: 800, fontSize: '0.9rem', border: 'none', cursor: 'pointer', boxShadow: 'var(--shadow-cosmic)' }}
+              style={{ padding: '14px 32px', borderRadius: '9999px', background: 'linear-gradient(135deg, var(--accent-amber), #D97706)', color: '#0B0B0E', fontWeight: 800, fontSize: '0.9rem', border: 'none', cursor: 'pointer', boxShadow: 'var(--shadow-cosmic)' }}
             >
               Complete Marriage Profile
             </button>
@@ -422,7 +422,7 @@ export const DiscoverFeedPage: React.FC = () => {
                   padding: '10px 20px',
                   borderRadius: '9999px',
                   background: 'linear-gradient(135deg, var(--accent-amber), #D97706)',
-                  color: '#0F0C1B',
+                  color: '#0B0B0E',
                   fontWeight: 700,
                   fontSize: '0.85rem',
                   border: 'none',

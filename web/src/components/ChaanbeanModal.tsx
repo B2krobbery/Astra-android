@@ -152,7 +152,7 @@ export const ChaanbeanModal: React.FC<ChaanbeanModalProps> = ({ targetUser, onDi
                 borderRadius: '9999px',
                 border: 'none',
                 background: selectedChecks.length === 0 ? 'var(--bg-secondary)' : 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
-                color: selectedChecks.length === 0 ? 'var(--text-muted)' : '#0F0C1B',
+                color: selectedChecks.length === 0 ? 'var(--text-muted)' : '#0B0B0E',
                 fontWeight: 700,
                 marginTop: '8px',
                 cursor: selectedChecks.length === 0 ? 'not-allowed' : 'pointer'
@@ -191,7 +191,7 @@ export const ChaanbeanModal: React.FC<ChaanbeanModalProps> = ({ targetUser, onDi
                 borderRadius: '9999px',
                 border: 'none',
                 background: !consentGiven ? 'var(--bg-secondary)' : 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
-                color: !consentGiven ? 'var(--text-muted)' : '#0F0C1B',
+                color: !consentGiven ? 'var(--text-muted)' : '#0B0B0E',
                 fontWeight: 700,
                 marginTop: '8px',
                 cursor: !consentGiven ? 'not-allowed' : 'pointer'
@@ -219,7 +219,7 @@ export const ChaanbeanModal: React.FC<ChaanbeanModalProps> = ({ targetUser, onDi
                 borderRadius: '9999px',
                 border: 'none',
                 background: 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
-                color: '#0F0C1B',
+                color: '#0B0B0E',
                 fontWeight: 700,
                 marginTop: '8px',
                 cursor: 'pointer',

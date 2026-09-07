@@ -152,7 +152,7 @@ export const AstroAiAssistantPage: React.FC = () => {
             background: inputText.trim()
               ? 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)'
               : 'rgba(255, 255, 255, 0.1)',
-            color: inputText.trim() ? '#0F0C1B' : 'var(--text-muted)',
+            color: inputText.trim() ? '#0B0B0E' : 'var(--text-muted)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

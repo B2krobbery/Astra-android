@@ -227,7 +227,7 @@ export const SplashPage: React.FC = () => {
         flexDirection: 'column',
         justifyContent: 'space-between',
         alignItems: 'center',
-        background: '#0F0C1B',
+        background: '#0B0B0E',
         position: 'relative',
         overflow: 'hidden'
       }}
@@ -235,8 +235,8 @@ export const SplashPage: React.FC = () => {
       <CosmicBackgroundCanvas />
 
       {isPhoneModalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 12, 27, 0.9)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-          <div style={{ background: '#1E1836', width: '100%', maxWidth: '360px', padding: '24px', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(11, 11, 14, 0.92)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+          <div style={{ background: '#181822', width: '100%', maxWidth: '360px', padding: '24px', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.08)', boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)' }}>
             <h3 style={{ color: '#FFF', fontSize: '1.2rem', fontWeight: 800, marginBottom: '16px' }}>
               {loginMethod === 'EmailSignup' ? 'Create Account' : loginMethod === 'EmailLogin' ? 'Sign In' : isOtpSent ? 'Verify Phone Number' : 'Enter Phone Number'}
             </h3>

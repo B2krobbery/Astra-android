@@ -4,7 +4,7 @@ export const getFallbackAvatarSvg = (name: string, isFemale: boolean = true): st
   const initial = (name || 'A').charAt(0).toUpperCase();
   const bgGradient = isFemale
     ? 'linear-gradient(135deg, #F43F5E 0%, #818CF8 100%)'
-    : 'linear-gradient(135deg, #F59E0B 0%, #4F46E5 100%)';
+    : 'linear-gradient(135deg, #D4AF37 0%, #4F46E5 100%)';
 
   const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
     <defs>

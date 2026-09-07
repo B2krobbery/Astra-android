@@ -141,7 +141,7 @@ export const UserProfilePage: React.FC = () => {
                 height: 26,
                 borderRadius: '50%',
                 background: 'var(--accent-amber)',
-                color: '#0F0C1B',
+                color: '#0B0B0E',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -162,11 +162,11 @@ export const UserProfilePage: React.FC = () => {
                   onChange={e => setEditedName(e.target.value)}
                   placeholder="Name"
                   style={{
-                    background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0F0C1B',
+                    background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0B0B0E',
                     border: '1.5px solid var(--accent-amber)',
                     borderRadius: '10px',
                     padding: '8px 12px',
-                    color: themeMode === 'LIGHT' ? '#0F0C1B' : '#FFFFFF',
+                    color: themeMode === 'LIGHT' ? '#0B0B0E' : '#FFFFFF',
                     fontSize: '1rem',
                     fontWeight: 700,
                     width: '100%',
@@ -180,11 +180,11 @@ export const UserProfilePage: React.FC = () => {
                   onChange={e => setEditedProfession(e.target.value)}
                   placeholder="Profession"
                   style={{
-                    background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0F0C1B',
+                    background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0B0B0E',
                     border: '1px solid var(--border-color)',
                     borderRadius: '8px',
                     padding: '6px 10px',
-                    color: themeMode === 'LIGHT' ? '#0F0C1B' : '#FFFFFF',
+                    color: themeMode === 'LIGHT' ? '#0B0B0E' : '#FFFFFF',
                     fontSize: '0.9rem',
                     width: '100%',
                     outline: 'none'
@@ -196,11 +196,11 @@ export const UserProfilePage: React.FC = () => {
                   onChange={e => setEditedEducation(e.target.value)}
                   placeholder="Education"
                   style={{
-                    background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0F0C1B',
+                    background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0B0B0E',
                     border: '1px solid var(--border-color)',
                     borderRadius: '8px',
                     padding: '6px 10px',
-                    color: themeMode === 'LIGHT' ? '#0F0C1B' : '#FFFFFF',
+                    color: themeMode === 'LIGHT' ? '#0B0B0E' : '#FFFFFF',
                     fontSize: '0.9rem',
                     width: '100%',
                     outline: 'none'
@@ -212,11 +212,11 @@ export const UserProfilePage: React.FC = () => {
                   onChange={e => setEditedLocation(e.target.value)}
                   placeholder="Location"
                   style={{
-                    background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0F0C1B',
+                    background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0B0B0E',
                     border: '1px solid var(--border-color)',
                     borderRadius: '8px',
                     padding: '6px 10px',
-                    color: themeMode === 'LIGHT' ? '#0F0C1B' : '#FFFFFF',
+                    color: themeMode === 'LIGHT' ? '#0B0B0E' : '#FFFFFF',
                     fontSize: '0.9rem',
                     width: '100%',
                     outline: 'none'
@@ -227,11 +227,11 @@ export const UserProfilePage: React.FC = () => {
                   onChange={e => setEditedBio(e.target.value)}
                   placeholder="Write a short bio or 'Voice Note' text here..."
                   style={{
-                    background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0F0C1B',
+                    background: themeMode === 'LIGHT' ? '#F1F5F9' : '#0B0B0E',
                     border: '1px solid var(--border-color)',
                     borderRadius: '8px',
                     padding: '8px 10px',
-                    color: themeMode === 'LIGHT' ? '#0F0C1B' : '#FFFFFF',
+                    color: themeMode === 'LIGHT' ? '#0B0B0E' : '#FFFFFF',
                     fontSize: '0.9rem',
                     width: '100%',
                     minHeight: '60px',
@@ -245,7 +245,7 @@ export const UserProfilePage: React.FC = () => {
                     padding: '8px',
                     borderRadius: '8px',
                     background: 'var(--accent-amber)',
-                    color: '#0F0C1B',
+                    color: '#0B0B0E',
                     border: 'none',
                     fontWeight: 800,
                     fontSize: '0.9rem',
@@ -507,7 +507,7 @@ export const UserProfilePage: React.FC = () => {
                     borderRadius: '9999px',
                     background: 'var(--accent-amber)',
                     border: 'none',
-                    color: '#0F0C1B',
+                    color: '#0B0B0E',
                     fontSize: '0.7rem',
                     fontWeight: 700,
                     cursor: 'pointer'

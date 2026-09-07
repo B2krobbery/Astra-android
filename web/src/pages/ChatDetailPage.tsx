@@ -150,7 +150,7 @@ export const ChatDetailPage: React.FC = () => {
             borderRadius: '9999px',
             background: showIcebreakers ? 'var(--accent-amber)' : 'rgba(245, 158, 11, 0.15)',
             border: '1px solid var(--accent-amber)',
-            color: showIcebreakers ? '#0F0C1B' : 'var(--accent-amber-light)',
+            color: showIcebreakers ? '#0B0B0E' : 'var(--accent-amber-light)',
             fontSize: '0.75rem',
             fontWeight: 700,
             display: 'flex',
@@ -190,7 +190,7 @@ export const ChatDetailPage: React.FC = () => {
             background: inputText.trim()
               ? 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)'
               : 'rgba(255, 255, 255, 0.1)',
-            color: inputText.trim() ? '#0F0C1B' : 'var(--text-muted)',
+            color: inputText.trim() ? '#0B0B0E' : 'var(--text-muted)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

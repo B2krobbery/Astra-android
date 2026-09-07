@@ -137,7 +137,7 @@ export const VoiceIntroCard: React.FC<VoiceIntroCardProps> = ({
             borderRadius: '50%',
             border: 'none',
             background: 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
-            color: '#0F0C1B',
+            color: '#0B0B0E',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -146,7 +146,7 @@ export const VoiceIntroCard: React.FC<VoiceIntroCardProps> = ({
             boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)'
           }}
         >
-          {isPlaying ? <Pause size={18} fill="#0F0C1B" /> : <Play size={18} fill="#0F0C1B" style={{ marginLeft: 2 }} />}
+          {isPlaying ? <Pause size={18} fill="#0B0B0E" /> : <Play size={18} fill="#0B0B0E" style={{ marginLeft: 2 }} />}
         </button>
 
         {/* Waveform Equalizer Visualizer */}

@@ -106,7 +106,7 @@ export const AdminAiPanelPage: React.FC = () => {
                   style={{
                     fontSize: '0.65rem',
                     fontWeight: 700,
-                    color: agent.status === 'RUNNING' ? '#FCD34D' : agent.status === 'COMPLETED' ? '#4ADE80' : '#94A3B8'
+                    color: agent.status === 'RUNNING' ? '#E2C872' : agent.status === 'COMPLETED' ? '#4ADE80' : '#94A3B8'
                   }}
                 >
                   {agent.status}
@@ -148,7 +148,7 @@ export const AdminAiPanelPage: React.FC = () => {
               borderRadius: '9999px',
               border: 'none',
               background: activeAgent.status === 'RUNNING' ? 'rgba(255, 255, 255, 0.2)' : 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
-              color: '#0F0C1B',
+              color: '#0B0B0E',
               fontWeight: 800,
               fontSize: '0.85rem',
               display: 'flex',
@@ -163,7 +163,7 @@ export const AdminAiPanelPage: React.FC = () => {
               </>
             ) : (
               <>
-                <Play size={16} fill="#0F0C1B" /> Trigger Agent Run
+                <Play size={16} fill="#0B0B0E" /> Trigger Agent Run
               </>
             )}
           </button>
@@ -187,7 +187,7 @@ export const AdminAiPanelPage: React.FC = () => {
               marginTop: '6px',
               padding: '10px 14px',
               borderRadius: '14px',
-              background: '#0F0C1B',
+              background: '#0B0B0E',
               border: '1px solid rgba(255, 255, 255, 0.1)',
               color: '#818CF8',
               fontFamily: 'monospace',

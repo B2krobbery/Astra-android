@@ -133,7 +133,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
               borderRadius: '9999px',
               border: 'none',
               background: 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
-              color: '#0F0C1B',
+              color: '#0B0B0E',
               fontWeight: 700,
               fontSize: '0.9rem',
               cursor: 'pointer'

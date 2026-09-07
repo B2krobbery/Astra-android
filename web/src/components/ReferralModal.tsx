@@ -100,7 +100,7 @@ export const ReferralModal: React.FC = () => {
               borderRadius: '9999px',
               border: 'none',
               background: copied ? '#4ADE80' : 'var(--accent-amber)',
-              color: '#0F0C1B',
+              color: '#0B0B0E',
               fontSize: '0.75rem',
               fontWeight: 700,
               display: 'flex',

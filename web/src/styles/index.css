@@ -14,7 +14,7 @@ html, body {
 }
 
 body {
-  background-color: #06040B;
+  background-color: #0B0B0E;
   color: var(--text-primary);
   font-family: var(--font-family);
   overflow-x: hidden;
@@ -63,7 +63,7 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(245, 158, 11, 0.25);
+  background: rgba(212, 175, 55, 0.2);
   border-radius: 10px;
 }
 

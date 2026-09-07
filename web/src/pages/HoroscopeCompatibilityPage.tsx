@@ -75,7 +75,7 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
-          background: themeMode === 'LIGHT' ? 'rgba(255, 245, 247, 0.85)' : 'rgba(15, 12, 27, 0.85)',
+          background: themeMode === 'LIGHT' ? 'rgba(255, 245, 247, 0.85)' : 'rgba(11, 11, 14, 0.85)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           borderBottom: '1px solid var(--border-color)',
@@ -375,7 +375,7 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
         {/* Start Connection CTA */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
           <PrimaryButton onClick={handleStartChatting}>
-            <Heart size={18} fill="#0F0C1B" /> {candidate.intent === 'Marriage' ? `Connect with ${candidate.name}` : `Send a Message`}
+            <Heart size={18} fill="#0B0B0E" /> {candidate.intent === 'Marriage' ? `Connect with ${candidate.name}` : `Send a Message`}
           </PrimaryButton>
         </div>
       </main>
