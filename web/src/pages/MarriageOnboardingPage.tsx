@@ -493,7 +493,7 @@ export const MarriageOnboardingPage: React.FC = () => {
         return (
           <div>
             <h4 style={{ color: 'white', marginBottom: '24px' }}>Family & Marriage</h4>
-            {renderSelect('Marital Status', maritalStatus, setMaritalStatus, ['Never Married', 'Divorced', 'Widowed', 'Awaiting Divorce'])}
+            {renderSelect('Marital Status', maritalStatus, setMaritalStatus, ['Never Married', 'Divorced', 'Separated', 'Annulled', 'Widowed', 'Awaiting Divorce'])}
           </div>
         );
       case 6: // Astrology & Birth
