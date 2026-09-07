@@ -528,6 +528,66 @@ export const UserProfilePage: React.FC = () => {
           </div>
         </div>
 
+        {/* Health & Lifestyle Section */}
+        <div
+          style={{
+            padding: '20px',
+            borderRadius: '24px',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-color)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+            <h3 className="heading-font" style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              🌿 Health &amp; Lifestyle
+            </h3>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: userProfile.healthCondition ? '12px' : '0' }}>
+            {userProfile.diet && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 14px', borderRadius: '9999px', background: 'rgba(34, 197, 94, 0.12)', border: '1px solid rgba(34, 197, 94, 0.3)', fontSize: '0.8rem', color: '#86efac' }}>
+                🥗 {userProfile.diet}
+              </span>
+            )}
+            {userProfile.alcohol && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 14px', borderRadius: '9999px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)', fontSize: '0.8rem', color: '#fde68a' }}>
+                🍷 Alcohol: {userProfile.alcohol}
+              </span>
+            )}
+            {userProfile.smoking && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 14px', borderRadius: '9999px', background: 'rgba(148, 163, 184, 0.1)', border: '1px solid rgba(148, 163, 184, 0.25)', fontSize: '0.8rem', color: '#cbd5e1' }}>
+                🚬 Smoking: {userProfile.smoking}
+              </span>
+            )}
+            <span style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '6px 14px',
+              borderRadius: '9999px',
+              background: userProfile.healthCondition && userProfile.healthCondition.toLowerCase() !== 'none'
+                ? 'rgba(239, 68, 68, 0.12)'
+                : 'rgba(59, 130, 246, 0.12)',
+              border: userProfile.healthCondition && userProfile.healthCondition.toLowerCase() !== 'none'
+                ? '1px solid rgba(239, 68, 68, 0.3)'
+                : '1px solid rgba(59, 130, 246, 0.3)',
+              fontSize: '0.8rem',
+              color: userProfile.healthCondition && userProfile.healthCondition.toLowerCase() !== 'none'
+                ? '#fca5a5'
+                : '#93c5fd'
+            }}>
+              🏥 Health: {userProfile.healthCondition ? userProfile.healthCondition : 'No Known Conditions'}
+            </span>
+          </div>
+          {userProfile.healthCondition && userProfile.healthCondition.toLowerCase() !== 'none' && (
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px', marginTop: '10px' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>🏥 Disclosed Medical / Health Condition</span>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
+                {userProfile.healthCondition}
+              </p>
+            </div>
+          )}
+        </div>
+
         {/* Theme Settings Selector */}
         <div
           style={{

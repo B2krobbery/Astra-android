@@ -140,6 +140,7 @@ export interface UserProfile {
   healthStatus?: string;
   healthInfo?: string;
   healthPrivacy?: string;
+  healthCondition?: string;
   diet?: string;
   alcohol?: string;
   smoking?: string;
