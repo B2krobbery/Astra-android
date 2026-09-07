@@ -208,7 +208,6 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
            maritalStatus: dbProfile.marital_status,
            previousMarriage: dbProfile.previous_marriage,
            childrenStatus: dbProfile.children_status,
-           photoPrivacy: dbProfile.photo_privacy,
            lookingFor: dbProfile.looking_for || [],
            regionalPreference: dbProfile.regional_preference,
            bio: dbProfile.bio,

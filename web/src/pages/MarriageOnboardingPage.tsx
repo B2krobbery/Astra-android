@@ -132,7 +132,6 @@ export const MarriageOnboardingPage: React.FC = () => {
   
   // Photos
   const [photoPreview, setPhotoPreview] = useState(userProfile.photoUrl || '');
-  const [photoPrivacy, setPhotoPrivacy] = useState(userProfile.photoPrivacy || 'public');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Questionnaire
@@ -195,7 +194,6 @@ export const MarriageOnboardingPage: React.FC = () => {
       setDietTier((userProfile.partnerPreferences?.tierDiet as any) || 'DEAL_BREAKER');
       
       setPhotoPreview(userProfile.photoUrl || '');
-      setPhotoPrivacy(userProfile.photoPrivacy || 'public');
 
       hasHydrated.current = true;
     }
@@ -307,7 +305,6 @@ export const MarriageOnboardingPage: React.FC = () => {
         smoking_frequency: smoking,
         pre_existing_conditions: healthCondition || null,
         marital_status: maritalStatus,
-        photo_privacy: photoPrivacy,
         nakshatra,
         rashi,
         nadi,
@@ -799,14 +796,6 @@ export const MarriageOnboardingPage: React.FC = () => {
               />
               <span style={{ fontSize: '0.8rem', color: '#94A3B8' }}>Upload a clear photo (4–5 recommended)</span>
             </div>
-
-            {renderSelect('Photo Privacy Setting', photoPrivacy, setPhotoPrivacy, [
-              'public',
-              'private'
-            ])}
-            <p style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
-              {photoPrivacy === 'private' ? '🔒 Private: Hidden until you accept an explicit photo request.' : '🌐 Public: Visible on discovery cards to verified members.'}
-            </p>
           </div>
         );
       default:

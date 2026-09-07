@@ -73,7 +73,6 @@ export interface Candidate {
   manglik?: string;
   religion?: string;
   caste?: string;
-  photoPrivacy?: string;
   subCaste?: string;
   gotra?: string;
   motherFatherGotra?: string;
@@ -154,7 +153,6 @@ export interface UserProfile {
   maritalStatus?: string;
   previousMarriage?: string;
   childrenStatus?: string;
-  photoPrivacy?: string;
   nadi?: string;
   manglik?: string;
   partnerPreferences?: PartnerPreferences;
