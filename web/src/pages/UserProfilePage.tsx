@@ -558,34 +558,70 @@ export const UserProfilePage: React.FC = () => {
                 🚬 Smoking: {userProfile.smoking}
               </span>
             )}
-            <span style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              padding: '6px 14px',
-              borderRadius: '9999px',
-              background: userProfile.healthCondition && userProfile.healthCondition.toLowerCase() !== 'none'
-                ? 'rgba(239, 68, 68, 0.12)'
-                : 'rgba(59, 130, 246, 0.12)',
-              border: userProfile.healthCondition && userProfile.healthCondition.toLowerCase() !== 'none'
-                ? '1px solid rgba(239, 68, 68, 0.3)'
-                : '1px solid rgba(59, 130, 246, 0.3)',
-              fontSize: '0.8rem',
-              color: userProfile.healthCondition && userProfile.healthCondition.toLowerCase() !== 'none'
-                ? '#fca5a5'
-                : '#93c5fd'
-            }}>
-              🏥 Health: {userProfile.healthCondition ? userProfile.healthCondition : 'No Known Conditions'}
-            </span>
+            {(() => {
+              const text = (userProfile.healthCondition || userProfile.healthStatus || '').trim();
+              const lower = text.toLowerCase();
+              let label = text || 'Not Disclosed';
+              let isWarning = false;
+              let bg = 'rgba(59, 130, 246, 0.12)';
+              let border = 'rgba(59, 130, 246, 0.3)';
+              let color = '#93c5fd';
+
+              if (!text) {
+                label = 'Not Disclosed';
+              } else if (lower.includes('private') || lower.includes('inquiry')) {
+                label = 'Disclosed Privately';
+                bg = 'rgba(245, 158, 11, 0.15)';
+                border = 'rgba(245, 158, 11, 0.3)';
+                color = '#fde68a';
+              } else if (lower.includes('excellent')) {
+                label = 'Excellent';
+                bg = 'rgba(34, 197, 94, 0.12)';
+                border = 'rgba(34, 197, 94, 0.3)';
+                color = '#86efac';
+              } else if (lower === 'good') {
+                label = 'Good';
+              } else if (lower === 'none' || lower.includes('no issues') || lower.includes('no known')) {
+                label = 'No Known Conditions';
+                bg = 'rgba(34, 197, 94, 0.12)';
+                border = 'rgba(34, 197, 94, 0.3)';
+                color = '#86efac';
+              } else {
+                isWarning = true;
+                bg = 'rgba(239, 68, 68, 0.12)';
+                border = 'rgba(239, 68, 68, 0.3)';
+                color = '#fca5a5';
+              }
+
+              const showDisclosureBox = isWarning && text.length > 0;
+
+              return (
+                <>
+                  <span style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '6px 14px',
+                    borderRadius: '9999px',
+                    background: bg,
+                    border: `1px solid ${border}`,
+                    fontSize: '0.8rem',
+                    color: color
+                  }}>
+                    🏥 Health: {label}
+                  </span>
+                  {showDisclosureBox && (
+                    <div style={{ width: '100%', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px', marginTop: '10px' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>🏥 Disclosed Medical / Health Condition</span>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
+                        {text}
+                      </p>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
-          {userProfile.healthCondition && userProfile.healthCondition.toLowerCase() !== 'none' && (
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px', marginTop: '10px' }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>🏥 Disclosed Medical / Health Condition</span>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
-                {userProfile.healthCondition}
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Theme Settings Selector */}
