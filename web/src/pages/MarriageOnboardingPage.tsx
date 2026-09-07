@@ -590,6 +590,8 @@ export const MarriageOnboardingPage: React.FC = () => {
             {renderTextarea('Starting a family', questionnaire['q8'] || '', v => setQuestionnaire(prev => ({ ...prev, q8: v })), 'e.g. Want kids after 2-3 years of marriage')}
             {renderTextarea('Weekends and free time', questionnaire['q9'] || '', v => setQuestionnaire(prev => ({ ...prev, q9: v })), 'e.g. Hiking, trying new restaurants, or relaxing at home')}
             {renderTextarea('Most important quality in a partner', questionnaire['q10'] || '', v => setQuestionnaire(prev => ({ ...prev, q10: v })), 'e.g. Honesty, ambition, and a good sense of humor')}
+            {renderTextarea('Raising children religiously', questionnaire['q11'] || '', v => setQuestionnaire(prev => ({ ...prev, q11: v })), 'e.g. Yes, teaching them spiritual values and daily prayers')}
+            {renderTextarea('Hanging out with friends after marriage', questionnaire['q12'] || '', v => setQuestionnaire(prev => ({ ...prev, q12: v })), 'e.g. Yes, maintaining friendships and occasional weekend catchups')}
           </div>
         );
       case 9: // Partner Preferences

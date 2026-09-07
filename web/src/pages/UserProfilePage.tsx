@@ -744,7 +744,9 @@ export const UserProfilePage: React.FC = () => {
                 { id: 'q7', text: 'Handling conflicts' },
                 { id: 'q8', text: 'Starting a family' },
                 { id: 'q9', text: 'Weekends and free time' },
-                { id: 'q10', text: 'Most important quality in a partner' }
+                { id: 'q10', text: 'Most important quality in a partner' },
+                { id: 'q11', text: 'Raising children religiously' },
+                { id: 'q12', text: 'Hanging out with friends after marriage' }
               ].map(q => {
                 const answer = userProfile.marriageQuestionnaire?.[q.id];
                 if (!answer) return null;
