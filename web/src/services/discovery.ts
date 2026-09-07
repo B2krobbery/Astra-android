@@ -133,6 +133,7 @@ export const DiscoveryService = {
         photoPrivacy: p.photo_privacy,
         voiceNoteUrl: p.voice_note_url,
         voiceNotePrompt: p.voice_note_prompt,
+        healthCondition: p.pre_existing_conditions || undefined,
         regionalCategory: p.region || (() => {
           const loc = (p.location || '').toLowerCase();
           if (loc.includes('kerala')) return 'Kerala';

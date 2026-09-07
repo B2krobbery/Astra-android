@@ -88,6 +88,7 @@ export interface Candidate {
   marriageQuestionnaire?: Record<string, string>;
   voiceNoteUrl?: string;
   voiceNotePrompt?: string;
+  healthCondition?: string;
 }
 
 export interface UserProfile {

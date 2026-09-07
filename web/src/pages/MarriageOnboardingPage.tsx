@@ -101,6 +101,7 @@ export const MarriageOnboardingPage: React.FC = () => {
   const [diet, setDiet] = useState(userProfile.diet || 'Vegetarian');
   const [alcohol, setAlcohol] = useState(userProfile.alcohol || 'Never');
   const [smoking, setSmoking] = useState(userProfile.smoking || 'Never');
+  const [healthCondition, setHealthCondition] = useState((userProfile as any).healthCondition || (userProfile as any).pre_existing_conditions || '');
   
   // Family & Marriage
   const [maritalStatus, setMaritalStatus] = useState(userProfile.maritalStatus || 'Never Married');
@@ -166,6 +167,7 @@ export const MarriageOnboardingPage: React.FC = () => {
       setDiet(userProfile.diet || 'Vegetarian');
       setAlcohol(userProfile.alcohol || 'Never');
       setSmoking(userProfile.smoking || 'Never');
+      setHealthCondition((userProfile as any).healthCondition || (userProfile as any).pre_existing_conditions || '');
       
       setMaritalStatus(userProfile.maritalStatus || 'Never Married');
       
@@ -293,6 +295,7 @@ export const MarriageOnboardingPage: React.FC = () => {
         diet,
         alcohol_frequency: alcohol,
         smoking_frequency: smoking,
+        pre_existing_conditions: healthCondition || null,
         marital_status: maritalStatus,
         photo_privacy: photoPrivacy,
         nakshatra,
@@ -487,6 +490,7 @@ export const MarriageOnboardingPage: React.FC = () => {
             {renderSelect('Diet Preference', diet, setDiet, ['Vegetarian', 'Eggetarian', 'Non-Vegetarian', 'Vegan', 'Jain Vegetarian'])}
             {renderSelect('Alcohol Habit', alcohol, setAlcohol, ['Never', 'Socially', 'Occasionally', 'Daily'])}
             {renderSelect('Smoking Habit', smoking, setSmoking, ['Never', 'Occasionally', 'Daily'])}
+            {renderTextarea('Pre-existing Health Conditions (optional)', healthCondition, setHealthCondition, 'e.g. Diabetes, Hypertension, None — disclosed privately after match')}
           </div>
         );
       case 5: // Family & Marriage

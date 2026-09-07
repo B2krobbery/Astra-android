@@ -305,6 +305,28 @@ export const CandidateDetailPage: React.FC = () => {
         )}
 
 
+        {candidate.healthCondition && (
+          <div
+            style={{
+              marginBottom: '24px',
+              padding: '16px',
+              borderRadius: '16px',
+              background: 'rgba(34, 197, 94, 0.06)',
+              border: '1px solid rgba(34, 197, 94, 0.2)'
+            }}
+          >
+            <h3
+              className="heading-font"
+              style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '8px', color: 'var(--text-primary)' }}
+            >
+              🏥 Health Disclosure
+            </h3>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
+              {candidate.healthCondition}
+            </p>
+          </div>
+        )}
+
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
           <CosmicCheckButton
             onClick={() => {
