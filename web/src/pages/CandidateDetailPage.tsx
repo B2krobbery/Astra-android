@@ -235,7 +235,7 @@ export const CandidateDetailPage: React.FC = () => {
         </div>
 
         {/* Health & Lifestyle */}
-        {(candidate.diet || candidate.alcohol || candidate.smoking || candidate.healthCondition) && (
+        {(candidate.diet || candidate.alcohol || candidate.smoking || candidate.healthCondition !== undefined || candidate.intent === 'Marriage') && (
           <div
             style={{
               marginBottom: '20px',
@@ -267,10 +267,29 @@ export const CandidateDetailPage: React.FC = () => {
                   🚬 Smoking: {candidate.smoking}
                 </span>
               )}
+              <span style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '5px 12px',
+                borderRadius: '9999px',
+                background: candidate.healthCondition && candidate.healthCondition.toLowerCase() !== 'none'
+                  ? 'rgba(239, 68, 68, 0.12)'
+                  : 'rgba(59, 130, 246, 0.12)',
+                border: candidate.healthCondition && candidate.healthCondition.toLowerCase() !== 'none'
+                  ? '1px solid rgba(239, 68, 68, 0.3)'
+                  : '1px solid rgba(59, 130, 246, 0.3)',
+                fontSize: '0.78rem',
+                color: candidate.healthCondition && candidate.healthCondition.toLowerCase() !== 'none'
+                  ? '#fca5a5'
+                  : '#93c5fd'
+              }}>
+                🏥 Health: {candidate.healthCondition ? candidate.healthCondition : 'No Known Conditions'}
+              </span>
             </div>
-            {candidate.healthCondition && (
+            {candidate.healthCondition && candidate.healthCondition.toLowerCase() !== 'none' && (
               <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>🏥 Health Disclosure</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>🏥 Pre-existing Health Condition Disclosure</span>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
                   {candidate.healthCondition}
                 </p>
