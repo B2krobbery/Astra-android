@@ -21,7 +21,7 @@ const SECTIONS = [
   'Chemistry & Interests',
   'Values & Vision',
   'Partner Preferences',
-  'Photo & Privacy',
+  'Profile Photo',
 ];
 
 const NAKSHATRAS = [
@@ -750,10 +750,10 @@ export const MarriageOnboardingPage: React.FC = () => {
             </div>
           </div>
         );
-      case 10: // Photo & Privacy
+      case 10: // Profile Photo
         return (
           <div>
-            <h4 style={{ color: 'white', marginBottom: '24px' }}>Profile Photo & Privacy</h4>
+            <h4 style={{ color: 'white', marginBottom: '24px' }}>Profile Photo</h4>
             
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px' }}>
               <div 
