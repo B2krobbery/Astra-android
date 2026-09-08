@@ -212,6 +212,7 @@ export const SplashPage: React.FC = () => {
     } catch (err: any) {
       console.error('Google sign-in error:', err);
       setErrorMsg(err.message || 'Google Sign-In failed');
+      setIsPhoneModalOpen(true);
     } finally {
       setIsLoading(false);
     }
