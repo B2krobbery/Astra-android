@@ -6,7 +6,7 @@ import { AstraBottomNavigation } from '../components/AstraBottomNavigation';
 import { CandidateAvatar } from '../components/CandidateAvatar';
 import { VerificationBadge } from '../components/VerificationBadge';
 import { VerificationType, ThemeMode, AppLanguage } from '../types';
-import { Edit, Moon, Sun, Monitor, ShieldCheck, Sparkles, LogOut, Share2, Bot, Camera, Globe } from 'lucide-react';
+import { Edit, Moon, Sun, Monitor, ShieldCheck, Sparkles, LogOut, Share2, Bot, Camera, Globe, Landmark, Activity, Utensils, Wine, Cigarette, Lock, ShieldAlert } from 'lucide-react';
 
 import { UserVoiceRecorderCard } from '../components/UserVoiceRecorderCard';
 
@@ -538,8 +538,8 @@ export const UserProfilePage: React.FC = () => {
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <h3 className="heading-font" style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
-              🏛️ Ancestral Gotra Lineage (4 Gotras)
+            <h3 className="heading-font" style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Landmark size={16} style={{ color: 'var(--accent-gold)' }} /> Ancestral Gotra Lineage (4 Gotras)
             </h3>
             {(userProfile.religion || userProfile.caste) && (
               <span style={{ fontSize: '0.75rem', color: 'var(--accent-amber-light)', background: 'rgba(245, 158, 11, 0.12)', padding: '4px 10px', borderRadius: '8px' }}>
@@ -549,19 +549,19 @@ export const UserProfilePage: React.FC = () => {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
             <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>👴 Father's Father (Main)</span>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Father's Father (Main)</span>
               <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#F3F4F6' }}>{userProfile.gotra || 'Not Specified'}</span>
             </div>
             <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>👵 Father's Mother</span>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Father's Mother</span>
               <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#F3F4F6' }}>{userProfile.fatherMotherGotra || 'Not Specified'}</span>
             </div>
             <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>👴 Mother's Father</span>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Mother's Father</span>
               <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#F3F4F6' }}>{userProfile.motherFatherGotra || 'Not Specified'}</span>
             </div>
             <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>👵 Mother's Mother</span>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Mother's Mother</span>
               <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#F3F4F6' }}>{userProfile.motherMotherGotra || 'Not Specified'}</span>
             </div>
           </div>
@@ -577,24 +577,24 @@ export const UserProfilePage: React.FC = () => {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <h3 className="heading-font" style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-              🌿 Health &amp; Lifestyle
+            <h3 className="heading-font" style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Activity size={16} style={{ color: 'var(--accent-gold)' }} /> Health &amp; Lifestyle
             </h3>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: userProfile.healthCondition ? '12px' : '0' }}>
             {userProfile.diet && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 14px', borderRadius: '9999px', background: 'rgba(34, 197, 94, 0.12)', border: '1px solid rgba(34, 197, 94, 0.3)', fontSize: '0.8rem', color: '#86efac' }}>
-                🥗 {userProfile.diet}
+              <span style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 14px', borderRadius: '9999px', background: 'rgba(34, 197, 94, 0.12)', border: '1px solid rgba(34, 197, 94, 0.3)', fontSize: '0.8rem', color: '#86efac' }}>
+                <Utensils size={13} /> {userProfile.diet}
               </span>
             )}
             {userProfile.alcohol && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 14px', borderRadius: '9999px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)', fontSize: '0.8rem', color: '#fde68a' }}>
-                🍷 Alcohol: {userProfile.alcohol}
+              <span style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 14px', borderRadius: '9999px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)', fontSize: '0.8rem', color: '#fde68a' }}>
+                <Wine size={13} /> Alcohol: {userProfile.alcohol}
               </span>
             )}
             {userProfile.smoking && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 14px', borderRadius: '9999px', background: 'rgba(148, 163, 184, 0.1)', border: '1px solid rgba(148, 163, 184, 0.25)', fontSize: '0.8rem', color: '#cbd5e1' }}>
-                🚬 Smoking: {userProfile.smoking}
+              <span style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 14px', borderRadius: '9999px', background: 'rgba(148, 163, 184, 0.1)', border: '1px solid rgba(148, 163, 184, 0.25)', fontSize: '0.8rem', color: '#cbd5e1' }}>
+                <Cigarette size={13} /> Smoking: {userProfile.smoking}
               </span>
             )}
             {/* Health Status Pill */}
@@ -626,7 +626,7 @@ export const UserProfilePage: React.FC = () => {
                 <span style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '4px',
+                  gap: '5px',
                   padding: '6px 14px',
                   borderRadius: '9999px',
                   background: sBg,
@@ -634,7 +634,7 @@ export const UserProfilePage: React.FC = () => {
                   fontSize: '0.8rem',
                   color: sColor
                 }}>
-                  🏥 Health: {statusLabel}
+                  <Lock size={13} /> Health: {statusLabel}
                 </span>
               );
             })()}
@@ -650,7 +650,7 @@ export const UserProfilePage: React.FC = () => {
                   <span style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '4px',
+                    gap: '5px',
                     padding: '6px 14px',
                     borderRadius: '9999px',
                     background: hasText ? 'rgba(239, 68, 68, 0.12)' : 'rgba(100, 116, 139, 0.12)',
@@ -658,11 +658,11 @@ export const UserProfilePage: React.FC = () => {
                     fontSize: '0.8rem',
                     color: hasText ? '#fca5a5' : '#94a3b8'
                   }}>
-                    🦠 Disease: {displayLabel}
+                    <ShieldAlert size={13} /> Disease: {displayLabel}
                   </span>
                   {hasText && (
                     <div style={{ width: '100%', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px', marginTop: '10px' }}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>🏥 Pre-existing Disease / Medical Condition Disclosure</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Pre-existing Disease / Medical Condition Disclosure</span>
                       <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
                         {condText}
                       </p>
@@ -735,18 +735,9 @@ export const UserProfilePage: React.FC = () => {
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {[
-                { id: 'q1', text: 'Future career plans and goals' },
-                { id: 'q2', text: 'Work-life balance' },
-                { id: 'q3', text: 'Household responsibilities' },
-                { id: 'q4', text: 'Finances and investments' },
-                { id: 'q5', text: 'Family involvement' },
-                { id: 'q6', text: 'Living arrangements' },
-                { id: 'q7', text: 'Handling conflicts' },
-                { id: 'q8', text: 'Starting a family' },
-                { id: 'q9', text: 'Weekends and free time' },
-                { id: 'q10', text: 'Most important quality in a partner' },
                 { id: 'q11', text: 'Raising children religiously' },
-                { id: 'q12', text: 'Hanging out with friends after marriage' }
+                { id: 'q12', text: 'Hanging out with friends after marriage' },
+                { id: 'q13', text: 'How would you like to celebrate your first wedding anniversary?' }
               ].map(q => {
                 const answer = userProfile.marriageQuestionnaire?.[q.id];
                 if (!answer) return null;

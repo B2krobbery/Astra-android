@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, ChevronLeft, ChevronRight, CheckCircle, Flame, Moon, MapPin, Search, Sparkles, AlertCircle } from 'lucide-react';
+import { Camera, ChevronLeft, ChevronRight, CheckCircle, Flame, Moon, MapPin, Search, Sparkles, AlertCircle, Landmark } from 'lucide-react';
 import { useAstra } from '../context/AstraContext';
 import { PrimaryButton, SecondaryOutlineButton } from '../components/AstraButtons';
 import { supabase } from '../lib/supabase';
@@ -475,8 +475,8 @@ export const MarriageOnboardingPage: React.FC = () => {
             {renderInput('State', state, setState, 'e.g. Maharashtra')}
             {renderInput('City / District', cityDistrict, setCityDistrict, 'e.g. Pune')}
             <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-              <h5 style={{ color: 'var(--accent-amber-light)', fontSize: '0.85rem', fontWeight: 700, marginBottom: '12px' }}>
-                🏛️ Ancestral Gotra Lineage (4 Gotras)
+              <h5 style={{ color: 'var(--accent-amber-light)', fontSize: '0.85rem', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Landmark size={15} style={{ color: 'var(--accent-gold)' }} /> Ancestral Gotra Lineage (4 Gotras)
               </h5>
               {renderInput("Father's Father Gotra (Main Gotra)", gotra, setGotra, 'e.g. Kashyapa, Bharadwaja')}
               {renderInput("Father's Mother Gotra", fatherMotherGotra, setFatherMotherGotra, 'e.g. Vatsa, Harita')}
@@ -578,18 +578,9 @@ export const MarriageOnboardingPage: React.FC = () => {
             <p style={{ color: '#94A3B8', fontSize: '0.85rem', marginBottom: '16px' }}>
               These answers will be displayed directly on your profile to help matches understand your personal values.
             </p>
-            {renderTextarea('Future career plans and goals', questionnaire['q1'] || '', v => setQuestionnaire(prev => ({ ...prev, q1: v })), 'e.g. Planning to start a business or grow in tech')}
-            {renderTextarea('Work-life balance', questionnaire['q2'] || '', v => setQuestionnaire(prev => ({ ...prev, q2: v })), 'e.g. Weekends are strictly for family')}
-            {renderTextarea('Household responsibilities', questionnaire['q3'] || '', v => setQuestionnaire(prev => ({ ...prev, q3: v })), 'e.g. Expect to split 50/50')}
-            {renderTextarea('Finances and investments', questionnaire['q4'] || '', v => setQuestionnaire(prev => ({ ...prev, q4: v })), 'e.g. Prefer to invest heavily in real estate')}
-            {renderTextarea('Family involvement', questionnaire['q5'] || '', v => setQuestionnaire(prev => ({ ...prev, q5: v })), 'e.g. Very close to my parents, visit them often')}
-            {renderTextarea('Living arrangements', questionnaire['q6'] || '', v => setQuestionnaire(prev => ({ ...prev, q6: v })), 'e.g. Plan to live independently after marriage')}
-            {renderTextarea('Handling conflicts', questionnaire['q7'] || '', v => setQuestionnaire(prev => ({ ...prev, q7: v })), 'e.g. Direct communication and compromise')}
-            {renderTextarea('Starting a family', questionnaire['q8'] || '', v => setQuestionnaire(prev => ({ ...prev, q8: v })), 'e.g. Want kids after 2-3 years of marriage')}
-            {renderTextarea('Weekends and free time', questionnaire['q9'] || '', v => setQuestionnaire(prev => ({ ...prev, q9: v })), 'e.g. Hiking, trying new restaurants, or relaxing at home')}
-            {renderTextarea('Most important quality in a partner', questionnaire['q10'] || '', v => setQuestionnaire(prev => ({ ...prev, q10: v })), 'e.g. Honesty, ambition, and a good sense of humor')}
             {renderTextarea('Raising children religiously', questionnaire['q11'] || '', v => setQuestionnaire(prev => ({ ...prev, q11: v })), 'e.g. Yes, teaching them spiritual values and daily prayers')}
             {renderTextarea('Hanging out with friends after marriage', questionnaire['q12'] || '', v => setQuestionnaire(prev => ({ ...prev, q12: v })), 'e.g. Yes, maintaining friendships and occasional weekend catchups')}
+            {renderTextarea('How would you like to celebrate your first wedding anniversary?', questionnaire['q13'] || '', v => setQuestionnaire(prev => ({ ...prev, q13: v })), 'e.g. A romantic getaway to the mountains, a quiet candlelight dinner, or a celebration with family')}
           </div>
         );
       case 9: // Partner Preferences

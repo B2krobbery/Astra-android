@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAstra } from '../context/AstraContext';
-import { ArrowLeft, Sparkles, MapPin, Briefcase, GraduationCap, ShieldCheck, CheckCircle2, Globe, UserX, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Sparkles, MapPin, Briefcase, GraduationCap, ShieldCheck, CheckCircle2, Globe, UserX, AlertTriangle, Landmark, Activity, Utensils, Wine, Cigarette, Lock, ShieldAlert } from 'lucide-react';
 import { VerificationBadge } from '../components/VerificationBadge';
 import { VerificationType } from '../types';
 import { PassCircleButton, LikeCircleButton, CosmicCheckButton } from '../components/AstraButtons';
@@ -165,8 +165,8 @@ export const CandidateDetailPage: React.FC = () => {
               marginBottom: '20px'
             }}
           >
-            <h4 className="heading-font" style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--accent-amber-light)', marginBottom: '10px' }}>
-              💡 {t('why_matched')} ({candidate.name})
+            <h4 className="heading-font" style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--accent-amber-light)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Sparkles size={16} color="var(--accent-amber-light)" /> {t('why_matched')} ({candidate.name})
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {candidate.matchReasons.map((reason, idx) => (
@@ -219,8 +219,8 @@ export const CandidateDetailPage: React.FC = () => {
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h3 className="heading-font" style={{ fontSize: '0.9rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
-                🏛️ Ancestral Gotra Lineage (4 Gotras)
+              <h3 className="heading-font" style={{ fontSize: '0.9rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Landmark size={15} style={{ color: 'var(--accent-gold)' }} /> Ancestral Gotra Lineage (4 Gotras)
               </h3>
               {(candidate.religion || candidate.caste) && (
                 <span style={{ fontSize: '0.75rem', color: 'var(--accent-amber-light)', background: 'rgba(245, 158, 11, 0.12)', padding: '2px 8px', borderRadius: '6px' }}>
@@ -230,19 +230,19 @@ export const CandidateDetailPage: React.FC = () => {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <div style={{ background: 'rgba(0,0,0,0.2)', padding: '8px 12px', borderRadius: '10px' }}>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>👴 Father's Father (Main)</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Father's Father (Main)</span>
                 <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#F3F4F6' }}>{candidate.gotra || 'Not Specified'}</span>
               </div>
               <div style={{ background: 'rgba(0,0,0,0.2)', padding: '8px 12px', borderRadius: '10px' }}>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>👵 Father's Mother</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Father's Mother</span>
                 <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#F3F4F6' }}>{candidate.fatherMotherGotra || 'Not Specified'}</span>
               </div>
               <div style={{ background: 'rgba(0,0,0,0.2)', padding: '8px 12px', borderRadius: '10px' }}>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>👴 Mother's Father</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Mother's Father</span>
                 <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#F3F4F6' }}>{candidate.motherFatherGotra || 'Not Specified'}</span>
               </div>
               <div style={{ background: 'rgba(0,0,0,0.2)', padding: '8px 12px', borderRadius: '10px' }}>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>👵 Mother's Mother</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Mother's Mother</span>
                 <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#F3F4F6' }}>{candidate.motherMotherGotra || 'Not Specified'}</span>
               </div>
             </div>
@@ -289,24 +289,24 @@ export const CandidateDetailPage: React.FC = () => {
           >
             <h3
               className="heading-font"
-              style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '12px', color: 'var(--text-primary)' }}
+              style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '12px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}
             >
-              🌿 Health &amp; Lifestyle
+              <Activity size={15} style={{ color: 'var(--accent-gold)' }} /> Health &amp; Lifestyle
             </h3>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: candidate.healthCondition ? '12px' : '0' }}>
               {candidate.diet && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 12px', borderRadius: '9999px', background: 'rgba(34, 197, 94, 0.12)', border: '1px solid rgba(34, 197, 94, 0.3)', fontSize: '0.78rem', color: '#86efac' }}>
-                  🥗 {candidate.diet}
+                <span style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '9999px', background: 'rgba(34, 197, 94, 0.12)', border: '1px solid rgba(34, 197, 94, 0.3)', fontSize: '0.78rem', color: '#86efac' }}>
+                  <Utensils size={13} /> {candidate.diet}
                 </span>
               )}
               {candidate.alcohol && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 12px', borderRadius: '9999px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)', fontSize: '0.78rem', color: '#fde68a' }}>
-                  🍷 Alcohol: {candidate.alcohol}
+                <span style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '9999px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)', fontSize: '0.78rem', color: '#fde68a' }}>
+                  <Wine size={13} /> Alcohol: {candidate.alcohol}
                 </span>
               )}
               {candidate.smoking && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 12px', borderRadius: '9999px', background: 'rgba(148, 163, 184, 0.1)', border: '1px solid rgba(148, 163, 184, 0.25)', fontSize: '0.78rem', color: '#cbd5e1' }}>
-                  🚬 Smoking: {candidate.smoking}
+                <span style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '9999px', background: 'rgba(148, 163, 184, 0.1)', border: '1px solid rgba(148, 163, 184, 0.25)', fontSize: '0.78rem', color: '#cbd5e1' }}>
+                  <Cigarette size={13} /> Smoking: {candidate.smoking}
                 </span>
               )}
               {/* Health Status Pill */}
@@ -338,7 +338,7 @@ export const CandidateDetailPage: React.FC = () => {
                   <span style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '4px',
+                    gap: '5px',
                     padding: '5px 12px',
                     borderRadius: '9999px',
                     background: sBg,
@@ -346,7 +346,7 @@ export const CandidateDetailPage: React.FC = () => {
                     fontSize: '0.78rem',
                     color: sColor
                   }}>
-                    🏥 Health: {statusLabel}
+                    <Lock size={13} /> Health: {statusLabel}
                   </span>
                 );
               })()}
@@ -362,7 +362,7 @@ export const CandidateDetailPage: React.FC = () => {
                     <span style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '4px',
+                      gap: '5px',
                       padding: '5px 12px',
                       borderRadius: '9999px',
                       background: hasText ? 'rgba(239, 68, 68, 0.12)' : 'rgba(100, 116, 139, 0.12)',
@@ -370,11 +370,11 @@ export const CandidateDetailPage: React.FC = () => {
                       fontSize: '0.78rem',
                       color: hasText ? '#fca5a5' : '#94a3b8'
                     }}>
-                      🦠 Disease: {displayLabel}
+                      <ShieldAlert size={13} /> Disease: {displayLabel}
                     </span>
                     {hasText && (
                       <div style={{ width: '100%', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px', marginTop: '10px' }}>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>🏥 Pre-existing Disease / Medical Condition Disclosure</span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Pre-existing Disease / Medical Condition Disclosure</span>
                         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
                           {condText}
                         </p>
@@ -429,18 +429,9 @@ export const CandidateDetailPage: React.FC = () => {
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {[
-                { id: 'q1', text: 'Future career plans and goals' },
-                { id: 'q2', text: 'Work-life balance' },
-                { id: 'q3', text: 'Household responsibilities' },
-                { id: 'q4', text: 'Finances and investments' },
-                { id: 'q5', text: 'Family involvement' },
-                { id: 'q6', text: 'Living arrangements' },
-                { id: 'q7', text: 'Handling conflicts' },
-                { id: 'q8', text: 'Starting a family' },
-                { id: 'q9', text: 'Weekends and free time' },
-                { id: 'q10', text: 'Most important quality in a partner' },
                 { id: 'q11', text: 'Raising children religiously' },
-                { id: 'q12', text: 'Hanging out with friends after marriage' }
+                { id: 'q12', text: 'Hanging out with friends after marriage' },
+                { id: 'q13', text: 'How would you like to celebrate your first wedding anniversary?' }
               ].map(q => {
                 const answer = candidate.marriageQuestionnaire?.[q.id];
                 if (!answer) return null;
