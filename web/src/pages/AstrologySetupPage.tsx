@@ -21,10 +21,18 @@ export const AstrologySetupPage: React.FC = () => {
   const [previewRashi, setPreviewRashi] = useState<string | null>(null);
 
   React.useEffect(() => {
-    if (dob && time && city) {
-      setPreviewNakshatra(AstrologyEngine.calculateNakshatra(dob, time, city));
-      setPreviewRashi(AstrologyEngine.calculateRashi(dob, time, city));
-    }
+    // Debounce: only calculate after user pauses typing for 600ms
+    const timer = setTimeout(() => {
+      if (dob && time && city) {
+        try {
+          setPreviewNakshatra(AstrologyEngine.calculateNakshatra(dob, time, city));
+          setPreviewRashi(AstrologyEngine.calculateRashi(dob, time, city));
+        } catch {
+          // Partial or invalid input — silently ignore until input is complete
+        }
+      }
+    }, 600);
+    return () => clearTimeout(timer);
   }, [dob, time, city]);
 
   const handleCalculate = (e: React.FormEvent) => {

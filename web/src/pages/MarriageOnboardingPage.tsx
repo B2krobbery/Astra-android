@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, ChevronLeft, ChevronRight, CheckCircle, Flame, Moon, MapPin, Search, Sparkles, AlertCircle, Landmark } from 'lucide-react';
 import { useAstra } from '../context/AstraContext';
@@ -59,6 +59,179 @@ const RASHIS = [
   'Simha (Leo)', 'Kanya (Virgo)', 'Tula (Libra)', 'Vrishchika (Scorpio)',
   'Dhanu (Sagittarius)', 'Makara (Capricorn)', 'Kumbha (Aquarius)', 'Meena (Pisces)'
 ];
+
+const VEDIC_LOADING_MESSAGES = [
+  'Sealing your Vedic profile…',
+  'Aligning with the stars…',
+  'Calculating Kundali compatibility…',
+  'Entering the matrimonial Sabha…',
+];
+
+const VedicLoadingOverlay: React.FC = () => {
+  const [msgIdx, setMsgIdx] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setMsgIdx(i => (i + 1) % VEDIC_LOADING_MESSAGES.length), 1800);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <>
+      <style>{`
+        @keyframes mandalaSpin {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+        @keyframes innerRingSpin {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(-360deg); }
+        }
+        @keyframes pulseGlow {
+          0%, 100% { filter: drop-shadow(0 0 8px #D4AF37) drop-shadow(0 0 20px #D4AF3766); }
+          50%       { filter: drop-shadow(0 0 18px #F59E0B) drop-shadow(0 0 40px #F59E0B88); }
+        }
+        @keyframes vedicFadeMsg {
+          0%   { opacity: 0; transform: translateY(6px); }
+          15%  { opacity: 1; transform: translateY(0);  }
+          85%  { opacity: 1; transform: translateY(0);  }
+          100% { opacity: 0; transform: translateY(-6px); }
+        }
+        @keyframes vedicStarTwinkle {
+          0%, 100% { opacity: 0.15; } 50% { opacity: 0.7; }
+        }
+      `}</style>
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        background: 'rgba(11,11,14,0.97)',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', gap: '32px'
+      }}>
+        {/* Twinkling stars */}
+        {[...Array(18)].map((_, i) => (
+          <div key={i} style={{
+            position: 'absolute',
+            left: `${Math.sin(i * 2.1) * 45 + 50}%`,
+            top:  `${Math.cos(i * 1.7) * 40 + 50}%`,
+            width: i % 3 === 0 ? '3px' : '2px',
+            height: i % 3 === 0 ? '3px' : '2px',
+            borderRadius: '50%',
+            background: '#D4AF37',
+            animation: `vedicStarTwinkle ${1.2 + (i % 5) * 0.4}s ease-in-out ${(i % 7) * 0.3}s infinite`,
+          }} />
+        ))}
+
+        {/* Mandala stack */}
+        <div style={{ position: 'relative', width: '220px', height: '220px' }}>
+
+          {/* Outer mandala — slow clockwise spin */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            animation: 'mandalaSpin 8s linear infinite, pulseGlow 3s ease-in-out infinite',
+          }}>
+            <svg viewBox="0 0 200 200" width="220" height="220" xmlns="http://www.w3.org/2000/svg">
+              {[...Array(16)].map((_, i) => {
+                const angle = (i * 360) / 16;
+                const rad = (angle * Math.PI) / 180;
+                const x1 = 100 + 30 * Math.cos(rad);
+                const y1 = 100 + 30 * Math.sin(rad);
+                const x2 = 100 + 90 * Math.cos(rad + Math.PI / 16);
+                const y2 = 100 + 90 * Math.sin(rad + Math.PI / 16);
+                const x3 = 100 + 90 * Math.cos(rad - Math.PI / 16);
+                const y3 = 100 + 90 * Math.sin(rad - Math.PI / 16);
+                return (
+                  <g key={i}>
+                    <path d={`M${x1},${y1} Q${x2},${y2} 100,${100 + 90 * Math.sin(rad + Math.PI / 8)}`}
+                      fill="none" stroke="#D4AF37" strokeWidth="0.8" opacity="0.6" />
+                    <path d={`M${x1},${y1} Q${x3},${y3} 100,${100 + 90 * Math.sin(rad - Math.PI / 8)}`}
+                      fill="none" stroke="#F59E0B" strokeWidth="0.6" opacity="0.4" />
+                    <line x1="100" y1="100" x2={100 + 88 * Math.cos(rad)} y2={100 + 88 * Math.sin(rad)}
+                      stroke="#D4AF37" strokeWidth="0.5" opacity="0.25" />
+                  </g>
+                );
+              })}
+              {/* Outer circle */}
+              <circle cx="100" cy="100" r="90" fill="none" stroke="#D4AF37" strokeWidth="1" opacity="0.4" />
+              <circle cx="100" cy="100" r="70" fill="none" stroke="#D4AF37" strokeWidth="0.6" opacity="0.3" />
+              <circle cx="100" cy="100" r="30" fill="none" stroke="#F59E0B" strokeWidth="1" opacity="0.5" />
+            </svg>
+          </div>
+
+          {/* Inner ring — faster counter-spin */}
+          <div style={{
+            position: 'absolute',
+            inset: '20px',
+            animation: 'innerRingSpin 3.5s linear infinite',
+          }}>
+            <svg viewBox="0 0 160 160" width="180" height="180" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="80" cy="80" r="72"
+                fill="none" stroke="#D4AF37" strokeWidth="1.5"
+                strokeDasharray="6 5" opacity="0.7" />
+              <circle cx="80" cy="80" r="60"
+                fill="none" stroke="#F59E0B" strokeWidth="0.8"
+                strokeDasharray="3 8" opacity="0.4" />
+            </svg>
+          </div>
+
+          {/* Lotus center — static */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <svg viewBox="0 0 48 48" width="48" height="48" xmlns="http://www.w3.org/2000/svg">
+              {/* Lotus petals */}
+              {[...Array(8)].map((_, i) => {
+                const a = (i * 45 * Math.PI) / 180;
+                const px = 24 + 12 * Math.cos(a);
+                const py = 24 + 12 * Math.sin(a);
+                return (
+                  <ellipse key={i} cx={px} cy={py} rx="5" ry="9"
+                    transform={`rotate(${i * 45}, ${px}, ${py})`}
+                    fill="none" stroke="#D4AF37" strokeWidth="0.9" opacity="0.85" />
+                );
+              })}
+              {/* Center dot */}
+              <circle cx="24" cy="24" r="4" fill="#D4AF37" opacity="0.9" />
+              <circle cx="24" cy="24" r="2" fill="#FFF" opacity="0.8" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Status text */}
+        <div style={{ textAlign: 'center', padding: '0 32px' }}>
+          <p key={msgIdx} style={{
+            fontSize: '1.1rem', fontWeight: 600, color: '#FFFFFF',
+            margin: '0 0 8px',
+            animation: 'vedicFadeMsg 1.8s ease-in-out forwards',
+          }}>
+            {VEDIC_LOADING_MESSAGES[msgIdx]}
+          </p>
+          <p style={{ fontSize: '0.78rem', color: '#D4AF3799', margin: 0, letterSpacing: '0.08em' }}>
+            ॐ तत्सत् — Setting up your sacred alliance
+          </p>
+        </div>
+
+        {/* Gold progress bar */}
+        <div style={{ width: '160px', height: '3px', background: 'rgba(212,175,55,0.15)', borderRadius: '2px', overflow: 'hidden' }}>
+          <div style={{
+            height: '100%',
+            background: 'linear-gradient(90deg, #D4AF37, #F59E0B)',
+            borderRadius: '2px',
+            animation: 'mandalaSpin 2s linear infinite',
+            width: '60%',
+            transform: 'translateX(-100%)',
+            animationName: 'shimmerBar',
+          }} />
+        </div>
+        <style>{`
+          @keyframes shimmerBar {
+            0%   { transform: translateX(-100%); }
+            100% { transform: translateX(300%); }
+          }
+        `}</style>
+      </div>
+    </>
+  );
+};
 
 export const MarriageOnboardingPage: React.FC = () => {
   const { userProfile, updateProfileInfo, uploadUserProfilePhoto, refreshProfile } = useAstra();
@@ -350,20 +523,23 @@ export const MarriageOnboardingPage: React.FC = () => {
   };
 
   const handleSaveAndContinue = async () => {
-    setIsSaving(true);
-    setSaveMessage('');
     const isFinal = currentStep === SECTIONS.length - 1;
-    await saveToDatabase(isFinal);
-    setIsSaving(false);
-    
-    if (!isFinal) {
-      setCurrentStep(c => c + 1);
-    } else {
+
+    if (isFinal) {
+      // Final step: await save, then navigate
+      setIsSaving(true);
+      setSaveMessage('');
+      await saveToDatabase(true);
+      setIsSaving(false);
       if (!readiness.isComplete) {
         setSaveMessage(`Profile is ${readiness.percentage}% complete. Marriage discovery requires 100%. Missing: ${readiness.missingFields.slice(0, 3).join(', ')}...`);
         return;
       }
       navigate('/discover');
+    } else {
+      // Intermediate steps: navigate immediately, save in background
+      setCurrentStep(c => c + 1);
+      saveToDatabase(false).catch(e => console.error('Background save failed:', e));
     }
   };
 
@@ -449,7 +625,7 @@ export const MarriageOnboardingPage: React.FC = () => {
             </div>
 
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', color: '#94A3B8', fontSize: '0.85rem', marginBottom: '8px' }}>Sub-Caste</label>
+              <label style={{ display: 'block', color: '#94A3B8', fontSize: '0.85rem', marginBottom: '8px' }}>Sub-Caste (optional)</label>
               {(indianReligions.find(r => r.name === religion)?.castes.find(c => c.name === caste)?.subCastes?.length || 0) > 0 ? (
                 <select
                   value={subCaste}
@@ -478,7 +654,7 @@ export const MarriageOnboardingPage: React.FC = () => {
               <h5 style={{ color: 'var(--accent-amber-light)', fontSize: '0.85rem', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Landmark size={15} style={{ color: 'var(--accent-gold)' }} /> Ancestral Gotra Lineage (4 Gotras)
               </h5>
-              {renderInput("Father's Father Gotra (Main Gotra)", gotra, setGotra, 'e.g. Kashyapa, Bharadwaja')}
+              {renderInput("Father's Father Gotra / Main Gotra (optional)", gotra, setGotra, 'e.g. Kashyapa, Bharadwaja')}
               {renderInput("Father's Mother Gotra", fatherMotherGotra, setFatherMotherGotra, 'e.g. Vatsa, Harita')}
               {renderInput("Mother's Father Gotra", motherFatherGotra, setMotherFatherGotra, 'e.g. Kaushika, Vashistha')}
               {renderInput("Mother's Mother Gotra", motherMotherGotra, setMotherMotherGotra, 'e.g. Gargya, Gautam')}
@@ -852,9 +1028,12 @@ export const MarriageOnboardingPage: React.FC = () => {
 
         {/* Save & Continue */}
         <PrimaryButton onClick={handleSaveAndContinue} disabled={isSaving}>
-          {isSaving ? 'Saving...' : currentStep === SECTIONS.length - 1 ? 'Complete & Enter Matrimony' : 'Save & Continue'}
+          {currentStep === SECTIONS.length - 1 ? 'Complete & Enter Matrimony' : 'Save & Continue'}
         </PrimaryButton>
       </div>
+
+      {/* Vedic Loading Overlay — only on final step save */}
+      {isSaving && currentStep === SECTIONS.length - 1 && <VedicLoadingOverlay />}
     </div>
   );
 };

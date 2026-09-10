@@ -35,6 +35,18 @@ export const UserProfilePage: React.FC = () => {
   const [editedLocation, setEditedLocation] = React.useState(userProfile.location);
   const [editedBio, setEditedBio] = React.useState(userProfile.bio || '');
 
+  // Optional fields the user hasn't filled yet
+  const OPTIONAL_PROFILE_FIELDS = [
+    { key: 'subCaste',        label: 'Sub-Caste',          getValue: (p: any) => p.subCaste || p.sub_caste },
+    { key: 'gotra',           label: 'Gotra',               getValue: (p: any) => p.gotra },
+    { key: 'birthTime',       label: 'Birth Time',          getValue: (p: any) => p.birthTime || p.birth_time },
+    { key: 'bio',             label: 'About Me / Bio',      getValue: (p: any) => p.bio },
+    { key: 'healthCondition', label: 'Health Conditions',   getValue: (p: any) => p.healthInfo || p.pre_existing_conditions || p.healthCondition },
+  ];
+  const missingOptionalFields = OPTIONAL_PROFILE_FIELDS.filter(
+    f => !f.getValue(userProfile) || String(f.getValue(userProfile)).trim() === ''
+  );
+
   const handleSaveProfile = () => {
     if (editedName.trim()) {
       updateProfileInfo(
@@ -324,6 +336,62 @@ export const UserProfilePage: React.FC = () => {
           <Edit size={18} />
           Edit Full Profile (Re-take Onboarding)
         </button>
+
+        {/* Optional Fields Nudge Card */}
+        {missingOptionalFields.length > 0 && (
+          <div style={{
+            padding: '16px',
+            borderRadius: '16px',
+            background: 'rgba(245, 158, 11, 0.07)',
+            border: '1px solid rgba(245, 158, 11, 0.3)',
+            boxShadow: '0 0 16px rgba(245, 158, 11, 0.08)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              <Sparkles size={16} color="var(--accent-amber)" />
+              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--accent-amber-light)' }}>
+                Boost Your Visibility
+              </span>
+            </div>
+            <p style={{ fontSize: '0.78rem', color: '#94A3B8', margin: '0 0 12px' }}>
+              Fill these optional fields to appear in more searches &amp; get better matches
+            </p>
+            {/* Missing field pills */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '14px' }}>
+              {missingOptionalFields.map(f => (
+                <span key={f.key} style={{
+                  padding: '4px 10px',
+                  borderRadius: '999px',
+                  background: 'rgba(245, 158, 11, 0.12)',
+                  border: '1px solid rgba(245, 158, 11, 0.35)',
+                  color: 'var(--accent-amber-light)',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                }}>
+                  + {f.label}
+                </span>
+              ))}
+            </div>
+            <button
+              onClick={() => {
+                if (userProfile.intent === 'Marriage') navigate('/marriage-onboarding');
+                else navigate('/onboarding-typeform');
+              }}
+              style={{
+                width: '100%',
+                padding: '10px',
+                borderRadius: '10px',
+                background: 'rgba(245, 158, 11, 0.15)',
+                border: '1px solid var(--accent-amber)',
+                color: 'var(--accent-amber-light)',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+              }}
+            >
+              Fill Now →
+            </button>
+          </div>
+        )}
 
         {/* User Voice Note Recorder */}
         <UserVoiceRecorderCard />

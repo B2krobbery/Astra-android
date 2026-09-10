@@ -28,11 +28,11 @@ export const MARRIAGE_REQUIRED_FIELDS: ReadinessFieldDef[] = [
   // Religion & Community
   { key: 'religion', label: 'Religion', category: 'Community', getValue: p => p.religion },
   { key: 'caste', label: 'Caste / Community', category: 'Community', getValue: p => p.caste },
-  { key: 'subCaste', label: 'Sub-Caste', category: 'Community', getValue: p => p.subCaste || p.sub_caste },
+
   { key: 'region', label: 'Cultural Region', category: 'Community', getValue: p => p.region },
   { key: 'state', label: 'State', category: 'Community', getValue: p => p.state },
   { key: 'cityDistrict', label: 'City / District', category: 'Community', getValue: p => p.cityDistrict || p.city_district },
-  { key: 'gotra', label: 'Gotra', category: 'Community', getValue: p => p.gotra },
+
 
   // Education & Career
   { key: 'education10th', label: '10th Standard Education', category: 'Career', getValue: p => p.education10th || p.education_10th },

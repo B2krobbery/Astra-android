@@ -91,8 +91,17 @@ export class VedicAstrologyEngine {
    * Constructs an AstroTime instance handling exact local time and timezone offset
    */
   static parseAstroTime(dateStr: string, timeStr: string, timezoneOffsetMinutes = 330): Astronomy.AstroTime {
-    const [year, month, day] = dateStr.split('-').map(Number);
-    const [hours, minutes] = (timeStr || '12:00').split(':').map(Number);
+    // Sanitize date — guard against empty or partial DOB
+    const dateParts = (dateStr || '1995-01-01').split('-').map(s => parseInt(s, 10));
+    const year  = (!isNaN(dateParts[0]) && dateParts[0] > 0) ? dateParts[0] : 1995;
+    const month = (!isNaN(dateParts[1]) && dateParts[1] >= 1 && dateParts[1] <= 12) ? dateParts[1] : 1;
+    const day   = (!isNaN(dateParts[2]) && dateParts[2] >= 1 && dateParts[2] <= 31) ? dateParts[2] : 1;
+
+    // Sanitize time — strip AM/PM, handle partial input, validate range
+    const cleanTime = (timeStr || '12:00').replace(/\s*(am|pm)/gi, '').trim();
+    const timeParts = cleanTime.split(':').map(s => parseInt(s, 10));
+    const hours   = (!isNaN(timeParts[0]) && timeParts[0] >= 0 && timeParts[0] <= 23) ? timeParts[0] : 12;
+    const minutes = (!isNaN(timeParts[1]) && timeParts[1] >= 0 && timeParts[1] <= 59) ? timeParts[1] : 0;
 
     // Convert local time to UTC
     const localUtcDate = new Date(Date.UTC(year, month - 1, day, hours, minutes, 0));
