@@ -10,6 +10,50 @@ import { Edit, Moon, Sun, Monitor, ShieldCheck, Sparkles, LogOut, Share2, Bot, C
 
 import { UserVoiceRecorderCard } from '../components/UserVoiceRecorderCard';
 
+const LogoutLoadingOverlay: React.FC = () => (
+  <div style={{
+    position: 'fixed', inset: 0, zIndex: 9999,
+    background: 'rgba(11, 11, 14, 0.96)',
+    backdropFilter: 'blur(12px)',
+    display: 'flex', flexDirection: 'column',
+    alignItems: 'center', justifyContent: 'center', gap: '24px'
+  }}>
+    <style>{`
+      @keyframes logoutSpin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      @keyframes logoutPulse {
+        0%, 100% { opacity: 0.35; transform: scale(0.95); }
+        50% { opacity: 0.85; transform: scale(1.06); }
+      }
+    `}</style>
+    <div style={{ position: 'relative', width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: '50%',
+        border: '2px solid var(--accent-amber)',
+        animation: 'logoutPulse 1.8s ease-in-out infinite'
+      }} />
+      <div style={{
+        position: 'absolute', inset: '6px', borderRadius: '50%',
+        border: '3px solid transparent',
+        borderTopColor: '#D4AF37',
+        borderRightColor: '#F59E0B',
+        animation: 'logoutSpin 0.9s linear infinite'
+      }} />
+      <Sparkles size={28} color="var(--accent-amber)" />
+    </div>
+    <div style={{ textAlign: 'center', padding: '0 24px' }}>
+      <h3 style={{ margin: '0 0 6px', fontSize: '1.15rem', fontWeight: 700, color: '#FFFFFF' }}>
+        Signing out of Astra…
+      </h3>
+      <p style={{ margin: 0, fontSize: '0.82rem', color: '#94A3B8' }}>
+        Securing your session &amp; clearing local data
+      </p>
+    </div>
+  </div>
+);
+
 export const UserProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -29,6 +73,7 @@ export const UserProfilePage: React.FC = () => {
   } = useAstra();
 
   const [isEditingProfile, setIsEditingProfile] = React.useState(false);
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
   const [editedName, setEditedName] = React.useState(userProfile.name);
   const [editedProfession, setEditedProfession] = React.useState(userProfile.profession);
   const [editedEducation, setEditedEducation] = React.useState(userProfile.higherEducation || userProfile.education);
@@ -84,6 +129,18 @@ export const UserProfilePage: React.FC = () => {
     }
   };
 
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await supabase.auth.signOut();
+      await new Promise(res => setTimeout(res, 700));
+    } catch (e) {
+      console.error("Sign out error:", e);
+    } finally {
+      navigate('/splash');
+    }
+  };
+
 
 
   return (
@@ -95,6 +152,8 @@ export const UserProfilePage: React.FC = () => {
         overflowY: 'auto'
       }}
     >
+      {isLoggingOut && <LogoutLoadingOverlay />}
+
       {/* Hidden File Input */}
       <input
         type="file"
@@ -119,10 +178,7 @@ export const UserProfilePage: React.FC = () => {
           {t('profile_title')} ✨
         </h1>
         <button
-          onClick={async () => {
-            await supabase.auth.signOut();
-            navigate('/splash');
-          }}
+          onClick={handleLogout}
           style={{ background: 'none', border: 'none', color: 'var(--accent-rose)', cursor: 'pointer' }}
           title="Sign Out"
         >
