@@ -27,7 +27,7 @@ export const AstroAiAssistantPage: React.FC = () => {
         height: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))',
+        paddingBottom: 'calc(66px + env(safe-area-inset-bottom, 0px))',
         background: 'var(--bg-primary)'
       }}
     >

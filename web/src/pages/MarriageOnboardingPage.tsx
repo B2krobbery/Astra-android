@@ -984,7 +984,7 @@ export const MarriageOnboardingPage: React.FC = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0B0B0E', color: '#FFF', padding: '24px 16px 80px' }}>
+    <div style={{ minHeight: '100vh', background: '#0B0B0E', color: '#FFF', padding: 'calc(28px + env(safe-area-inset-top, 16px)) 16px calc(80px + env(safe-area-inset-bottom, 0px))' }}>
       <div style={{ maxWidth: '480px', margin: '0 auto' }}>
         
         {/* Top Header & Progress */}
