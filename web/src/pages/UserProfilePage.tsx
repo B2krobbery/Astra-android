@@ -35,13 +35,15 @@ export const UserProfilePage: React.FC = () => {
   const [editedLocation, setEditedLocation] = React.useState(userProfile.location);
   const [editedBio, setEditedBio] = React.useState(userProfile.bio || '');
 
-  // Optional fields the user hasn't filled yet
-  const OPTIONAL_PROFILE_FIELDS = [
+  // Optional fields the user hasn't filled yet (intent-aware)
+  const OPTIONAL_PROFILE_FIELDS = userProfile.intent === 'Marriage' ? [
     { key: 'subCaste',        label: 'Sub-Caste',          getValue: (p: any) => p.subCaste || p.sub_caste },
     { key: 'gotra',           label: 'Gotra',               getValue: (p: any) => p.gotra },
     { key: 'birthTime',       label: 'Birth Time',          getValue: (p: any) => p.birthTime || p.birth_time },
     { key: 'bio',             label: 'About Me / Bio',      getValue: (p: any) => p.bio },
     { key: 'healthCondition', label: 'Health Conditions',   getValue: (p: any) => p.healthInfo || p.pre_existing_conditions || p.healthCondition },
+  ] : [
+    { key: 'bio',             label: 'About Me / Bio',      getValue: (p: any) => p.bio },
   ];
   const missingOptionalFields = OPTIONAL_PROFILE_FIELDS.filter(
     f => !f.getValue(userProfile) || String(f.getValue(userProfile)).trim() === ''
@@ -596,44 +598,46 @@ export const UserProfilePage: React.FC = () => {
         </div>
 
         {/* Ancestral 4-Gotra Lineage Section */}
-        <div
-          style={{
-            padding: '20px',
-            borderRadius: '24px',
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-color)',
-            marginBottom: '20px'
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <h3 className="heading-font" style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Landmark size={16} style={{ color: 'var(--accent-gold)' }} /> Ancestral Gotra Lineage (4 Gotras)
-            </h3>
-            {(userProfile.religion || userProfile.caste) && (
-              <span style={{ fontSize: '0.75rem', color: 'var(--accent-amber-light)', background: 'rgba(245, 158, 11, 0.12)', padding: '4px 10px', borderRadius: '8px' }}>
-                {[userProfile.religion, userProfile.caste, userProfile.subCaste].filter(Boolean).join(' • ')}
-              </span>
-            )}
+        {userProfile.intent === 'Marriage' && (
+          <div
+            style={{
+              padding: '20px',
+              borderRadius: '24px',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              marginBottom: '20px'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h3 className="heading-font" style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Landmark size={16} style={{ color: 'var(--accent-gold)' }} /> Ancestral Gotra Lineage (4 Gotras)
+              </h3>
+              {(userProfile.religion || userProfile.caste) && (
+                <span style={{ fontSize: '0.75rem', color: 'var(--accent-amber-light)', background: 'rgba(245, 158, 11, 0.12)', padding: '4px 10px', borderRadius: '8px' }}>
+                  {[userProfile.religion, userProfile.caste, userProfile.subCaste].filter(Boolean).join(' • ')}
+                </span>
+              )}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Father's Father (Main)</span>
+                <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#F3F4F6' }}>{userProfile.gotra || 'Not Specified'}</span>
+              </div>
+              <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Father's Mother</span>
+                <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#F3F4F6' }}>{userProfile.fatherMotherGotra || 'Not Specified'}</span>
+              </div>
+              <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Mother's Father</span>
+                <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#F3F4F6' }}>{userProfile.motherFatherGotra || 'Not Specified'}</span>
+              </div>
+              <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Mother's Mother</span>
+                <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#F3F4F6' }}>{userProfile.motherMotherGotra || 'Not Specified'}</span>
+              </div>
+            </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Father's Father (Main)</span>
-              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#F3F4F6' }}>{userProfile.gotra || 'Not Specified'}</span>
-            </div>
-            <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Father's Mother</span>
-              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#F3F4F6' }}>{userProfile.fatherMotherGotra || 'Not Specified'}</span>
-            </div>
-            <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Mother's Father</span>
-              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#F3F4F6' }}>{userProfile.motherFatherGotra || 'Not Specified'}</span>
-            </div>
-            <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Mother's Mother</span>
-              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#F3F4F6' }}>{userProfile.motherMotherGotra || 'Not Specified'}</span>
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* Health & Lifestyle Section */}
         <div

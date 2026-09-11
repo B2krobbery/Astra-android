@@ -289,6 +289,11 @@ export const MarriageOnboardingPage: React.FC = () => {
   const [manualNakshatra, setManualNakshatra] = useState(userProfile.nakshatra || '');
   const [manualRashi, setManualRashi] = useState(userProfile.rashi || '');
 
+  // Chemistry & Interests
+  const [sportsInput, setSportsInput] = useState((userProfile as any).chemistryAnswers?.sports?.join(', ') || '');
+  const [moviesInput, setMoviesInput] = useState((userProfile as any).chemistryAnswers?.movies?.join(', ') || '');
+  const [musicInput, setMusicInput] = useState((userProfile as any).chemistryAnswers?.music?.join(', ') || '');
+
   // Preferences
   const [preferredReligion, setPreferredReligion] = useState(userProfile.partnerPreferences?.preferredReligion || 'Any');
   const [preferredCaste, setPreferredCaste] = useState(userProfile.partnerPreferences?.preferredCaste || 'Any');
@@ -367,6 +372,9 @@ export const MarriageOnboardingPage: React.FC = () => {
       setDietTier((userProfile.partnerPreferences?.tierDiet as any) || 'DEAL_BREAKER');
       
       setPhotoPreview(userProfile.photoUrl || '');
+      setSportsInput((userProfile as any).chemistryAnswers?.sports?.join(', ') || '');
+      setMoviesInput((userProfile as any).chemistryAnswers?.movies?.join(', ') || '');
+      setMusicInput((userProfile as any).chemistryAnswers?.music?.join(', ') || '');
 
       hasHydrated.current = true;
     }
@@ -486,6 +494,11 @@ export const MarriageOnboardingPage: React.FC = () => {
         onboarding_completed: isCompleted,
         intent: 'Marriage',
         marriage_questionnaire: questionnaire,
+        chemistry_answers: {
+          sports: sportsInput.split(',').map((s: string) => s.trim()).filter(Boolean),
+          movies: moviesInput.split(',').map((s: string) => s.trim()).filter(Boolean),
+          music: musicInput.split(',').map((s: string) => s.trim()).filter(Boolean)
+        },
         updated_at: new Date().toISOString()
       }).eq('id', uid);
 
@@ -742,9 +755,9 @@ export const MarriageOnboardingPage: React.FC = () => {
             <p style={{ color: '#94A3B8', fontSize: '0.85rem', marginBottom: '16px' }}>
               Your answers power genuine, multi-dimensional lifestyle & personality compatibility matching.
             </p>
-            {renderInput('Sports you love/play', (userProfile as any).chemistryAnswers?.sports?.join(', ') || 'Cricket, Badminton', () => {}, 'Comma-separated')}
-            {renderInput('Favorite Movies / Shows', (userProfile as any).chemistryAnswers?.movies?.join(', ') || 'Interstellar, 3 Idiots', () => {}, 'Comma-separated')}
-            {renderInput('Music & Artists', (userProfile as any).chemistryAnswers?.music?.join(', ') || 'A.R. Rahman, Classical', () => {}, 'Comma-separated')}
+            {renderInput('Sports you love/play', sportsInput, setSportsInput, 'e.g. Cricket, Badminton, Swimming')}
+            {renderInput('Favorite Movies / Shows', moviesInput, setMoviesInput, 'e.g. Interstellar, 3 Idiots, Marvel')}
+            {renderInput('Music & Artists', musicInput, setMusicInput, 'e.g. A.R. Rahman, Classical, Rock')}
           </div>
         );
       case 8: // Values & Vision

@@ -216,6 +216,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
            voiceNoteUrl: dbProfile.voice_note_url,
            voiceNotePrompt: dbProfile.voice_note_prompt,
            marriageQuestionnaire: dbProfile.marriage_questionnaire,
+           chemistryAnswers: dbProfile.chemistry_answers || dbProfile.marriage_questionnaire?.chemistryAnswers,
            completionPercentage,
            partnerPreferences: {
              preferredEducation: preferencesData?.preferred_education || 'Any',
