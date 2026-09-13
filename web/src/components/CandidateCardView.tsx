@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Candidate } from '../types';
 import { Sparkles, MapPin, Briefcase, GraduationCap, ShieldCheck, ChevronRight } from 'lucide-react';
 import { VerificationBadge } from './VerificationBadge';
 import { VerificationType } from '../types';
 import { VoiceIntroCard } from './VoiceIntroCard';
+import { preloadImages } from '../utils/imagePreloader';
 
 interface CandidateCardViewProps {
   candidate: Candidate;
@@ -21,13 +22,28 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
   onCheckCompatibility
 }) => {
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartX, setDragStartX] = useState(0);
   const [exitDirection, setExitDirection] = useState<'LIKE' | 'PASS' | null>(null);
 
-  const nextPhoto = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const [dragStartY, setDragStartY] = useState(0);
+
+  // Preload all candidate photos immediately on mount / photoIndex change
+  useEffect(() => {
+    if (candidate?.photoUrls) {
+      preloadImages(candidate.photoUrls);
+    }
+  }, [candidate]);
+
+  useEffect(() => {
+    setIsImageLoaded(false);
+  }, [photoIndex, candidate?.id]);
+
+  const currentPhotoSrc = candidate.photoUrls[photoIndex] || candidate.photoUrls[0];
+
+  const nextPhoto = () => {
     if (photoIndex < candidate.photoUrls.length - 1) {
       setPhotoIndex(prev => prev + 1);
     } else {
@@ -35,8 +51,7 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
     }
   };
 
-  const prevPhoto = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const prevPhoto = () => {
     if (photoIndex > 0) {
       setPhotoIndex(prev => prev - 1);
     } else {
@@ -48,6 +63,11 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
     if (exitDirection) return;
     setIsDragging(true);
     setDragStartX(e.clientX);
+    setDragStartY(e.clientY);
+    setDragOffset({ x: 0, y: 0 });
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch (_) {}
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
@@ -56,17 +76,42 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
     setDragOffset({ x: deltaX, y: 0 });
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e: React.PointerEvent) => {
     if (!isDragging || exitDirection) return;
     setIsDragging(false);
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch (_) {}
 
-    if (dragOffset.x > 120) {
+    const deltaX = e.clientX - dragStartX;
+    const deltaY = e.clientY - dragStartY;
+    const totalDist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+    if (totalDist < 10) {
+      // Tap gesture
+      const rect = e.currentTarget.getBoundingClientRect();
+      const relativeX = e.clientX - rect.left;
+      const relativeY = e.clientY - rect.top;
+
+      // Upper 65% of card: Photo tap controls (Left 50% = Prev, Right 50% = Next)
+      if (relativeY < rect.height * 0.65) {
+        if (relativeX < rect.width * 0.5) {
+          prevPhoto();
+        } else {
+          nextPhoto();
+        }
+      }
+      setDragOffset({ x: 0, y: 0 });
+      return;
+    }
+
+    if (dragOffset.x > 100) {
       // Smooth Fly-Off Animation to the Right (LIKE)
       setExitDirection('LIKE');
       setTimeout(() => {
         onLikeClick();
       }, 220);
-    } else if (dragOffset.x < -120) {
+    } else if (dragOffset.x < -100) {
       // Smooth Fly-Off Animation to the Left (PASS)
       setExitDirection('PASS');
       setTimeout(() => {
@@ -104,7 +149,7 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
         borderRadius: '28px',
         overflow: 'hidden',
         boxShadow: 'var(--shadow-card)',
-        background: 'var(--bg-card)',
+        background: '#121217',
         cursor: isDragging ? 'grabbing' : 'grab',
         transform: getTransform(),
         opacity: exitDirection ? 0 : 1,
@@ -113,18 +158,39 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
           : isDragging
           ? 'none'
           : 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-        touchAction: 'pan-y'
+        touchAction: 'none'
       }}
     >
+      {/* Shimmer Placeholder Background while image is downloading */}
+      {!isImageLoaded && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(110deg, #181822 30%, #2A2A38 50%, #181822 70%)',
+            backgroundSize: '200% 100%',
+            animation: 'shimmer 1.5s infinite linear',
+            zIndex: 1
+          }}
+        />
+      )}
+
       {/* Photo Viewport */}
       <img
-        src={candidate.photoUrls[photoIndex] || candidate.photoUrls[0]}
+        src={currentPhotoSrc}
         alt={candidate.name}
+        onLoad={() => setIsImageLoaded(true)}
+        decoding="async"
+        loading="eager"
         style={{
           width: '100%',
           height: '100%',
           objectFit: 'cover',
-          pointerEvents: 'none'
+          pointerEvents: 'none',
+          opacity: isImageLoaded ? 1 : 0,
+          transition: 'opacity 0.28s ease-in-out',
+          position: 'relative',
+          zIndex: 2
         }}
       />
 
@@ -179,7 +245,8 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
           right: '16px',
           display: 'flex',
           gap: '4px',
-          zIndex: 25
+          zIndex: 25,
+          pointerEvents: 'none'
         }}
       >
         {candidate.photoUrls.map((_, idx) => (
@@ -195,32 +262,6 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
           />
         ))}
       </div>
-
-      {/* Left / Right Photo Tap Controls */}
-      <div
-        onClick={prevPhoto}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '40%',
-          height: '50%',
-          zIndex: 20,
-          cursor: 'pointer'
-        }}
-      />
-      <div
-        onClick={nextPhoto}
-        style={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: '40%',
-          height: '50%',
-          zIndex: 20,
-          cursor: 'pointer'
-        }}
-      />
 
       {/* Gradient Vignette Overlay */}
       <div
@@ -319,7 +360,7 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
         />
 
         {/* Action Button Bar */}
-        <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
+        <div onPointerDown={(e) => e.stopPropagation()} style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
           <button
             onClick={onCheckCompatibility}
             style={{

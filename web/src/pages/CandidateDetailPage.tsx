@@ -488,7 +488,7 @@ export const CandidateDetailPage: React.FC = () => {
         />
         <LikeCircleButton
           onClick={() => {
-            likeCandidate(candidate, () => navigate('/match-celebration'), () => navigate(-1));
+            likeCandidate(candidate, () => navigate('/match-celebration'), () => navigate('/discover'));
           }}
           size={64}
         />

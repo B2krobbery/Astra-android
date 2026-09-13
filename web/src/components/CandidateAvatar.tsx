@@ -17,6 +17,12 @@ export const CandidateAvatar: React.FC<CandidateAvatarProps> = ({
   onClick
 }) => {
   const [imgError, setImgError] = React.useState(false);
+  const [isLoaded, setIsLoaded] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsLoaded(false);
+    setImgError(false);
+  }, [src]);
 
   return (
     <div
@@ -38,19 +44,24 @@ export const CandidateAvatar: React.FC<CandidateAvatarProps> = ({
           background: 'linear-gradient(135deg, var(--accent-amber) 0%, var(--accent-indigo) 100%)',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          overflow: 'hidden'
         }}
       >
         {src && !imgError ? (
           <img
             src={src}
             alt={name}
+            onLoad={() => setIsLoaded(true)}
             onError={() => setImgError(true)}
+            decoding="async"
             style={{
               width: '100%',
               height: '100%',
               borderRadius: '50%',
-              objectFit: 'cover'
+              objectFit: 'cover',
+              opacity: isLoaded ? 1 : 0,
+              transition: 'opacity 0.22s ease-in-out'
             }}
           />
         ) : (

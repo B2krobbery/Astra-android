@@ -84,6 +84,7 @@ interface AstraContextType {
   sentRequests: Candidate[];
   rewindCandidate: () => void;
   resetFeed: () => Promise<void>;
+  refreshData: () => Promise<void>;
   unfriendCandidate: (targetId: string) => Promise<void>;
   lastMatchedCandidate: Candidate | null;
 
@@ -92,6 +93,7 @@ interface AstraContextType {
   checkCompatibility: (candidate: Candidate, onAnalyzed: () => void) => void;
 
   conversations: MatchConversation[];
+  isSyncingMatches: boolean;
   activeConversation: MatchConversation | null;
   openConversationForCandidate: (candidate: Candidate) => void;
   sendChatMessage: (text: string) => void;
@@ -252,22 +254,25 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           }
       }
       
-      const dbConversations = await ChatService.getConversations();
-      if (dbConversations) {
+      const dbConversations = await ChatService.getConversations(currentUser.id);
+      if (dbConversations && dbConversations.length > 0) {
         setConversations(dbConversations as any);
       }
 
-      const dbPending = await DiscoveryService.getPendingRequests();
+      const currentUserId = currentUser.id;
+      const dbPending = await DiscoveryService.getPendingRequests(currentUserId);
       if (dbPending) {
         setPendingRequests(dbPending as any);
       }
       
-      const dbSent = await DiscoveryService.getSentRequests();
+      const dbSent = await DiscoveryService.getSentRequests(currentUserId);
       if (dbSent) {
         setSentRequests(dbSent as any);
       }
     } catch (e) {
       console.error('[loadBackendData] error:', e);
+    } finally {
+      setIsSyncingMatches(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -581,6 +586,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Messaging & Conversations
   const [conversations, setConversations] = useState<MatchConversation[]>([]);
+  const [isSyncingMatches, setIsSyncingMatches] = useState(true);
   const [activeConversation, setActiveConversation] = useState<MatchConversation | null>(null);
   const [isChatTyping, setIsChatTyping] = useState(false);
 
@@ -748,6 +754,8 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const likeCandidate = async (candidate: Candidate, onMatch?: () => void, onNotMatch?: () => void) => {
+    const currentUserId = sessionUser?.id;
+
     // Remove from UI immediately for snappy feel
     setCandidates((prev: any) => {
       return prev.filter((c: any) => c.id !== candidate.id);
@@ -757,11 +765,13 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setSentRequests((prev: any) => [candidate, ...prev]);
 
     try {
-      // Save to backend
-      const { isMatch } = await DiscoveryService.interact(candidate.id, 'LIKE');
+      // Save to backend using atomic SECURITY DEFINER RPC
+      const { isMatch } = await DiscoveryService.interact(candidate.id, 'LIKE', currentUserId);
 
       if (isMatch) {
         setLastMatchedCandidate(candidate);
+        // Remove from sent requests if it became a mutual match
+        setSentRequests((prev: any) => prev.filter((c: any) => c.id !== candidate.id));
         if (onMatch) {
           onMatch();
         }
@@ -775,15 +785,13 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setTimeout(async () => {
         try {
           const [dbConversations, dbCandidates, dbPending, dbSent] = await Promise.all([
-            
-            ChatService.getConversations(),
+            ChatService.getConversations(currentUserId),
             DiscoveryService.getCandidates(),
-            DiscoveryService.getPendingRequests(),
-
-            DiscoveryService.getSentRequests()
+            DiscoveryService.getPendingRequests(currentUserId),
+            DiscoveryService.getSentRequests(currentUserId)
           ]);
           
-          if (dbConversations) setConversations(dbConversations as any);
+          if (dbConversations && dbConversations.length > 0) setConversations(dbConversations as any);
           if (dbCandidates) setCandidates(dbCandidates);
           if (dbPending) setPendingRequests(dbPending);
           if (dbSent) setSentRequests(dbSent);
@@ -810,10 +818,11 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const passCandidate = (candidate: Candidate) => {
+    const currentUserId = sessionUser?.id;
     setPassedCandidatesHistory(prev => [...prev, candidate]);
     
-    // Save to backend
-    DiscoveryService.interact(candidate.id, 'PASS').catch(console.error);
+    // Save to backend using explicit user ID
+    DiscoveryService.interact(candidate.id, 'PASS', currentUserId).catch(console.error);
 
     setCandidates((prev: any) => {
       return prev.filter((c: any) => c.id !== candidate.id);
@@ -1120,12 +1129,14 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         sentRequests,
         rewindCandidate,
         resetFeed,
+        refreshData: loadBackendData,
         unfriendCandidate,
         lastMatchedCandidate,
         isAnalyzingCompatibility,
         currentCompatibility,
         checkCompatibility,
         conversations,
+        isSyncingMatches,
         activeConversation,
         openConversationForCandidate,
         sendChatMessage,

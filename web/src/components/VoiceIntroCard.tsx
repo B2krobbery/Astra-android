@@ -130,6 +130,7 @@ export const VoiceIntroCard: React.FC<VoiceIntroCardProps> = ({
       {/* Audio Waveform Bar Controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
         <button
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={togglePlay}
           style={{
             width: 38,

@@ -6,6 +6,7 @@ import { AstraBottomNavigation } from '../components/AstraBottomNavigation';
 import { FloatingHeartsBackground } from '../components/FloatingHeartsBackground';
 import { Sparkles, Moon, Sun, ShieldCheck, Share2, Bot, Globe, RotateCcw } from 'lucide-react';
 import { RegionalPreference } from '../types';
+import { preloadImages } from '../utils/imagePreloader';
 
 export const DiscoverFeedPage: React.FC = () => {
   const navigate = useNavigate();
@@ -43,7 +44,20 @@ export const DiscoverFeedPage: React.FC = () => {
     else setThemeMode('DARK');
   };
 
-  // currentCandidate is provided by useAstra context directly now
+  // Preload upcoming candidate images in the background so swipes render instantly (0ms)
+  React.useEffect(() => {
+    if (candidates && candidates.length > 0) {
+      const upcomingPhotos: string[] = [];
+      candidates.slice(0, 4).forEach(c => {
+        if (c.photoUrls && c.photoUrls.length > 0) {
+          upcomingPhotos.push(...c.photoUrls);
+        }
+      });
+      if (upcomingPhotos.length > 0) {
+        preloadImages(upcomingPhotos);
+      }
+    }
+  }, [candidates]);
 
   return (
     <div

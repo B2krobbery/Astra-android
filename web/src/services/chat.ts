@@ -2,9 +2,12 @@ import { supabase } from '../lib/supabase';
 import { MatchConversation, ChatMessage } from '../types';
 
 export const ChatService = {
-  async getConversations(): Promise<MatchConversation[]> {
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData?.user?.id;
+  async getConversations(targetUserId?: string): Promise<MatchConversation[]> {
+    let userId = targetUserId;
+    if (!userId) {
+      const { data: sessionData } = await supabase.auth.getSession();
+      userId = sessionData?.session?.user?.id;
+    }
     if (!userId) return [];
 
     const { data: parts, error: partsErr } = await supabase
@@ -21,47 +24,70 @@ export const ChatService = {
       .in('conversation_id', convoIds)
       .neq('user_id', userId);
 
-    if (otherErr || !otherParts) return [];
+    if (otherErr || !otherParts || otherParts.length === 0) return [];
 
-    const matchConversations: MatchConversation[] = [];
-    for (const part of otherParts) {
-      const { data: rawProfile } = await supabase.from('profiles').select('*').eq('id', part.user_id).maybeSingle();
-      if (!rawProfile) continue;
+    // Batch query: Fetch all profiles in 1 single network request
+    const otherUserIds = Array.from(new Set(otherParts.map(p => p.user_id)));
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('*')
+      .in('id', otherUserIds);
 
-      const { data: lastMsg } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('conversation_id', part.conversation_id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+    const profileMap = new Map((profiles || []).map(p => [p.id, p]));
 
-      matchConversations.push({
-        id: part.conversation_id, 
-        candidate: {
-          id: rawProfile.id,
-          name: rawProfile.display_name || 'Unknown',
-          age: 25,
-          profession: rawProfile.profession || '',
-          location: rawProfile.location || '',
-          bio: rawProfile.bio || '',
-          photoUrls: [], 
-          isVerified: true,
-          educationVerified: true,
-          policeVerified: true,
-          creditVerified: true,
-          interests: [],
-          education: '',
-          compatibilityScore: 90
-        },
-        lastMessage: lastMsg ? lastMsg.content : 'New Match!',
-        timestamp: lastMsg ? new Date(lastMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now',
-        unreadCount: 0,
-        messages: [] 
-      });
-    }
+    // Parallel fetch last message per conversation
+    const matchConversations = await Promise.all(
+      otherParts.map(async part => {
+        const rawProfile = profileMap.get(part.user_id);
+        if (!rawProfile) return null;
 
-    return matchConversations;
+        const { data: lastMsg } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('conversation_id', part.conversation_id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        let avatarUrl = rawProfile.photo_url || '';
+        if (!avatarUrl && rawProfile.avatar_storage_path) {
+          if (rawProfile.avatar_storage_path.startsWith('http')) {
+            avatarUrl = rawProfile.avatar_storage_path;
+          } else {
+            const { data: signedData } = await supabase.storage
+              .from('avatars')
+              .createSignedUrl(rawProfile.avatar_storage_path, 3600);
+            if (signedData) avatarUrl = signedData.signedUrl;
+          }
+        }
+
+        return {
+          id: part.conversation_id,
+          candidate: {
+            id: rawProfile.id,
+            name: rawProfile.display_name || 'Unknown',
+            age: rawProfile.date_of_birth ? Math.max(18, new Date().getFullYear() - new Date(rawProfile.date_of_birth).getFullYear()) : 25,
+            profession: rawProfile.profession || '',
+            location: rawProfile.location || '',
+            bio: rawProfile.bio || '',
+            photoUrls: avatarUrl ? [avatarUrl] : [],
+            isVerified: true,
+            educationVerified: true,
+            policeVerified: true,
+            creditVerified: true,
+            interests: [],
+            education: rawProfile.higher_education || '',
+            compatibilityScore: 90
+          },
+          lastMessage: lastMsg ? lastMsg.content : 'New Match!',
+          timestamp: lastMsg ? new Date(lastMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now',
+          unreadCount: 0,
+          messages: []
+        } as MatchConversation;
+      })
+    );
+
+    return matchConversations.filter(Boolean) as MatchConversation[];
   },
 
   async getMessages(conversationId: string): Promise<ChatMessage[]> {

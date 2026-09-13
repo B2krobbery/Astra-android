@@ -3,23 +3,38 @@ import { useNavigate } from 'react-router-dom';
 import { useAstra } from '../context/AstraContext';
 import { AstraBottomNavigation } from '../components/AstraBottomNavigation';
 import { CandidateAvatar } from '../components/CandidateAvatar';
-import { Sparkles, MessageCircle, Bot, UserX, Users, AlertTriangle } from 'lucide-react';
+import { Sparkles, MessageCircle, Bot, UserX, Users, AlertTriangle, RotateCcw } from 'lucide-react';
 import { Candidate } from '../types';
 
 export const MatchesConversationsPage: React.FC = () => {
   const navigate = useNavigate();
   const {
     conversations,
+    isSyncingMatches,
     pendingRequests,
     sentRequests,
     openConversationForCandidate,
     selectCandidate,
     unfriendCandidate,
+    refreshData,
     t
   } = useAstra();
 
   const [unfriendTarget, setUnfriendTarget] = useState<Candidate | null>(null);
   const [isUnfriending, setIsUnfriending] = useState(false);
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
+
+  const handleManualRefresh = async () => {
+    if (isManualRefreshing) return;
+    setIsManualRefreshing(true);
+    try {
+      await refreshData();
+    } catch (e) {
+      console.error('Manual refresh error:', e);
+    } finally {
+      setTimeout(() => setIsManualRefreshing(false), 600);
+    }
+  };
 
   const handleConfirmUnfriend = async () => {
     if (!unfriendTarget) return;
@@ -48,12 +63,43 @@ export const MatchesConversationsPage: React.FC = () => {
         style={{
           padding: 'calc(16px + env(safe-area-inset-top, 0px)) 20px 16px 20px',
           background: 'var(--bg-secondary)',
-          borderBottom: '1px solid var(--border-color)'
+          borderBottom: '1px solid var(--border-color)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
         }}
       >
         <h1 className="heading-font" style={{ fontSize: '1.25rem', fontWeight: 800 }}>
           {t('matches_page_title')}
         </h1>
+
+        <button
+          onClick={handleManualRefresh}
+          disabled={isManualRefreshing || isSyncingMatches}
+          style={{
+            padding: '8px 14px',
+            borderRadius: '9999px',
+            background: 'rgba(245, 158, 11, 0.12)',
+            border: '1px solid var(--accent-amber)',
+            color: 'var(--accent-amber-light)',
+            fontWeight: 700,
+            fontSize: '0.78rem',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(245, 158, 11, 0.15)',
+            transition: 'all 0.2s ease',
+            opacity: isManualRefreshing ? 0.7 : 1
+          }}
+        >
+          <RotateCcw
+            size={14}
+            className={isManualRefreshing || isSyncingMatches ? 'spin-slow' : ''}
+            color="var(--accent-amber)"
+          />
+          <span>{isManualRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+        </button>
       </header>
 
       <main style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
@@ -65,8 +111,13 @@ export const MatchesConversationsPage: React.FC = () => {
             </span>
           </div>
 
-          {conversations.length === 0 ? (
-            <div style={{ padding: '20px', textAlign: 'center', background: 'var(--bg-card)', borderRadius: '20px', border: '1px border var(--border-color)' }}>
+          {isSyncingMatches && conversations.length === 0 ? (
+            <div style={{ padding: '20px', textAlign: 'center', background: 'var(--bg-card)', borderRadius: '20px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+              <Sparkles size={16} className="spin-slow" color="var(--accent-amber)" />
+              <span style={{ fontSize: '0.85rem', color: 'var(--accent-amber-light)', fontWeight: 600 }}>Syncing your friend list...</span>
+            </div>
+          ) : conversations.length === 0 ? (
+            <div style={{ padding: '20px', textAlign: 'center', background: 'var(--bg-card)', borderRadius: '20px', border: '1px solid var(--border-color)' }}>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>
                 No friends added yet. Connect with candidates in Discovery to build your friend list!
               </p>
