@@ -31,6 +31,8 @@ const MAX_PHOTOS = 5;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ACCEPTED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
+import imageCompression from 'browser-image-compression';
+
 export class PhotoService {
   /**
    * Request private photos from a candidate
@@ -274,15 +276,27 @@ export class PhotoService {
     let registeredCount = 0;
 
     for (const file of accepted) {
-      const ext = (file.name.split('.').pop() || '').toLowerCase() || 'jpg';
-      const safeExt = ACCEPTED_MIME_TYPES.has(file.type)
-        ? file.type.split('/')[1]
+      let fileToUpload = file;
+      try {
+        const options = {
+          maxSizeMB: 0.8, // Compress to ~800KB max
+          maxWidthOrHeight: 1200, // Reasonable max dimension for mobile photos
+          useWebWorker: true
+        };
+        fileToUpload = await imageCompression(file, options);
+      } catch (err) {
+        console.warn('Image compression failed, falling back to original file', err);
+      }
+
+      const ext = (fileToUpload.name.split('.').pop() || '').toLowerCase() || 'jpg';
+      const safeExt = ACCEPTED_MIME_TYPES.has(fileToUpload.type)
+        ? fileToUpload.type.split('/')[1]
         : ext;
       const filePath = `${uid}/${crypto.randomUUID()}.${safeExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { upsert: false, contentType: file.type });
+        .upload(filePath, fileToUpload, { upsert: false, contentType: fileToUpload.type });
 
       if (uploadError) {
         errors.push(`"${file.name}" failed to upload: ${uploadError.message}`);
