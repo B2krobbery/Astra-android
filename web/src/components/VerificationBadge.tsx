@@ -46,7 +46,7 @@ export const VerificationBadge: React.FC<VerificationBadgeProps> = ({
         gap: '6px',
         padding: '6px 12px',
         borderRadius: '9999px',
-        background: isVerified ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.02)',
+        background: isVerified ? 'var(--glass-bg)' : 'var(--bg-secondary)',
         border: `1px solid ${isVerified ? 'var(--border-color)' : 'rgba(255, 255, 255, 0.05)'}`,
         color: isVerified ? 'var(--text-primary)' : 'var(--text-muted)',
         fontSize: '0.75rem',

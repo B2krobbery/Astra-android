@@ -51,6 +51,7 @@ export const MatchesConversationsPage: React.FC = () => {
 
   return (
     <div
+      className="glass-page matches-glass-page"
       style={{
         height: '100%',
         overflowY: 'auto',
@@ -102,7 +103,7 @@ export const MatchesConversationsPage: React.FC = () => {
         </button>
       </header>
 
-      <main style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <main style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '600px', margin: '0 auto', width: '100%' }}>
         {/* Celestial Friend List */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>

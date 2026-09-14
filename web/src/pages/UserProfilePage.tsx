@@ -6,15 +6,16 @@ import { AstraBottomNavigation } from '../components/AstraBottomNavigation';
 import { CandidateAvatar } from '../components/CandidateAvatar';
 import { VerificationBadge } from '../components/VerificationBadge';
 import { VerificationType, ThemeMode, AppLanguage } from '../types';
-import { Edit, Moon, Sun, Monitor, ShieldCheck, Sparkles, LogOut, Share2, Bot, Camera, Globe, Landmark, Activity, Utensils, Wine, Cigarette, Lock, ShieldAlert } from 'lucide-react';
+import { Edit, Moon, Sun, Monitor, ShieldCheck, Sparkles, LogOut, Share2, Bot, Camera, Globe, Landmark, Activity, Utensils, Wine, Cigarette, Lock, ShieldAlert, Trash2, AlertCircle } from 'lucide-react';
 
 import { UserVoiceRecorderCard } from '../components/UserVoiceRecorderCard';
 
 const LogoutLoadingOverlay: React.FC = () => (
   <div style={{
     position: 'fixed', inset: 0, zIndex: 9999,
-    background: 'rgba(11, 11, 14, 0.96)',
-    backdropFilter: 'blur(12px)',
+    background: 'rgba(10, 7, 20, 0.7)',
+    backdropFilter: 'var(--glass-backdrop)',
+    WebkitBackdropFilter: 'var(--glass-backdrop)',
     display: 'flex', flexDirection: 'column',
     alignItems: 'center', justifyContent: 'center', gap: '24px'
   }}>
@@ -64,7 +65,10 @@ export const UserProfilePage: React.FC = () => {
     openChaanbean,
     
     openReferralModal,
-    uploadUserProfilePhoto,
+    profilePhotos,
+    uploadUserProfilePhotos,
+    setPrimaryProfilePhoto,
+    deleteProfilePhoto,
     updateProfileInfo,
     deleteAccount,
     language,
@@ -74,6 +78,8 @@ export const UserProfilePage: React.FC = () => {
 
   const [isEditingProfile, setIsEditingProfile] = React.useState(false);
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+  const [isUploadingPhotos, setIsUploadingPhotos] = React.useState(false);
+  const [photoUploadError, setPhotoUploadError] = React.useState('');
   const [editedName, setEditedName] = React.useState(userProfile.name);
   const [editedProfession, setEditedProfession] = React.useState(userProfile.profession);
   const [editedEducation, setEditedEducation] = React.useState(userProfile.higherEducation || userProfile.education);
@@ -110,9 +116,22 @@ export const UserProfilePage: React.FC = () => {
     setIsEditingProfile(false);
   };
 
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      uploadUserProfilePhoto(e.target.files[0]);
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = '';
+    if (files.length === 0) return;
+
+    setIsUploadingPhotos(true);
+    setPhotoUploadError('');
+    try {
+      const result = await uploadUserProfilePhotos(files);
+      if (result.errors.length > 0) {
+        setPhotoUploadError(result.errors.join(' '));
+      }
+    } catch (err: any) {
+      setPhotoUploadError(err?.message || 'Failed to upload photos. Please try again.');
+    } finally {
+      setIsUploadingPhotos(false);
     }
   };
 
@@ -145,6 +164,7 @@ export const UserProfilePage: React.FC = () => {
 
   return (
     <div
+      className="glass-page profile-glass-page"
       style={{
         minHeight: '100vh',
         background: 'var(--bg-primary)',
@@ -159,7 +179,8 @@ export const UserProfilePage: React.FC = () => {
         type="file"
         ref={fileInputRef}
         onChange={handlePhotoSelect}
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
         style={{ display: 'none' }}
       />
 
@@ -186,7 +207,7 @@ export const UserProfilePage: React.FC = () => {
         </button>
       </header>
 
-      <main style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <main style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '600px', margin: '0 auto', width: '100%' }}>
         {/* User Card with Photo Upload Overlay */}
         <div
           style={{
@@ -368,6 +389,78 @@ export const UserProfilePage: React.FC = () => {
               <Edit size={18} />
             </button>
           )}
+        </div>
+
+        {/* Compact photo gallery with primary/set/delete controls */}
+        <div
+          style={{
+            padding: '16px',
+            borderRadius: '20px',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-color)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+            <Camera size={16} color="var(--accent-amber)" />
+            <h3 className="heading-font" style={{ fontSize: '0.9rem', fontWeight: 700, margin: 0 }}>
+              Your Photos
+            </h3>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(72px, 1fr))', gap: '10px', marginBottom: '10px' }}>
+            {[0, 1, 2, 3, 4].map((slotIdx) => {
+              const photo = profilePhotos[slotIdx];
+              if (photo) {
+                return (
+                  <div key={photo.id} style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1', borderRadius: '10px', overflow: 'hidden', border: photo.isPrimary ? '2px solid var(--accent-amber)' : '1px solid var(--border-color)' }}>
+                    <img src={photo.url} alt={`Photo ${slotIdx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    {photo.isPrimary && (
+                      <span style={{ position: 'absolute', top: 3, left: 3, background: 'var(--accent-amber)', color: '#0B0B0E', fontSize: '0.55rem', fontWeight: 800, padding: '1px 5px', borderRadius: '5px' }}>
+                        Primary
+                      </span>
+                    )}
+                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, display: 'flex', gap: '3px', padding: '3px', background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }}>
+                      {!photo.isPrimary && (
+                        <button
+                          onClick={() => setPrimaryProfilePhoto(photo.id)}
+                          style={{ flex: 1, padding: '3px', borderRadius: '5px', background: 'rgba(245, 158, 11, 0.9)', color: '#0B0B0E', border: 'none', fontSize: '0.55rem', fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          Make primary
+                        </button>
+                      )}
+                      <button
+                        onClick={() => deleteProfilePhoto(photo.id)}
+                        style={{ width: 22, height: 20, borderRadius: '5px', background: 'rgba(239, 68, 68, 0.9)', color: '#FFF', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                        title="Delete photo"
+                      >
+                        <Trash2 size={11} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+              return (
+                <div
+                  key={`empty-${slotIdx}`}
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: '10px', border: '2px dashed var(--accent-amber)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: 'rgba(255, 255, 255, 0.05)' }}
+                >
+                  <Camera size={18} color="var(--accent-amber)" />
+                </div>
+              );
+            })}
+          </div>
+
+          {isUploadingPhotos && (
+            <div style={{ fontSize: '0.78rem', color: 'var(--accent-amber-light)', marginBottom: '6px' }}>Uploading photos…</div>
+          )}
+          {photoUploadError && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: '#FDA4AF', padding: '6px 8px', background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.3)', borderRadius: '8px' }}>
+              <AlertCircle size={13} color="#F43F5E" />
+              {photoUploadError}
+            </div>
+          )}
+          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Upload up to 5 photos (JPEG, PNG, or WebP; 5 MB each).</span>
         </div>
 
         <button

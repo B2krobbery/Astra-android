@@ -47,24 +47,40 @@ export const DiscoveryService = {
       const profileIds = profiles.map((p: any) => p.id);
       const { data: photos } = await supabase
         .from('profile_photos')
-        .select('user_id, storage_path')
+        .select('user_id, storage_path, is_primary, position')
         .in('user_id', profileIds);
 
-      // Build map of user_id -> storage_path[] (checking both profiles.avatar_storage_path and profile_photos)
-      profiles.forEach((p: any) => {
-        userPhotoPathsMap[p.id] = [];
-        if (p.avatar_storage_path) {
-          userPhotoPathsMap[p.id].push(p.avatar_storage_path);
+      // Group profile_photos by user, sorted primary-first then position so the
+      // primary is always photoUrls[0].
+      const photosByUser: Record<string, any[]> = {};
+      photos?.forEach((photo: any) => {
+        if (photo.user_id && photo.storage_path) {
+          if (!photosByUser[photo.user_id]) photosByUser[photo.user_id] = [];
+          photosByUser[photo.user_id].push(photo);
         }
       });
 
-      photos?.forEach((photo: any) => {
-        if (photo.user_id && photo.storage_path) {
-          if (!userPhotoPathsMap[photo.user_id]) userPhotoPathsMap[photo.user_id] = [];
-          if (!userPhotoPathsMap[photo.user_id].includes(photo.storage_path)) {
-            userPhotoPathsMap[photo.user_id].push(photo.storage_path);
-          }
+      // Build map of user_id -> storage_path[] (checking both profiles.avatar_storage_path and profile_photos)
+      profiles.forEach((p: any) => {
+        const rows = (photosByUser[p.id] || []).slice().sort((a: any, b: any) => {
+          if (!!a.is_primary !== !!b.is_primary) return a.is_primary ? -1 : 1;
+          const ap = typeof a.position === 'number' ? a.position : 0;
+          const bp = typeof b.position === 'number' ? b.position : 0;
+          return ap - bp;
+        });
+
+        const paths: string[] = [];
+        rows.forEach((r: any) => {
+          if (!paths.includes(r.storage_path)) paths.push(r.storage_path);
+        });
+
+        // Legacy fallback: avatar_storage_path, but avoid adding a duplicate if it
+        // already matches a profile_photos row.
+        if (p.avatar_storage_path && !paths.includes(p.avatar_storage_path)) {
+          paths.push(p.avatar_storage_path);
         }
+
+        userPhotoPathsMap[p.id] = paths;
       });
 
       // Collect all distinct paths to sign

@@ -1,5 +1,5 @@
 import { calculateMarriageReadiness } from '../utils/profileReadiness';
-import { PhotoService, PhotoRequestRecord } from '../services/PhotoService';
+import { PhotoService, PhotoRequestRecord, ProfilePhoto, PhotoUploadResult } from '../services/PhotoService';
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 
 import {
@@ -63,7 +63,11 @@ interface AstraContextType {
   updateDatingPreferences: (education: string, location: string) => void;
   isPreferenceStrictFilterOn: boolean;
   setIsPreferenceStrictFilterOn: (val: boolean) => void;
-  uploadUserProfilePhoto: (file: File) => void;
+  profilePhotos: ProfilePhoto[];
+  uploadUserProfilePhoto: (file: File) => Promise<void>;
+  uploadUserProfilePhotos: (files: File[]) => Promise<PhotoUploadResult>;
+  setPrimaryProfilePhoto: (photoId: string) => Promise<void>;
+  deleteProfilePhoto: (photoId: string) => Promise<void>;
   uploadVoiceNote: (blob: Blob, prompt: string) => Promise<void>;
   deleteVoiceNote: () => Promise<void>;
 
@@ -133,6 +137,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Supabase Phase 1 State
   const [sessionUser, setSessionUser] = useState<any | null>(null);
   const isUploadingPhoto = useRef(false);
+  const [profilePhotos, setProfilePhotos] = useState<ProfilePhoto[]>([]);
   
   
   // Keep a stable ref to the current sessionUser so loadBackendData always has fresh auth
@@ -145,13 +150,33 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const dbProfile = await ProfileService.getProfile(currentUser.id);
       if (dbProfile) {
-         let photoUrl = undefined;
+         // Authoritative source: profile_photos gallery (multi-photo). Primary/first URL
+         // is authoritative before the legacy avatar_storage_path fallback.
+         let photos: ProfilePhoto[] = [];
+         try {
+           photos = await PhotoService.getMyPhotos();
+         } catch (e) {
+           console.error('Failed to load profile photos gallery', e);
+         }
+         setProfilePhotos(photos);
 
-         // Primary source: avatar_storage_path stored directly on profiles (reliable)
-         const avatarPath = dbProfile.avatar_storage_path;
-         if (avatarPath) {
-           const { data: signedData } = await supabase.storage.from('avatars').createSignedUrl(avatarPath, 3600);
-           if (signedData) photoUrl = signedData.signedUrl;
+         const galleryUrls = photos.map(p => p.url);
+         const primaryPhotoUrl = photos.find(p => p.isPrimary)?.url || photos[0]?.url;
+
+         let photoUrl = primaryPhotoUrl;
+         let photoUrls = galleryUrls.length > 0 ? galleryUrls : undefined;
+
+         // Legacy fallback: avatar_storage_path stored directly on profiles
+         if (!photoUrl) {
+           const avatarPath = dbProfile.avatar_storage_path;
+           if (avatarPath) {
+             if (avatarPath.startsWith('http')) {
+               photoUrl = avatarPath;
+             } else {
+               const { data: signedData } = await supabase.storage.from('avatars').createSignedUrl(avatarPath, 3600);
+               if (signedData) photoUrl = signedData.signedUrl;
+             }
+           }
          }
 
          // Fallback: profile_photos table (for backward compat / other users)
@@ -214,6 +239,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
            regionalPreference: dbProfile.regional_preference,
            bio: dbProfile.bio,
            photoUrl: isUploadingPhoto.current ? prev.photoUrl : photoUrl,
+          photoUrls: isUploadingPhoto.current ? prev.photoUrls : (photoUrls || (photoUrl ? [photoUrl] : [])),
            hasVoiceNote: !!dbProfile.voice_note_url,
            voiceNoteUrl: dbProfile.voice_note_url,
            voiceNotePrompt: dbProfile.voice_note_prompt,
@@ -341,75 +367,72 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  const uploadUserProfilePhoto = async (file: File) => {
-    // Optimistic UI update with local blob URL
-    const objectUrl = URL.createObjectURL(file);
-    setUserProfile((prev: any) => ({
-      ...prev,
-      photoUrl: objectUrl,
-      completionPercentage: Math.min(100, (prev.completionPercentage || 0) + 20)
-    }));
+  // Apply a refreshed gallery to local state: profilePhotos + userProfile URLs +
+  // a real readiness recalculation (do not blindly add 20%).
+  const applyPhotosToProfile = (photos: ProfilePhoto[]) => {
+    setProfilePhotos(photos);
+    const galleryUrls = photos.map(p => p.url);
+    const primaryUrl = photos.find(p => p.isPrimary)?.url || photos[0]?.url;
+    setUserProfile((prev: any) => {
+      // Revoke any previously-created blob URLs we may have optimistically set.
+      const prevUrl = prev.photoUrl;
+      if (prevUrl && prevUrl.startsWith('blob:') && prevUrl !== primaryUrl) {
+        try { URL.revokeObjectURL(prevUrl); } catch (e) { /* ignore */ }
+      }
+      // An empty gallery must clear the URLs so deleting the last photo does not
+      // leave stale (and now-invalid) signed URLs behind.
+      const nextPhotoUrl = primaryUrl || '';
+      const nextPhotoUrls = galleryUrls;
+      const readiness = calculateMarriageReadiness({ ...prev, photoUrl: nextPhotoUrl, photoUrls: nextPhotoUrls }, nextPhotoUrl);
+      return {
+        ...prev,
+        photoUrl: nextPhotoUrl,
+        photoUrls: nextPhotoUrls,
+        completionPercentage: readiness.percentage
+      };
+    });
+  };
 
-    if (!sessionUser) return;
+  const uploadUserProfilePhotos = async (files: File[]): Promise<PhotoUploadResult> => {
+    if (!sessionUser) {
+      return { photos: [], errors: ['You must be signed in to upload photos.'] };
+    }
 
     isUploadingPhoto.current = true;
     try {
-      // 1. Upload file to Supabase Storage (avatars bucket)
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${sessionUser.id}/avatar_${Date.now()}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) {
-        console.error('Error uploading photo to storage:', uploadError);
-        return;
+      // Snapshot the gallery size before uploading so a validation-only failure
+      // does not clear a legacy-only avatar that lives outside profile_photos.
+      const previousPhotoCount = profilePhotos.length;
+      const result = await PhotoService.uploadProfilePhotos(files);
+      if (result.photos.length > 0 || previousPhotoCount > 0) {
+        applyPhotosToProfile(result.photos);
       }
 
-      // 2. Store path directly on profiles table (simple UPDATE, same RLS as all other profile edits)
-      const { error: profileUpdateError } = await supabase
-        .from('profiles')
-        .update({ avatar_storage_path: filePath, updated_at: new Date().toISOString() })
-        .eq('id', sessionUser.id);
-
-      if (profileUpdateError) {
-        console.error('Error saving avatar path to profile:', profileUpdateError);
-        return;
+      // Throw only when every attempted upload failed, i.e. errors were reported
+      // and the gallery did not grow.
+      const everyUploadFailed =
+        files.length > 0 && result.errors.length > 0 && result.photos.length <= previousPhotoCount;
+      if (everyUploadFailed) {
+        throw new Error(result.errors.join(' '));
       }
-
-      // 3. Also keep profile_photos in sync (best-effort, non-blocking)
-      supabase.from('profile_photos')
-        .update({ storage_path: filePath })
-        .eq('user_id', sessionUser.id)
-        .eq('is_primary', true)
-        .then(({ error }) => {
-          if (error) {
-            // If update found no rows, insert
-            supabase.from('profile_photos').insert({
-              user_id: sessionUser.id,
-              storage_path: filePath,
-              is_primary: true
-            }).then(({ error: ie }) => {
-              if (ie) console.error('profile_photos sync error:', ie);
-            });
-          }
-        });
-
-      // 4. Create signed URL and update local state
-      const { data: signedData } = await supabase.storage
-        .from('avatars')
-        .createSignedUrl(filePath, 3600);
-
-      setUserProfile((prev: any) => ({
-        ...prev,
-        photoUrl: signedData?.signedUrl || objectUrl
-      }));
-    } catch (e) {
-      console.error('Failed to upload user photo to Supabase', e);
+      return result;
     } finally {
       isUploadingPhoto.current = false;
     }
+  };
+
+  const uploadUserProfilePhoto = async (file: File): Promise<void> => {
+    await uploadUserProfilePhotos([file]);
+  };
+
+  const setPrimaryProfilePhoto = async (photoId: string): Promise<void> => {
+    const photos = await PhotoService.setPrimaryPhoto(photoId);
+    applyPhotosToProfile(photos);
+  };
+
+  const deleteProfilePhoto = async (photoId: string): Promise<void> => {
+    const photos = await PhotoService.deleteProfilePhoto(photoId);
+    applyPhotosToProfile(photos);
   };
 
   const uploadVoiceNote = async (blob: Blob, prompt: string) => {
@@ -1112,7 +1135,11 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         updateDatingPreferences,
         isPreferenceStrictFilterOn,
         setIsPreferenceStrictFilterOn,
+        profilePhotos,
         uploadUserProfilePhoto,
+        uploadUserProfilePhotos,
+        setPrimaryProfilePhoto,
+        deleteProfilePhoto,
         regionalPreference: userProfile.regionalPreference,
         setRegionalPreference,
         refreshProfile: loadBackendData,

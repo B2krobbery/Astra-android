@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAstra } from '../context/AstraContext';
-import { ArrowLeft, Sparkles, MapPin, Briefcase, GraduationCap, ShieldCheck, CheckCircle2, Globe, UserX, AlertTriangle, Landmark, Activity, Utensils, Wine, Cigarette, Lock, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Sparkles, MapPin, Briefcase, GraduationCap, ShieldCheck, CheckCircle2, Globe, UserX, AlertTriangle, Landmark, Activity, Utensils, Wine, Cigarette, Lock, ShieldAlert } from 'lucide-react';
 import { VerificationBadge } from '../components/VerificationBadge';
 import { VerificationType } from '../types';
 import { PassCircleButton, LikeCircleButton, CosmicCheckButton } from '../components/AstraButtons';
@@ -11,9 +11,20 @@ export const CandidateDetailPage: React.FC = () => {
   const { selectedCandidate, likeCandidate, passCandidate, checkCompatibility, openChaanbean, conversations, unfriendCandidate, t } = useAstra();
   const [showUnfriendModal, setShowUnfriendModal] = useState(false);
   const [isUnfriending, setIsUnfriending] = useState(false);
+  const [imageIndex, setImageIndex] = useState(0);
 
   const candidate = selectedCandidate;
+
+  // Reset the active image when the candidate changes; guard empty arrays.
+  useEffect(() => {
+    setImageIndex(0);
+  }, [candidate?.id]);
+
   if (!candidate) return null;
+
+  const photos = (candidate.photoUrls && candidate.photoUrls.length > 0) ? candidate.photoUrls : [];
+  const safeImageIndex = photos.length > 0 ? Math.min(imageIndex, photos.length - 1) : 0;
+  const activePhoto = photos[safeImageIndex] || '';
 
   const isFriend = conversations.some(c => c.candidate.id === candidate.id);
 
@@ -32,6 +43,7 @@ export const CandidateDetailPage: React.FC = () => {
 
   return (
     <div
+      className="glass-page candidate-detail-glass-page"
       style={{
         minHeight: '100vh',
         height: '100vh',
@@ -41,6 +53,9 @@ export const CandidateDetailPage: React.FC = () => {
         overflowY: 'auto'
       }}
     >
+      {/* Responsive Wrapper for Desktop */}
+      <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%', position: 'relative' }}>
+      
       {/* Top Bar Overlay */}
       <div
         style={{
@@ -98,11 +113,17 @@ export const CandidateDetailPage: React.FC = () => {
 
       {/* Main Image Header */}
       <div style={{ position: 'relative', width: '100%', height: '360px' }}>
-        <img
-          src={candidate.photoUrls[0]}
-          alt={candidate.name}
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-        />
+        {activePhoto ? (
+          <img
+            src={activePhoto}
+            alt={candidate.name}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        ) : (
+          <div style={{ width: '100%', height: '100%', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No photo</span>
+          </div>
+        )}
         <div
           style={{
             position: 'absolute',
@@ -110,6 +131,54 @@ export const CandidateDetailPage: React.FC = () => {
             background: 'linear-gradient(to bottom, transparent 40%, var(--bg-primary) 100%)'
           }}
         />
+
+        {/* Image navigation controls when more than one photo */}
+        {photos.length > 1 && (
+          <>
+            <button
+              onClick={() => setImageIndex(i => (i - 1 + photos.length) % photos.length)}
+              style={{
+                position: 'absolute', top: '50%', left: '12px', transform: 'translateY(-50%)',
+                width: 36, height: 36, borderRadius: '50%',
+                background: 'rgba(11, 11, 14, 0.6)', backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)', color: '#FFF',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+              }}
+              title="Previous photo"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              onClick={() => setImageIndex(i => (i + 1) % photos.length)}
+              style={{
+                position: 'absolute', top: '50%', right: '12px', transform: 'translateY(-50%)',
+                width: 36, height: 36, borderRadius: '50%',
+                background: 'rgba(11, 11, 14, 0.6)', backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)', color: '#FFF',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+              }}
+              title="Next photo"
+            >
+              <ChevronRight size={20} />
+            </button>
+            {/* Thumbnail strip */}
+            <div style={{ position: 'absolute', bottom: '60px', left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: '6px' }}>
+              {photos.map((url, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setImageIndex(idx)}
+                  style={{
+                    width: idx === safeImageIndex ? 24 : 8,
+                    height: 8, borderRadius: '4px',
+                    background: idx === safeImageIndex ? 'var(--accent-amber)' : 'rgba(255, 255, 255, 0.5)',
+                    border: 'none', cursor: 'pointer', transition: 'all 0.2s ease'
+                  }}
+                  title={`Photo ${idx + 1}`}
+                />
+              ))}
+            </div>
+          </>
+        )}
 
         {/* Compatibility Floating Badge */}
         <div style={{ position: 'absolute', bottom: '20px', right: '20px' }}>
@@ -459,6 +528,7 @@ export const CandidateDetailPage: React.FC = () => {
           />
         </div>
       </div>
+      </div>
 
       {/* Floating Action Footer */}
       <div
@@ -467,7 +537,7 @@ export const CandidateDetailPage: React.FC = () => {
           bottom: 0,
           left: 0,
           right: 0,
-          maxWidth: '480px',
+          maxWidth: '100%',
           margin: '0 auto',
           padding: '12px 24px 20px',
           background: 'var(--glass-bg)',
@@ -501,8 +571,9 @@ export const CandidateDetailPage: React.FC = () => {
             position: 'fixed',
             inset: 0,
             zIndex: 100,
-            background: 'rgba(11, 11, 14, 0.85)',
-            backdropFilter: 'blur(8px)',
+            background: 'rgba(10, 7, 20, 0.7)',
+            backdropFilter: 'var(--glass-backdrop)',
+            WebkitBackdropFilter: 'var(--glass-backdrop)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

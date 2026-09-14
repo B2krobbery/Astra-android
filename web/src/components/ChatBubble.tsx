@@ -62,6 +62,8 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message }) => {
           fontWeight: 400,
           lineHeight: 1.45,
           boxShadow: isUser ? '0 4px 14px rgba(79, 70, 229, 0.3)' : 'var(--shadow-card)',
+          backdropFilter: isUser ? undefined : 'var(--glass-backdrop)',
+          WebkitBackdropFilter: isUser ? undefined : 'var(--glass-backdrop)',
           whiteSpace: 'pre-wrap'
         }}
       >

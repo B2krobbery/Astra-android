@@ -70,7 +70,7 @@ export const CandidateAvatar: React.FC<CandidateAvatarProps> = ({
               width: '100%',
               height: '100%',
               borderRadius: '50%',
-              background: '#0B0B0E',
+              background: 'var(--bg-primary)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

@@ -23,12 +23,13 @@ export const AstroAiAssistantPage: React.FC = () => {
 
   return (
     <div
+      className="glass-page astro-ai-glass-page"
       style={{
         height: '100vh',
         display: 'flex',
         flexDirection: 'column',
         paddingBottom: 'calc(66px + env(safe-area-inset-bottom, 0px))',
-        background: 'var(--bg-primary)'
+        background: 'transparent'
       }}
     >
       {/* Top Header Bar */}
@@ -67,7 +68,7 @@ export const AstroAiAssistantPage: React.FC = () => {
       </header>
 
       {/* Messages */}
-      <main style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+      <main style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', maxWidth: '800px', margin: '0 auto', width: '100%' }}>
         {astroAiMessages.map(msg => (
           <ChatBubble key={msg.id} message={msg} />
         ))}

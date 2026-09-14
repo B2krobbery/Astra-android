@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, ChevronLeft, ChevronRight, CheckCircle, Flame, Moon, MapPin, Search, Sparkles, AlertCircle, Landmark } from 'lucide-react';
+import { Camera, ChevronLeft, ChevronRight, CheckCircle, Flame, Moon, MapPin, Search, Sparkles, AlertCircle, Landmark, Trash2 } from 'lucide-react';
 import { useAstra } from '../context/AstraContext';
 import { PrimaryButton, SecondaryOutlineButton } from '../components/AstraButtons';
 import { supabase } from '../lib/supabase';
@@ -102,7 +102,9 @@ const VedicLoadingOverlay: React.FC = () => {
       `}</style>
       <div style={{
         position: 'fixed', inset: 0, zIndex: 9999,
-        background: 'rgba(11,11,14,0.97)',
+        background: 'rgba(10, 7, 20, 0.7)',
+        backdropFilter: 'var(--glass-backdrop)',
+        WebkitBackdropFilter: 'var(--glass-backdrop)',
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center', gap: '32px'
       }}>
@@ -234,7 +236,7 @@ const VedicLoadingOverlay: React.FC = () => {
 };
 
 export const MarriageOnboardingPage: React.FC = () => {
-  const { userProfile, updateProfileInfo, uploadUserProfilePhoto, refreshProfile } = useAstra();
+  const { userProfile, updateProfileInfo, profilePhotos, uploadUserProfilePhotos, setPrimaryProfilePhoto, deleteProfilePhoto, refreshProfile } = useAstra();
   const navigate = useNavigate();
   
   const [currentStep, setCurrentStep] = useState(0);
@@ -310,6 +312,8 @@ export const MarriageOnboardingPage: React.FC = () => {
   
   // Photos
   const [photoPreview, setPhotoPreview] = useState(userProfile.photoUrl || '');
+  const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
+  const [photoUploadError, setPhotoUploadError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Questionnaire
@@ -380,6 +384,17 @@ export const MarriageOnboardingPage: React.FC = () => {
     }
   }, [userProfile]);
 
+  // Keep photoPreview/readiness following the primary photo from the gallery,
+  // while still working with the legacy userProfile.photoUrl before hydration.
+  useEffect(() => {
+    const primary = profilePhotos.find(p => p.isPrimary)?.url || profilePhotos[0]?.url;
+    if (primary) {
+      setPhotoPreview(primary);
+    } else if (userProfile.photoUrl) {
+      setPhotoPreview(userProfile.photoUrl);
+    }
+  }, [profilePhotos, userProfile.photoUrl]);
+
   // Authoritative Readiness Calculation
   const currentProfileData = {
     name,
@@ -414,16 +429,22 @@ export const MarriageOnboardingPage: React.FC = () => {
   const readiness = calculateMarriageReadiness(currentProfileData, photoPreview);
 
   const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setPhotoPreview(event.target.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
-      await uploadUserProfilePhoto(file);
+    const files = Array.from(e.target.files ?? []);
+    // Always reset input value afterward so the same file can be selected again.
+    e.target.value = '';
+    if (files.length === 0) return;
+
+    setIsUploadingPhotos(true);
+    setPhotoUploadError('');
+    try {
+      const result = await uploadUserProfilePhotos(files);
+      if (result.errors.length > 0) {
+        setPhotoUploadError(result.errors.join(' '));
+      }
+    } catch (err: any) {
+      setPhotoUploadError(err?.message || 'Failed to upload photos. Please try again.');
+    } finally {
+      setIsUploadingPhotos(false);
     }
   };
 
@@ -943,38 +964,99 @@ export const MarriageOnboardingPage: React.FC = () => {
         return (
           <div>
             <h4 style={{ color: 'white', marginBottom: '24px' }}>Profile Photo</h4>
-            
+
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '24px' }}>
-              <div 
-                onClick={() => fileInputRef.current?.click()}
-                style={{
-                  width: '120px',
-                  height: '120px',
-                  borderRadius: '50%',
-                  border: '2px dashed var(--accent-amber)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  overflow: 'hidden',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  marginBottom: '12px'
-                }}
-              >
-                {photoPreview ? (
-                  <img src={photoPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <Camera size={32} color="var(--accent-amber)" />
-                )}
-              </div>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handlePhotoSelect} 
-                accept="image/*" 
-                style={{ display: 'none' }} 
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handlePhotoSelect}
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                style={{ display: 'none' }}
               />
-              <span style={{ fontSize: '0.8rem', color: '#94A3B8' }}>Upload a clear photo (4–5 recommended)</span>
+
+              {/* Five-slot gallery */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
+                gap: '12px',
+                width: '100%',
+                maxWidth: '360px',
+                marginBottom: '16px'
+              }}>
+                {[0, 1, 2, 3, 4].map((slotIdx) => {
+                  const photo = profilePhotos[slotIdx];
+                  if (photo) {
+                    return (
+                      <div key={photo.id} style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1', borderRadius: '12px', overflow: 'hidden', border: photo.isPrimary ? '2px solid var(--accent-amber)' : '1px solid var(--border-color)' }}>
+                        <img src={photo.url} alt={`Photo ${slotIdx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        {photo.isPrimary && (
+                          <span style={{
+                            position: 'absolute', top: 4, left: 4,
+                            background: 'var(--accent-amber)', color: '#0B0B0E',
+                            fontSize: '0.6rem', fontWeight: 800,
+                            padding: '2px 6px', borderRadius: '6px'
+                          }}>
+                            Primary
+                          </span>
+                        )}
+                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, display: 'flex', gap: '4px', padding: '4px', background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }}>
+                          {!photo.isPrimary && (
+                            <button
+                              onClick={() => setPrimaryProfilePhoto(photo.id)}
+                              style={{
+                                flex: 1, padding: '4px', borderRadius: '6px',
+                                background: 'rgba(245, 158, 11, 0.9)', color: '#0B0B0E',
+                                border: 'none', fontSize: '0.62rem', fontWeight: 700, cursor: 'pointer'
+                              }}
+                            >
+                              Make primary
+                            </button>
+                          )}
+                          <button
+                            onClick={() => deleteProfilePhoto(photo.id)}
+                            style={{
+                              width: 28, height: 24, borderRadius: '6px',
+                              background: 'rgba(239, 68, 68, 0.9)', color: '#FFF',
+                              border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                            }}
+                            title="Delete photo"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div
+                      key={`empty-${slotIdx}`}
+                      onClick={() => fileInputRef.current?.click()}
+                      style={{
+                        width: '100%', aspectRatio: '1 / 1', borderRadius: '12px',
+                        border: '2px dashed var(--accent-amber)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', background: 'rgba(255, 255, 255, 0.05)'
+                      }}
+                    >
+                      <Camera size={24} color="var(--accent-amber)" />
+                    </div>
+                  );
+                })}
+              </div>
+
+              {isUploadingPhotos && (
+                <span style={{ fontSize: '0.8rem', color: 'var(--accent-amber-light)', marginBottom: '8px' }}>
+                  Uploading photos…
+                </span>
+              )}
+              {photoUploadError && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: '#FDA4AF', marginBottom: '8px', padding: '8px 10px', background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.3)', borderRadius: '10px' }}>
+                  <AlertCircle size={14} color="#F43F5E" />
+                  {photoUploadError}
+                </div>
+              )}
+              <span style={{ fontSize: '0.8rem', color: '#94A3B8' }}>Upload up to 5 photos (JPEG, PNG, or WebP; 5 MB each).</span>
             </div>
           </div>
         );
@@ -984,8 +1066,8 @@ export const MarriageOnboardingPage: React.FC = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0B0B0E', color: '#FFF', padding: 'calc(28px + env(safe-area-inset-top, 16px)) 16px calc(80px + env(safe-area-inset-bottom, 0px))' }}>
-      <div style={{ maxWidth: '480px', margin: '0 auto' }}>
+    <div className="glass-page onboarding-glass-page" style={{ minHeight: '100vh', background: 'transparent', color: 'var(--text-primary)', padding: 'calc(28px + env(safe-area-inset-top, 16px)) 16px calc(80px + env(safe-area-inset-bottom, 0px))' }}>
+      <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%' }}>
         
         {/* Top Header & Progress */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
@@ -1001,7 +1083,7 @@ export const MarriageOnboardingPage: React.FC = () => {
         </div>
 
         {/* Readiness Meter */}
-        <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: '12px', padding: '14px', marginBottom: '24px', border: '1px solid rgba(245,158,11,0.2)' }}>
+        <div className="glass-card onboarding-progress-card" style={{ background: 'var(--glass-bg)', borderRadius: '16px', padding: '14px', marginBottom: '24px', border: '1px solid var(--border-glow)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#FFF' }}>
               Marriage Readiness: {readiness.percentage}%
@@ -1028,7 +1110,7 @@ export const MarriageOnboardingPage: React.FC = () => {
         </div>
 
         {/* Dynamic Step Content */}
-        <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.08)', marginBottom: '24px' }}>
+        <div className="glass-card onboarding-step-card" style={{ background: 'var(--glass-bg)', padding: '20px', borderRadius: '22px', border: '1px solid var(--border-color)', marginBottom: '24px' }}>
           {renderStepContent()}
         </div>
 

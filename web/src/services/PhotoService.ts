@@ -13,6 +13,24 @@ export interface PhotoRequestRecord {
   };
 }
 
+export interface ProfilePhoto {
+  id: string;
+  userId: string;
+  storagePath: string;
+  url: string;
+  isPrimary: boolean;
+  position: number;
+}
+
+export interface PhotoUploadResult {
+  photos: ProfilePhoto[];
+  errors: string[];
+}
+
+const MAX_PHOTOS = 5;
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const ACCEPTED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
 export class PhotoService {
   /**
    * Request private photos from a candidate
@@ -142,5 +160,181 @@ export class PhotoService {
     if (!signedUrls) return [];
 
     return signedUrls.map((s: any) => s.signedUrl).filter(Boolean);
+  }
+
+  /**
+   * Fetch the current user's profile photos, ordered primary-first then position.
+   * Returns [] when signed out. Throws query/sign errors rather than swallowing.
+   */
+  static async getMyPhotos(): Promise<ProfilePhoto[]> {
+    const { data: userData } = await supabase.auth.getUser();
+    const uid = userData?.user?.id;
+    if (!uid) return [];
+
+    const { data, error } = await supabase
+      .from('profile_photos')
+      .select('id, user_id, storage_path, is_primary, position')
+      .eq('user_id', uid)
+      .order('is_primary', { ascending: false })
+      .order('position', { ascending: true });
+
+    if (error) throw error;
+    if (!data || data.length === 0) return [];
+
+    // Preserve HTTP paths; batch-sign internal paths from the avatars bucket.
+    const internalPaths = data
+      .map((row: any) => row.storage_path)
+      .filter((p: string) => p && !p.startsWith('http'));
+
+    const signedByPath: Record<string, string> = {};
+    if (internalPaths.length > 0) {
+      const { data: signedUrls, error: signError } = await supabase.storage
+        .from('avatars')
+        .createSignedUrls(internalPaths, 3600);
+
+      if (signError) throw signError;
+
+      // Map signed URL results by each result's `path` when available, with an
+      // index fallback for SDK responses that omit `path`. Do not rely solely on
+      // compacted index ordering.
+      if (signedUrls) {
+        signedUrls.forEach((signed, index) => {
+          const path = signed?.path || internalPaths[index];
+          if (path && signed?.signedUrl) signedByPath[path] = signed.signedUrl;
+        });
+      }
+    }
+
+    return data.map((row: any) => {
+      const storagePath: string = row.storage_path;
+      const url = storagePath.startsWith('http')
+        ? storagePath
+        : signedByPath[storagePath];
+      if (!url) {
+        throw new Error(`Failed to sign profile photo: ${storagePath}`);
+      }
+      return {
+        id: row.id,
+        userId: row.user_id,
+        storagePath,
+        url,
+        isPrimary: !!row.is_primary,
+        position: typeof row.position === 'number' ? row.position : 0
+      };
+    });
+  }
+
+  /**
+   * Validate and upload multiple profile photos for the current user.
+   * Each file is validated independently; accepted files are uploaded sequentially
+   * and registered via the register_profile_photo RPC. The first accepted upload is
+   * marked primary only when the user currently has zero photos. Successful uploads
+   * are never lost if a later one fails.
+   */
+  static async uploadProfilePhotos(files: File[]): Promise<PhotoUploadResult> {
+    const errors: string[] = [];
+    if (!files || files.length === 0) {
+      return { photos: [], errors };
+    }
+
+    const { data: userData } = await supabase.auth.getUser();
+    const uid = userData?.user?.id;
+    if (!uid) throw new Error('Authentication required.');
+
+    // Snapshot current photos so we know whether the first upload should be primary
+    // and to enforce the max-five limit per slot.
+    const current = await PhotoService.getMyPhotos();
+    let nextSlot = current.length;
+
+    const accepted: File[] = [];
+    for (const file of files) {
+      const slot = nextSlot;
+      if (slot >= MAX_PHOTOS) {
+        errors.push(`"${file.name}" could not be added — you already have ${MAX_PHOTOS} photos.`);
+        continue;
+      }
+      if (!ACCEPTED_MIME_TYPES.has(file.type)) {
+        errors.push(`"${file.name}" was rejected — only JPEG, PNG, or WebP images are allowed.`);
+        continue;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        errors.push(`"${file.name}" was rejected — it exceeds the 5 MB size limit.`);
+        continue;
+      }
+      accepted.push(file);
+      nextSlot += 1;
+    }
+
+    if (accepted.length === 0) {
+      const photos = await PhotoService.getMyPhotos();
+      return { photos, errors };
+    }
+
+    const makePrimaryForFirst = current.length === 0;
+    let registeredCount = 0;
+
+    for (const file of accepted) {
+      const ext = (file.name.split('.').pop() || '').toLowerCase() || 'jpg';
+      const safeExt = ACCEPTED_MIME_TYPES.has(file.type)
+        ? file.type.split('/')[1]
+        : ext;
+      const filePath = `${uid}/${crypto.randomUUID()}.${safeExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: false, contentType: file.type });
+
+      if (uploadError) {
+        errors.push(`"${file.name}" failed to upload: ${uploadError.message}`);
+        continue;
+      }
+
+      const { error: rpcError } = await supabase.rpc('register_profile_photo', {
+        p_storage_path: filePath,
+        p_make_primary: makePrimaryForFirst && registeredCount === 0
+      });
+
+      if (rpcError) {
+        errors.push(`"${file.name}" was uploaded but could not be registered: ${rpcError.message}`);
+        // Roll back the just-uploaded object so we don't leak orphaned files.
+        const { error: removeError } = await supabase.storage.from('avatars').remove([filePath]);
+        if (removeError) {
+          console.error('Failed to clean up orphaned upload after RPC failure', removeError);
+        }
+        continue;
+      }
+      registeredCount += 1;
+    }
+
+    const photos = await PhotoService.getMyPhotos();
+    return { photos, errors };
+  }
+
+  /**
+   * Set a profile photo as primary via the set_primary_profile_photo RPC, then refresh.
+   */
+  static async setPrimaryPhoto(photoId: string): Promise<ProfilePhoto[]> {
+    const { error } = await supabase.rpc('set_primary_profile_photo', { p_photo_id: photoId });
+    if (error) throw error;
+    return PhotoService.getMyPhotos();
+  }
+
+  /**
+   * Delete a profile photo via the delete_profile_photo RPC, then remove the returned
+   * storage object. Object cleanup errors are logged but do not roll back metadata.
+   */
+  static async deleteProfilePhoto(photoId: string): Promise<ProfilePhoto[]> {
+    const { data, error } = await supabase.rpc('delete_profile_photo', { p_photo_id: photoId });
+    if (error) throw error;
+
+    const deletedPath: string | undefined = typeof data === 'string' ? data : undefined;
+    if (deletedPath && !deletedPath.startsWith('http')) {
+      const { error: removeError } = await supabase.storage.from('avatars').remove([deletedPath]);
+      if (removeError) {
+        console.error('Failed to remove deleted photo object from storage', removeError);
+      }
+    }
+
+    return PhotoService.getMyPhotos();
   }
 }

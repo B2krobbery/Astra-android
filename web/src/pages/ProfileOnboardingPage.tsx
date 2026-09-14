@@ -20,13 +20,14 @@ export const ProfileOnboardingPage: React.FC = () => {
 
   return (
     <div
+      className="glass-page profile-onboarding-glass-page"
       style={{
         padding: '24px 20px',
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        background: 'var(--bg-primary)'
+        background: 'transparent'
       }}
     >
       <div>

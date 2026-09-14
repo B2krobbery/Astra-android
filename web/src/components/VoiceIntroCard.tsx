@@ -103,7 +103,7 @@ export const VoiceIntroCard: React.FC<VoiceIntroCardProps> = ({
       style={{
         padding: '16px',
         borderRadius: '20px',
-        background: 'linear-gradient(135deg, rgba(30, 24, 54, 0.9) 0%, rgba(42, 14, 26, 0.85) 100%)',
+        background: 'var(--glass-bg)',
         border: '1px solid var(--border-glow)',
         display: 'flex',
         flexDirection: 'column',

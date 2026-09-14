@@ -127,28 +127,12 @@ export const TypeformOnboardingPage: React.FC = () => {
     }
   };
 
-  const getStageTheme = () => {
-    switch (step) {
-      case 1:
-      case 2:
-        return 'linear-gradient(135deg, #151520 0%, #0B0B0E 100%)';
-      case 3:
-      case 4:
-        return 'linear-gradient(135deg, #161A2E 0%, #0B0B0E 100%)';
-      case 5:
-      case 6:
-      case 7:
-        return 'linear-gradient(135deg, #1E1525 0%, #0B0B0E 100%)';
-      default:
-        return '#0B0B0E';
-    }
-  };
-
   return (
     <div
+      className="glass-page typeform-glass-page"
       style={{
         minHeight: '100vh',
-        background: getStageTheme(),
+        background: 'transparent',
         color: '#F8FAFC',
         padding: '24px 20px',
         display: 'flex',
@@ -164,7 +148,7 @@ export const TypeformOnboardingPage: React.FC = () => {
         type="file"
         ref={fileInputRef}
         onChange={handlePhotoSelect}
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         style={{ display: 'none' }}
       />
 
@@ -250,7 +234,7 @@ export const TypeformOnboardingPage: React.FC = () => {
                   width: '100%',
                   padding: '14px 16px 14px 48px',
                   borderRadius: '16px',
-                  background: 'rgba(30, 24, 54, 0.95)',
+                  background: 'var(--glass-bg)',
                   border: '1px solid rgba(255, 255, 255, 0.2)',
                   color: '#FFF',
                   fontSize: '1rem'
@@ -319,7 +303,7 @@ export const TypeformOnboardingPage: React.FC = () => {
                       width: '100%',
                       padding: '12px 14px 12px 42px',
                       borderRadius: '16px',
-                      background: 'rgba(30, 24, 54, 0.95)',
+                      background: 'var(--glass-bg)',
                       border: '1px solid rgba(255, 255, 255, 0.2)',
                       color: '#FFF'
                     }}
@@ -340,7 +324,7 @@ export const TypeformOnboardingPage: React.FC = () => {
                       width: '100%',
                       padding: '12px 14px 12px 42px',
                       borderRadius: '16px',
-                      background: 'rgba(30, 24, 54, 0.95)',
+                      background: 'var(--glass-bg)',
                       border: '1px solid rgba(255, 255, 255, 0.2)',
                       color: '#FFF'
                     }}
@@ -361,7 +345,7 @@ export const TypeformOnboardingPage: React.FC = () => {
                       width: '100%',
                       padding: '12px 14px 12px 42px',
                       borderRadius: '16px',
-                      background: 'rgba(30, 24, 54, 0.95)',
+                      background: 'var(--glass-bg)',
                       border: '1px solid rgba(255, 255, 255, 0.2)',
                       color: '#FFF'
                     }}
@@ -531,7 +515,7 @@ export const TypeformOnboardingPage: React.FC = () => {
                     width: '100%',
                     padding: '12px 14px',
                     borderRadius: '16px',
-                    background: 'rgba(30, 24, 54, 0.95)',
+                    background: 'var(--glass-bg)',
                     border: '1px solid rgba(255, 255, 255, 0.2)',
                     color: '#FFF',
                     fontSize: '0.9rem'
@@ -554,7 +538,7 @@ export const TypeformOnboardingPage: React.FC = () => {
                     width: '100%',
                     padding: '12px 14px',
                     borderRadius: '16px',
-                    background: 'rgba(30, 24, 54, 0.95)',
+                    background: 'var(--glass-bg)',
                     border: '1px solid rgba(255, 255, 255, 0.2)',
                     color: '#FFF',
                     fontSize: '0.9rem'
