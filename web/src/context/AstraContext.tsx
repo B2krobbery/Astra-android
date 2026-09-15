@@ -28,6 +28,7 @@ import { AuthService } from '../services/auth';
 import { ProfileService } from '../services/profiles';
 import { DiscoveryService } from '../services/discovery';
 import { ChatService } from '../services/chat';
+import { LocationService } from '../services/LocationService';
 
 
 const initialUserProfile: UserProfile = {} as UserProfile;
@@ -74,6 +75,12 @@ interface AstraContextType {
   regionalPreference: RegionalPreference;
   setRegionalPreference: (pref: RegionalPreference) => void;
   refreshProfile: () => Promise<void>;
+
+  isNearbyOnly: boolean;
+  setIsNearbyOnly: (val: boolean) => void;
+  userCoords: { latitude: number; longitude: number } | null;
+  enableNearbyDiscovery: (radiusKm?: number) => Promise<boolean>;
+  disableNearbyDiscovery: () => Promise<void>;
 
   candidates: Candidate[];
   filteredCandidates: Candidate[];
@@ -502,8 +509,48 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [lastMatchedCandidate, setLastMatchedCandidate] = useState<Candidate | null>(null);
 
   const [isPreferenceStrictFilterOn, setIsPreferenceStrictFilterOn] = useState(false);
+  const [isNearbyOnly, setIsNearbyOnly] = useState(false);
+  const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+
+  const enableNearbyDiscovery = async (radiusKm: number = 25): Promise<boolean> => {
+    try {
+      const coords = await LocationService.getCurrentPosition();
+      setUserCoords({ latitude: coords.latitude, longitude: coords.longitude });
+      setIsNearbyOnly(true);
+
+      // Background sync to profile
+      LocationService.syncUserLocation(coords);
+
+      const nearbyCandidates = await DiscoveryService.getCandidates({
+        radius_km: radiusKm,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        nearby: true
+      });
+      if (nearbyCandidates && nearbyCandidates.length > 0) {
+        setCandidates(nearbyCandidates);
+      }
+      return true;
+    } catch (err: any) {
+      console.warn('Failed to enable nearby discovery:', err.message);
+      throw err;
+    }
+  };
+
+  const disableNearbyDiscovery = async () => {
+    setIsNearbyOnly(false);
+    const regularCandidates = await DiscoveryService.getCandidates();
+    if (regularCandidates) {
+      setCandidates(regularCandidates);
+    }
+  };
 
   const filteredCandidates = candidates.filter((c: any) => {
+    // Nearby radius filter
+    if (isNearbyOnly && c.distanceKm !== undefined && c.distanceKm > 25) {
+      return false;
+    }
+
     // Filter by Intent strictly
     if (userProfile.intent && c.intent && userProfile.intent !== c.intent) return false;
 
@@ -1139,6 +1186,11 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         regionalPreference: userProfile.regionalPreference,
         setRegionalPreference,
         refreshProfile: loadBackendData,
+        isNearbyOnly,
+        setIsNearbyOnly,
+        userCoords,
+        enableNearbyDiscovery,
+        disableNearbyDiscovery,
         candidates,
         filteredCandidates,
         candidateIndex,

@@ -94,6 +94,10 @@ export interface Candidate {
   healthStatus?: string;
   alcohol?: string;
   smoking?: string;
+  distanceKm?: number;
+  familyIncome?: string;
+  currentLatitude?: number;
+  currentLongitude?: number;
 }
 
 export interface UserProfile {
@@ -268,4 +272,46 @@ export interface GunaScore {
   boyValue?: string;
   girlValue?: string;
   status?: 'Full' | 'Partial' | 'Dosha' | 'None';
+}
+
+export type RoomCategory = 'Sports' | 'Social' | 'Chai & Coffee' | 'Fitness' | 'Music' | 'Tech' | 'Other';
+
+export interface CommunityRoom {
+  id: string;
+  creatorId: string;
+  creatorName?: string;
+  creatorAvatar?: string;
+  name: string;
+  category: RoomCategory;
+  description?: string;
+  locationName: string;
+  latitude?: number;
+  longitude?: number;
+  radiusKm: number;
+  maxParticipants: number;
+  participantCount?: number;
+  isJoined?: boolean;
+  distanceKm?: number;
+  isActive: boolean;
+  expiresAt: string;
+  createdAt: string;
+}
+
+export interface RoomParticipant {
+  roomId: string;
+  userId: string;
+  displayName?: string;
+  avatarUrl?: string;
+  role: 'creator' | 'member';
+  joinedAt: string;
+}
+
+export interface RoomMessage {
+  id: string;
+  roomId: string;
+  senderId: string;
+  senderName?: string;
+  senderAvatar?: string;
+  content: string;
+  createdAt: string;
 }

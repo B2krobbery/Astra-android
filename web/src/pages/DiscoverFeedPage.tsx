@@ -4,7 +4,7 @@ import { useAstra } from '../context/AstraContext';
 import { CandidateCardView } from '../components/CandidateCardView';
 import { AstraBottomNavigation } from '../components/AstraBottomNavigation';
 import { FloatingHeartsBackground } from '../components/FloatingHeartsBackground';
-import { Sparkles, Moon, Sun, ShieldCheck, Share2, Bot, Globe, RotateCcw } from 'lucide-react';
+import { Sparkles, Moon, Sun, ShieldCheck, Share2, Bot, Globe, RotateCcw, MapPin } from 'lucide-react';
 import { RegionalPreference } from '../types';
 import { preloadImages } from '../utils/imagePreloader';
 
@@ -27,11 +27,35 @@ export const DiscoverFeedPage: React.FC = () => {
     t,
     isPreferenceStrictFilterOn,
     setIsPreferenceStrictFilterOn,
+    isNearbyOnly,
+    enableNearbyDiscovery,
+    disableNearbyDiscovery,
     passedCandidatesHistory,
     rewindCandidate,
     resetFeed,
     candidates
   } = useAstra();
+
+  const isDatingMode = userProfile.intent === 'Dating';
+  const [isAcquiringLocation, setIsAcquiringLocation] = React.useState(false);
+  const [locationError, setLocationError] = React.useState<string | null>(null);
+
+  const handleToggleNearby = async () => {
+    setLocationError(null);
+    if (isNearbyOnly) {
+      await disableNearbyDiscovery();
+    } else {
+      setIsAcquiringLocation(true);
+      try {
+        await enableNearbyDiscovery(25);
+      } catch (err: any) {
+        setLocationError(err.message || 'Unable to access location');
+        setTimeout(() => setLocationError(null), 4000);
+      } finally {
+        setIsAcquiringLocation(false);
+      }
+    }
+  };
 
   const toggleLanguage = () => {
     if (language === 'EN') setLanguage('ML');
@@ -236,6 +260,31 @@ export const DiscoverFeedPage: React.FC = () => {
           <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
             <Globe size={12} /> {t('filter_label')}
           </span>
+
+          {/* Nearby (<25km) Pill */}
+          <button
+            onClick={handleToggleNearby}
+            disabled={isAcquiringLocation}
+            style={{
+              padding: '4px 10px',
+              borderRadius: '9999px',
+              border: isNearbyOnly ? '1px solid #22C55E' : '1px solid var(--border-color)',
+              background: isNearbyOnly ? 'rgba(34, 197, 94, 0.25)' : 'rgba(255, 255, 255, 0.04)',
+              color: isNearbyOnly ? '#4ADE80' : 'var(--text-muted)',
+              fontSize: '0.7rem',
+              fontWeight: isNearbyOnly ? 800 : 600,
+              whiteSpace: 'nowrap',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              flexShrink: 0
+            }}
+          >
+            <MapPin size={11} color={isNearbyOnly ? '#4ADE80' : 'var(--text-muted)'} />
+            {isAcquiringLocation ? 'Locating...' : 'Nearby (<25km)'}
+          </button>
+
           {[
             { key: 'ALL', label: t('filter_all') },
             { key: 'KERALA', label: t('filter_kerala') },
@@ -265,6 +314,73 @@ export const DiscoverFeedPage: React.FC = () => {
             );
           })}
         </div>
+
+        {/* Nearby Active Bar */}
+        {isNearbyOnly && (
+          <div
+            style={{
+              padding: '5px 16px',
+              background: 'rgba(34, 197, 94, 0.15)',
+              borderBottom: '1px solid rgba(34, 197, 94, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: '0.72rem',
+              color: '#4ADE80',
+              fontWeight: 600
+            }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <MapPin size={13} /> Showing matches within 25 km of you
+            </span>
+            <button
+              onClick={handleToggleNearby}
+              style={{ background: 'none', border: 'none', color: '#86EFAC', cursor: 'pointer', fontSize: '0.7rem', textDecoration: 'underline' }}
+            >
+              Reset
+            </button>
+          </div>
+        )}
+
+        {/* Location Error Feedback */}
+        {locationError && (
+          <div style={{ padding: '6px 16px', background: 'rgba(239, 68, 68, 0.2)', color: '#FCA5A5', fontSize: '0.72rem', textAlign: 'center' }}>
+            {locationError}
+          </div>
+        )}
+
+        {/* Community Activity Rooms Teaser Card (ONLY in Dating Mode) */}
+        {isDatingMode && (
+          <div
+            onClick={() => navigate('/matches?tab=rooms')}
+            style={{
+              margin: '6px 16px 4px',
+              padding: '7px 12px',
+              borderRadius: '14px',
+              background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.18) 0%, rgba(236, 72, 153, 0.18) 100%)',
+              border: '1px solid rgba(168, 85, 247, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              cursor: 'pointer'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '1rem' }}>🏏</span>
+              <div>
+                <div style={{ fontSize: '0.73rem', fontWeight: 800, color: '#F8FAFC' }}>
+                  Wanna play cricket or hangout nearby?
+                </div>
+                <div style={{ fontSize: '0.65rem', color: '#94A3B8' }}>
+                  Join local 25km activity rooms & group chats
+                </div>
+              </div>
+            </div>
+            <span style={{ fontSize: '0.7rem', color: 'var(--accent-amber-light)', fontWeight: 800, whiteSpace: 'nowrap' }}>
+              Rooms &gt;
+            </span>
+          </div>
+        )}
 
         {/* Strict Partner Preferences Toggle & Rewind Bar */}
         <div

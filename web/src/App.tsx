@@ -22,6 +22,7 @@ const AdminAiPanelPage = React.lazy(() => import('./pages/AdminAiPanelPage').the
 const AdminDashboardPage = React.lazy(() => import('./pages/AdminDashboardPage').then(m => ({ default: m.AdminDashboardPage })));
 const AdminMarketingPage = React.lazy(() => import('./pages/AdminMarketingPage').then(m => ({ default: m.AdminMarketingPage })));
 const DigitalWeddingCardPage = React.lazy(() => import('./pages/DigitalWeddingCardPage').then(m => ({ default: m.DigitalWeddingCardPage })));
+const RoomChatPage = React.lazy(() => import('./pages/RoomChatPage').then(m => ({ default: m.RoomChatPage })));
 
 import { App as CapacitorApp } from '@capacitor/app';
 import { supabase } from './lib/supabase';
@@ -91,6 +92,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/match-celebration" element={<MatchCelebrationPage />} />
         <Route path="/matches" element={<MatchesConversationsPage />} />
         <Route path="/chat-detail" element={<ChatDetailPage />} />
+        <Route path="/rooms/:id" element={<RoomChatPage />} />
         <Route path="/astro-ai" element={<AstroAiAssistantPage />} />
         <Route path="/profile" element={<UserProfilePage />} />
         <Route path="/wedding-cards" element={<DigitalWeddingCardPage />} />

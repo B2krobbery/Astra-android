@@ -504,6 +504,26 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
             </div>
           )}
 
+          {candidate.distanceKm !== undefined && (
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '3px 10px',
+                borderRadius: '9999px',
+                background: 'rgba(34, 197, 94, 0.18)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(34, 197, 94, 0.4)',
+                color: '#4ADE80',
+                fontWeight: 600
+              }}
+            >
+              <MapPin size={12} color="#4ADE80" />
+              <span>{candidate.distanceKm < 1 ? '< 1 km away' : `${candidate.distanceKm} km away`}</span>
+            </div>
+          )}
+
           {candidate.intent === 'Marriage' && candidate.religion && candidate.caste && (
             <div
               style={{

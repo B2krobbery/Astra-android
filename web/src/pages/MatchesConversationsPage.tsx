@@ -1,14 +1,18 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAstra } from '../context/AstraContext';
 import { AstraBottomNavigation } from '../components/AstraBottomNavigation';
 import { CandidateAvatar } from '../components/CandidateAvatar';
-import { Sparkles, MessageCircle, Bot, UserX, Users, AlertTriangle, RotateCcw } from 'lucide-react';
-import { Candidate } from '../types';
+import { Sparkles, MessageCircle, Bot, UserX, Users, AlertTriangle, RotateCcw, Plus, MapPin, Clock } from 'lucide-react';
+import { Candidate, CommunityRoom } from '../types';
+import { RoomService } from '../services/RoomService';
+import { CreateRoomModal } from '../components/CreateRoomModal';
 
 export const MatchesConversationsPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const {
+    userProfile,
     conversations,
     isSyncingMatches,
     pendingRequests,
@@ -17,18 +21,52 @@ export const MatchesConversationsPage: React.FC = () => {
     selectCandidate,
     unfriendCandidate,
     refreshData,
+    userCoords,
     t
   } = useAstra();
+
+  const isDatingMode = userProfile.intent === 'Dating';
+  const activeTabParam = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState<'matches' | 'rooms'>(
+    isDatingMode && activeTabParam === 'rooms' ? 'rooms' : 'matches'
+  );
+  const [rooms, setRooms] = useState<CommunityRoom[]>([]);
+  const [isLoadingRooms, setIsLoadingRooms] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
 
   const [unfriendTarget, setUnfriendTarget] = useState<Candidate | null>(null);
   const [isUnfriending, setIsUnfriending] = useState(false);
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
 
+  const loadRooms = async () => {
+    if (!isDatingMode) return;
+    setIsLoadingRooms(true);
+    try {
+      const data = await RoomService.getActiveRooms(userCoords?.latitude, userCoords?.longitude, selectedCategory);
+      setRooms(data);
+    } catch (e) {
+      console.error('Failed to load rooms:', e);
+    } finally {
+      setIsLoadingRooms(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isDatingMode && activeTab === 'rooms') {
+      loadRooms();
+    }
+  }, [isDatingMode, activeTab, selectedCategory, userCoords]);
+
   const handleManualRefresh = async () => {
     if (isManualRefreshing) return;
     setIsManualRefreshing(true);
     try {
-      await refreshData();
+      if (isDatingMode && activeTab === 'rooms') {
+        await loadRooms();
+      } else {
+        await refreshData();
+      }
     } catch (e) {
       console.error('Manual refresh error:', e);
     } finally {
@@ -103,8 +141,270 @@ export const MatchesConversationsPage: React.FC = () => {
         </button>
       </header>
 
+      {/* Top Segmented Tabs: Matches vs Community Rooms (ONLY in Dating Mode) */}
+      {isDatingMode && (
+        <div
+          style={{
+            display: 'flex',
+            padding: '0 20px',
+            background: 'var(--bg-secondary)',
+            borderBottom: '1px solid var(--border-color)',
+            gap: '16px'
+          }}
+        >
+          <button
+            onClick={() => setActiveTab('matches')}
+            style={{
+              padding: '12px 4px',
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === 'matches' ? '2px solid var(--accent-amber)' : '2px solid transparent',
+              color: activeTab === 'matches' ? 'var(--accent-amber-light)' : 'var(--text-muted)',
+              fontWeight: activeTab === 'matches' ? 800 : 600,
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <MessageCircle size={16} /> Direct Matches ({conversations.length})
+          </button>
+
+          <button
+            onClick={() => setActiveTab('rooms')}
+            style={{
+              padding: '12px 4px',
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === 'rooms' ? '2px solid var(--accent-amber)' : '2px solid transparent',
+              color: activeTab === 'rooms' ? 'var(--accent-amber-light)' : 'var(--text-muted)',
+              fontWeight: activeTab === 'rooms' ? 800 : 600,
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <span>🏏</span> Community Rooms ({rooms.length})
+          </button>
+        </div>
+      )}
+
       <main style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '600px', margin: '0 auto', width: '100%' }}>
-        {/* Celestial Friend List */}
+        {isDatingMode && activeTab === 'rooms' ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Create Room CTA Card */}
+            <div
+              style={{
+                padding: '16px',
+                borderRadius: '20px',
+                background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.08) 100%)',
+                border: '1px solid var(--accent-amber)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '12px',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
+              }}
+            >
+              <div>
+                <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--accent-amber-light)', margin: 0 }}>
+                  Start an Activity Room
+                </h3>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '4px 0 0' }}>
+                  Organize cricket, badminton, chai, or hangout within 25 km!
+                </p>
+              </div>
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: '9999px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
+                  color: '#0B0B0E',
+                  fontWeight: 800,
+                  fontSize: '0.82rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  boxShadow: '0 2px 10px rgba(245, 158, 11, 0.3)'
+                }}
+              >
+                <Plus size={16} /> Create
+              </button>
+            </div>
+
+            {/* Category Filter Chips */}
+            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+              {[
+                { key: 'ALL', label: 'All', icon: '✨' },
+                { key: 'Sports', label: 'Cricket & Sports', icon: '🏏' },
+                { key: 'Chai & Coffee', label: 'Chai & Coffee', icon: '☕' },
+                { key: 'Fitness', label: 'Badminton & Fitness', icon: '🏸' },
+                { key: 'Social', label: 'Hangout', icon: '🗣️' },
+                { key: 'Tech', label: 'Tech', icon: '💻' }
+              ].map(cat => {
+                const isSelected = selectedCategory === cat.key;
+                return (
+                  <button
+                    key={cat.key}
+                    onClick={() => setSelectedCategory(cat.key)}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '9999px',
+                      border: isSelected ? '1px solid var(--accent-amber)' : '1px solid var(--border-color)',
+                      background: isSelected ? 'rgba(245, 158, 11, 0.2)' : 'var(--bg-card)',
+                      color: isSelected ? 'var(--accent-amber-light)' : 'var(--text-muted)',
+                      fontSize: '0.72rem',
+                      fontWeight: isSelected ? 700 : 500,
+                      whiteSpace: 'nowrap',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <span>{cat.icon}</span>
+                    <span>{cat.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Rooms List */}
+            {isLoadingRooms ? (
+              <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                <Sparkles size={24} className="spin-slow" color="var(--accent-amber)" style={{ margin: '0 auto 8px' }} />
+                <p style={{ fontSize: '0.85rem' }}>Discovering local rooms...</p>
+              </div>
+            ) : rooms.length === 0 ? (
+              <div style={{ padding: '36px 20px', textAlign: 'center', background: 'var(--bg-card)', borderRadius: '20px', border: '1px solid var(--border-color)' }}>
+                <span style={{ fontSize: '2.5rem', display: 'block', marginBottom: '8px' }}>🏏</span>
+                <p style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  No active rooms found in this category
+                </p>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px', marginBottom: '16px' }}>
+                  Be the pioneer! Create a room and invite nearby folks to play or meetup.
+                </p>
+                <button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '9999px',
+                    border: 'none',
+                    background: 'var(--accent-amber)',
+                    color: '#0B0B0E',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  + Create First Room
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {rooms.map(r => {
+                  const categoryEmoji: Record<string, string> = {
+                    'Sports': '🏏',
+                    'Chai & Coffee': '☕',
+                    'Fitness': '🏸',
+                    'Social': '🗣️',
+                    'Music': '🎵',
+                    'Tech': '💻',
+                    'Other': '✨'
+                  };
+                  return (
+                    <div
+                      key={r.id}
+                      onClick={() => navigate(`/rooms/${r.id}`)}
+                      style={{
+                        padding: '16px',
+                        borderRadius: '20px',
+                        background: 'var(--bg-card)',
+                        border: r.isJoined ? '1px solid rgba(212, 175, 55, 0.4)' : '1px solid var(--border-color)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '10px',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 14px rgba(0, 0, 0, 0.1)',
+                        transition: 'transform 0.15s ease, border-color 0.2s ease'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div
+                            style={{
+                              width: 44,
+                              height: 44,
+                              borderRadius: '14px',
+                              background: 'rgba(245, 158, 11, 0.15)',
+                              border: '1px solid rgba(245, 158, 11, 0.3)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '1.4rem',
+                              flexShrink: 0
+                            }}
+                          >
+                            {categoryEmoji[r.category] || '✨'}
+                          </div>
+                          <div>
+                            <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--accent-amber-light)', margin: 0 }}>
+                              {r.name}
+                            </h4>
+                            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                              Host: {r.creatorName}
+                            </span>
+                          </div>
+                        </div>
+
+                        {r.isJoined && (
+                          <span style={{ padding: '3px 8px', borderRadius: '9999px', background: 'rgba(34, 197, 94, 0.2)', border: '1px solid rgba(34, 197, 94, 0.4)', color: '#4ADE80', fontSize: '0.68rem', fontWeight: 700 }}>
+                            Joined
+                          </span>
+                        )}
+                      </div>
+
+                      {r.description && (
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4 }}>
+                          {r.description}
+                        </p>
+                      )}
+
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '6px', borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <Users size={12} color="var(--accent-amber)" /> {r.participantCount}/{r.maxParticipants}
+                          </span>
+                          {r.distanceKm !== undefined && (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: '#4ADE80' }}>
+                              <MapPin size={11} /> {r.distanceKm < 1 ? '< 1 km' : `${r.distanceKm} km`}
+                            </span>
+                          )}
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                            <MapPin size={11} color="var(--accent-rose)" /> {r.locationName}
+                          </span>
+                        </div>
+
+                        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent-amber)' }}>
+                          {r.isJoined ? 'Open Chat >' : 'Join Room >'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* Celestial Friend List */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -355,7 +655,18 @@ export const MatchesConversationsPage: React.FC = () => {
           </div>
           <Sparkles size={18} color="var(--accent-amber-light)" className="spin-slow" />
         </div>
+        </>
+        )}
       </main>
+
+      {/* Create Room Modal (ONLY in Dating Mode) */}
+      {isDatingMode && (
+        <CreateRoomModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onRoomCreated={(newId) => navigate(`/rooms/${newId}`)}
+        />
+      )}
 
       {/* Unfriend Confirmation Modal */}
       {unfriendTarget && (

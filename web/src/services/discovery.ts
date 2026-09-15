@@ -180,6 +180,9 @@ export const DiscoveryService = {
         healthCondition: p.pre_existing_conditions || undefined,
         annualIncome: p.annual_income,
         familyIncome: p.family_income,
+        distanceKm: p.distance_km !== null && p.distance_km !== undefined ? Number(p.distance_km) : undefined,
+        currentLatitude: p.current_latitude ? Number(p.current_latitude) : undefined,
+        currentLongitude: p.current_longitude ? Number(p.current_longitude) : undefined,
         regionalCategory: p.region || (() => {
           const loc = (p.location || '').toLowerCase();
           if (loc.includes('kerala')) return 'Kerala';
