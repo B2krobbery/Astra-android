@@ -111,6 +111,7 @@ export interface UserProfile {
   nakshatra: string;
   rashi: string;
   photoUrl: string;
+  photoUrls?: string[];
   educationVerified: boolean;
   policeVerified: boolean;
   creditVerified: boolean;

@@ -52,7 +52,7 @@ export const SplashScreenOverlay: React.FC = () => {
         position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        background: '#0B0B0E',
+        background: 'var(--bg-mesh)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',

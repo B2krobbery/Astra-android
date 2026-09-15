@@ -12,7 +12,7 @@ import { NadiShastraProvider } from '../data/NadiShastraProvider';
 
 export const HoroscopeCompatibilityPage: React.FC = () => {
   const navigate = useNavigate();
-  const { userProfile, selectedCandidate, openConversationForCandidate, themeMode } = useAstra();
+  const { userProfile, selectedCandidate, openConversationForCandidate } = useAstra();
   const candidate = selectedCandidate;
 
   const handleStartChatting = () => {
@@ -212,10 +212,11 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
 
   return (
     <div
+      className="glass-page horoscope-glass-page"
       style={{
         minHeight: '100vh',
         height: '100vh',
-        background: themeMode === 'LIGHT' ? '#FFF5F7' : 'var(--bg-primary)',
+        background: 'transparent',
         color: 'var(--text-primary)',
         paddingBottom: '60px',
         overflowY: 'auto'
@@ -228,7 +229,7 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
-          background: themeMode === 'LIGHT' ? 'rgba(255, 245, 247, 0.85)' : 'rgba(11, 11, 14, 0.85)',
+          background: 'var(--glass-bg)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           borderBottom: '1px solid var(--border-color)',
@@ -248,7 +249,7 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
         </h1>
       </header>
 
-      <main style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '480px', margin: '0 auto' }}>
+      <main style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '600px', margin: '0 auto', width: '100%' }}>
         {/* Avatars Header */}
         <div style={{ textAlign: 'center', marginTop: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', marginBottom: '16px' }}>

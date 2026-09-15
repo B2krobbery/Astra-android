@@ -1,26 +1,27 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AstraProvider, useAstra } from './context/AstraContext';
-import { SplashPage } from './pages/SplashPage';
-import { TypeformOnboardingPage } from './pages/TypeformOnboardingPage';
-import { MarriageOnboardingPage } from './pages/MarriageOnboardingPage';
-import { ProfileOnboardingPage } from './pages/ProfileOnboardingPage';
-import { AstrologySetupPage } from './pages/AstrologySetupPage';
-import { DiscoverFeedPage } from './pages/DiscoverFeedPage';
-import { CandidateDetailPage } from './pages/CandidateDetailPage';
-import { HoroscopeCompatibilityPage } from './pages/HoroscopeCompatibilityPage';
-import { MatchCelebrationPage } from './pages/MatchCelebrationPage';
-import { MatchesConversationsPage } from './pages/MatchesConversationsPage';
-import { ChatDetailPage } from './pages/ChatDetailPage';
-import { AstroAiAssistantPage } from './pages/AstroAiAssistantPage';
-import { UserProfilePage } from './pages/UserProfilePage';
-import { AdminAiPanelPage } from './pages/AdminAiPanelPage';
-import { AdminDashboardPage } from './pages/AdminDashboardPage';
-import { AdminMarketingPage } from './pages/AdminMarketingPage';
-import { DigitalWeddingCardPage } from './pages/DigitalWeddingCardPage';
 import { ChaanbeanModal } from './components/ChaanbeanModal';
 import { ReferralModal } from './components/ReferralModal';
 import { SplashScreenOverlay } from './components/SplashScreenOverlay';
+
+const SplashPage = React.lazy(() => import('./pages/SplashPage').then(m => ({ default: m.SplashPage })));
+const TypeformOnboardingPage = React.lazy(() => import('./pages/TypeformOnboardingPage').then(m => ({ default: m.TypeformOnboardingPage })));
+const MarriageOnboardingPage = React.lazy(() => import('./pages/MarriageOnboardingPage').then(m => ({ default: m.MarriageOnboardingPage })));
+const ProfileOnboardingPage = React.lazy(() => import('./pages/ProfileOnboardingPage').then(m => ({ default: m.ProfileOnboardingPage })));
+const AstrologySetupPage = React.lazy(() => import('./pages/AstrologySetupPage').then(m => ({ default: m.AstrologySetupPage })));
+const DiscoverFeedPage = React.lazy(() => import('./pages/DiscoverFeedPage').then(m => ({ default: m.DiscoverFeedPage })));
+const CandidateDetailPage = React.lazy(() => import('./pages/CandidateDetailPage').then(m => ({ default: m.CandidateDetailPage })));
+const HoroscopeCompatibilityPage = React.lazy(() => import('./pages/HoroscopeCompatibilityPage').then(m => ({ default: m.HoroscopeCompatibilityPage })));
+const MatchCelebrationPage = React.lazy(() => import('./pages/MatchCelebrationPage').then(m => ({ default: m.MatchCelebrationPage })));
+const MatchesConversationsPage = React.lazy(() => import('./pages/MatchesConversationsPage').then(m => ({ default: m.MatchesConversationsPage })));
+const ChatDetailPage = React.lazy(() => import('./pages/ChatDetailPage').then(m => ({ default: m.ChatDetailPage })));
+const AstroAiAssistantPage = React.lazy(() => import('./pages/AstroAiAssistantPage').then(m => ({ default: m.AstroAiAssistantPage })));
+const UserProfilePage = React.lazy(() => import('./pages/UserProfilePage').then(m => ({ default: m.UserProfilePage })));
+const AdminAiPanelPage = React.lazy(() => import('./pages/AdminAiPanelPage').then(m => ({ default: m.AdminAiPanelPage })));
+const AdminDashboardPage = React.lazy(() => import('./pages/AdminDashboardPage').then(m => ({ default: m.AdminDashboardPage })));
+const AdminMarketingPage = React.lazy(() => import('./pages/AdminMarketingPage').then(m => ({ default: m.AdminMarketingPage })));
+const DigitalWeddingCardPage = React.lazy(() => import('./pages/DigitalWeddingCardPage').then(m => ({ default: m.DigitalWeddingCardPage })));
 
 import { App as CapacitorApp } from '@capacitor/app';
 import { supabase } from './lib/supabase';
@@ -77,7 +78,7 @@ const AppRoutes: React.FC = () => {
       {/* Animated Celestial Splash Screen Overlay on Initial App Load */}
       <SplashScreenOverlay />
 
-      <Routes>
+      <React.Suspense fallback={<div className="glass-page" style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}><span className="spin-slow" style={{ fontSize: "2rem" }}>✨</span></div>}><Routes>
         <Route path="/" element={<SplashPage />} />
         <Route path="/splash" element={<SplashPage />} />
         <Route path="/onboarding-typeform" element={<TypeformOnboardingPage />} />
@@ -98,7 +99,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/admin/marketing" element={<AdminMarketingPage />} />
         <Route path="/admin" element={<Navigate to="/admin/ai-agents" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      </Routes></React.Suspense>
 
       {/* Global Verification Modal Overlay */}
       {isChaanbeanOpen && (

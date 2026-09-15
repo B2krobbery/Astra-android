@@ -13,9 +13,10 @@ export const AdminAiPanelPage: React.FC = () => {
 
   return (
     <div
+      className="glass-page admin-glass-page"
       style={{
         minHeight: '100vh',
-        background: '#0B0914',
+        background: 'transparent',
         color: '#F8FAFC',
         padding: '24px 20px',
         display: 'flex',
@@ -125,7 +126,7 @@ export const AdminAiPanelPage: React.FC = () => {
         style={{
           padding: '20px',
           borderRadius: '24px',
-          background: 'rgba(24, 19, 41, 0.9)',
+          background: 'var(--glass-bg)',
           border: '1px solid rgba(255, 255, 255, 0.12)',
           display: 'flex',
           flexDirection: 'column',

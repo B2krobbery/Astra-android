@@ -18,10 +18,11 @@ export const MatchCelebrationPage: React.FC = () => {
 
   return (
     <div
+      className="glass-page match-celebration-glass-page"
       style={{
         padding: '32px 24px',
         minHeight: '100vh',
-        background: 'radial-gradient(circle at 50% 35%, rgba(244, 63, 94, 0.4) 0%, rgba(42, 14, 26, 0.95) 60%, var(--bg-primary) 100%)',
+        background: 'transparent',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',

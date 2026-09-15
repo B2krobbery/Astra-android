@@ -1,53 +1,63 @@
-/* Ultra-Premium Modern Luxury Palette for Astra */
+/* Astra — Dusk Temple Glass palette: frosted panels over an indigo/mulberry nebula */
 
 :root {
-  /* Default Dark Mode Color Tokens - Sleek Midnight Onyx & Matte Charcoal */
-  --bg-primary: #0B0B0E;
-  --bg-secondary: #121217;
-  --bg-card: #181822;
-  --bg-wine: #1F1A28;
-  --bg-indigo: #161826;
-  
-  --border-color: rgba(255, 255, 255, 0.1);
-  --border-glow: rgba(212, 175, 55, 0.22);
-  
+  /* Base — deep indigo-void with an amethyst/mulberry aurora mesh behind the glass */
+  --bg-primary: #0A0714;
+  --bg-secondary: rgba(255, 255, 255, 0.05);
+  --bg-card: rgba(255, 255, 255, 0.055);
+  --bg-wine: rgba(107, 47, 92, 0.22);
+  --bg-indigo: rgba(45, 27, 78, 0.28);
+  --bg-mesh: radial-gradient(120% 90% at 12% -10%, rgba(107, 47, 92, 0.55) 0%, rgba(107, 47, 92, 0) 55%),
+             radial-gradient(100% 80% at 100% 0%, rgba(45, 27, 78, 0.65) 0%, rgba(45, 27, 78, 0) 60%),
+             radial-gradient(120% 100% at 50% 120%, rgba(212, 175, 55, 0.08) 0%, rgba(212, 175, 55, 0) 55%),
+             #0A0714;
+
+  --border-color: rgba(255, 255, 255, 0.14);
+  --border-glow: rgba(212, 175, 55, 0.3);
+  --glass-highlight: rgba(255, 255, 255, 0.35);
+
   --text-primary: #F8FAFC;
-  --text-secondary: #94A3B8;
-  --text-muted: #64748B;
-  
+  --text-secondary: #B9B4C7;
+  --text-muted: #7C7690;
+
   --accent-amber: #D4AF37;       /* Champagne Gold */
   --accent-amber-light: #E2C872; /* Soft Golden Platinum */
-  --accent-indigo: #818CF8;
-  --accent-indigo-dark: #4F46E5;
+  --accent-indigo: #9B87F5;
+  --accent-indigo-dark: #6D28D9;
   --accent-gold: #D4AF37;
   --accent-rose: #F43F5E;
-  --accent-emerald: #10B981;
+  --accent-emerald: #8FE3D3;     /* Jade Mist — replaces flat emerald */
 
   --guna-bar-bg: rgba(255, 255, 255, 0.08);
-  
-  --glass-bg: rgba(18, 18, 26, 0.85);
-  --glass-backdrop: blur(18px);
-  --shadow-cosmic: 0 12px 35px -8px rgba(212, 175, 55, 0.18);
-  --shadow-card: 0 16px 40px rgba(0, 0, 0, 0.6);
+
+  --glass-bg: rgba(30, 22, 46, 0.55);
+  --glass-backdrop: blur(20px) saturate(150%);
+  --shadow-cosmic: 0 12px 35px -8px rgba(212, 175, 55, 0.22);
+  --shadow-card: 0 16px 40px rgba(5, 3, 12, 0.55);
 
   /* AI Chat Bubble Tokens */
-  --ai-bubble-bg: linear-gradient(135deg, rgba(31, 26, 40, 0.95) 0%, rgba(24, 24, 34, 0.95) 100%);
+  --ai-bubble-bg: linear-gradient(135deg, rgba(107, 47, 92, 0.35) 0%, rgba(30, 22, 46, 0.55) 100%);
   --ai-bubble-text: #F8FAFC;
   --ai-bubble-border: var(--accent-amber);
-  --ai-header-bg: linear-gradient(135deg, #1F1A28 0%, #181822 100%);
+  --ai-header-bg: linear-gradient(135deg, rgba(45, 27, 78, 0.55) 0%, rgba(30, 22, 46, 0.55) 100%);
 
   --font-family: 'Inter', system-ui, -apple-system, sans-serif;
   --font-heading: 'Outfit', 'Inter', sans-serif;
 }
 
 [data-theme="light"] {
-  --bg-primary: #FAFAFA;
-  --bg-secondary: #FFFFFF;
-  --bg-card: #FFFFFF;
-  --bg-wine: #FFF8F0;
-  --bg-indigo: #F8FAFC;
-  --border-color: #E2E8F0;
-  --border-glow: rgba(212, 175, 55, 0.2);
+  --bg-primary: #F1EEFB;
+  --bg-secondary: rgba(255, 255, 255, 0.55);
+  --bg-card: rgba(255, 255, 255, 0.6);
+  --bg-wine: rgba(212, 175, 55, 0.08);
+  --bg-indigo: rgba(155, 135, 245, 0.1)  ;
+  --bg-mesh: radial-gradient(120% 90% at 12% -10%, rgba(155, 135, 245, 0.28) 0%, rgba(155, 135, 245, 0) 55%),
+             radial-gradient(100% 80% at 100% 0%, rgba(212, 175, 55, 0.16) 0%, rgba(212, 175, 55, 0) 60%),
+             #F1EEFB;
+
+  --border-color: rgba(15, 23, 42, 0.1);
+  --border-glow: rgba(212, 175, 55, 0.25);
+  --glass-highlight: rgba(255, 255, 255, 0.7);
 
   --text-primary: #0F172A;
   --text-secondary: #475569;
@@ -55,22 +65,22 @@
 
   --accent-amber: #B48A27;       /* Champagne Gold Light Mode */
   --accent-amber-light: #946E19;
-  --accent-indigo: #4F46E5;
-  --accent-indigo-dark: #3730A3;
+  --accent-indigo: #6D28D9;
+  --accent-indigo-dark: #4C1D95;
   --accent-gold: #B48A27;
   --accent-rose: #E11D48;
-  --accent-emerald: #059669;
+  --accent-emerald: #0D9488;
 
   --guna-bar-bg: rgba(15, 23, 42, 0.08);
 
-  --glass-bg: rgba(255, 255, 255, 0.92);
-  --glass-backdrop: blur(14px);
-  --shadow-cosmic: 0 10px 25px -5px rgba(212, 175, 55, 0.15);
-  --shadow-card: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-backdrop: blur(16px) saturate(140%);
+  --shadow-cosmic: 0 10px 25px -5px rgba(212, 175, 55, 0.18);
+  --shadow-card: 0 10px 30px rgba(15, 23, 42, 0.1);
 
   /* AI Chat Bubble Tokens in Light Theme */
-  --ai-bubble-bg: linear-gradient(135deg, #FFF8E7 0%, #F8FAFC 100%);
+  --ai-bubble-bg: linear-gradient(135deg, rgba(255, 248, 231, 0.7) 0%, rgba(255, 255, 255, 0.6) 100%);
   --ai-bubble-text: #0F172A;
   --ai-bubble-border: var(--accent-amber);
-  --ai-header-bg: linear-gradient(135deg, #FFF8E7 0%, #F8FAFC 100%);
+  --ai-header-bg: linear-gradient(135deg, rgba(255, 248, 231, 0.6) 0%, rgba(255, 255, 255, 0.6) 100%);
 }

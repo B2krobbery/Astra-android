@@ -18,12 +18,13 @@ export const AstraBottomNavigation: React.FC = () => {
 
   return (
     <nav
+      className="glass-bottom-nav"
       style={{
         position: 'fixed',
         bottom: 0,
         left: 0,
         right: 0,
-        maxWidth: '480px',
+        maxWidth: '100%',
         margin: '0 auto',
         padding: '8px 0 calc(12px + env(safe-area-inset-bottom, 0px)) 0',
         background: themeMode === 'LIGHT' ? 'rgba(255, 245, 247, 0.88)' : 'rgba(15, 12, 27, 0.88)',

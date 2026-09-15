@@ -42,9 +42,7 @@ export const FloatingHeartsBackground: React.FC = () => {
         overflow: 'hidden',
         pointerEvents: 'none',
         zIndex: 0,
-        background: isLight
-          ? 'linear-gradient(180deg, #FFF5F7 0%, #FEE2E2 40%, #FCE7F3 100%)'
-          : 'radial-gradient(ellipse at 50% 30%, #1A1A28 0%, #0B0B0E 70%, #060608 100%)',
+        background: 'transparent',
         transition: 'background 0.3s ease'
       }}
     >

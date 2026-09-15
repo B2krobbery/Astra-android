@@ -33,6 +33,7 @@ export const ChatDetailPage: React.FC = () => {
 
   return (
     <div
+      className="glass-page chat-glass-page"
       style={{
         height: '100vh',
         display: 'flex',
@@ -81,7 +82,7 @@ export const ChatDetailPage: React.FC = () => {
       </header>
 
       {/* Messages Thread */}
-      <main style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+      <main style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', maxWidth: '800px', margin: '0 auto', width: '100%' }}>
         {messages.map(msg => (
           <ChatBubble key={msg.id} message={msg} />
         ))}

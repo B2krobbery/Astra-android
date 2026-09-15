@@ -61,16 +61,17 @@ export const DiscoverFeedPage: React.FC = () => {
 
   return (
     <div
+      className="glass-page discover-glass-page"
       style={{
         height: '100vh',
         width: '100%',
-        maxWidth: '480px',
+        maxWidth: '100%',
         margin: '0 auto',
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
         overflowY: 'auto',
-        background: themeMode === 'LIGHT' ? '#FFF5F7' : '#0B0B0E'
+        background: 'transparent'
       }}
     >
       <FloatingHeartsBackground />
@@ -81,7 +82,7 @@ export const DiscoverFeedPage: React.FC = () => {
           top: 0,
           left: 0,
           right: 0,
-          maxWidth: '480px',
+          maxWidth: '100%',
           margin: '0 auto',
           zIndex: 40,
           background: themeMode === 'LIGHT' ? 'rgba(255, 245, 247, 0.78)' : 'rgba(11, 11, 14, 0.78)',
@@ -403,7 +404,7 @@ export const DiscoverFeedPage: React.FC = () => {
             </button>
           </div>
         ) : currentCandidate ? (
-          <div style={{ width: '100%', height: '100%', minHeight: '520px', position: 'relative' }}>
+          <div style={{ width: '100%', height: '100%', maxWidth: '440px', margin: '0 auto', minHeight: '520px', position: 'relative' }}>
             {/* Background Card 3 (Bottom of deck) */}
             {candidates[2] && (
               <div

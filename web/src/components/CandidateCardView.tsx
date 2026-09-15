@@ -165,6 +165,7 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
 
   return (
     <div
+      className="candidate-glass-card"
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -178,6 +179,7 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
         overflow: 'hidden',
         boxShadow: getBoxShadow(),
         background: '#0D0C13',
+        border: '1px solid var(--border-color)',
         cursor: isStaticPreview ? 'default' : isDragging ? 'grabbing' : 'grab',
         transform: getTransform(),
         opacity: exitDirection ? 0 : 1,
