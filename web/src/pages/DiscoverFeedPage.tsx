@@ -403,20 +403,79 @@ export const DiscoverFeedPage: React.FC = () => {
             </button>
           </div>
         ) : currentCandidate ? (
-          <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-            <CandidateCardView
-              key={currentCandidate.id}
-              candidate={currentCandidate}
-              onCardClick={() => {
-                selectCandidate(currentCandidate);
-                navigate('/candidate-detail');
-              }}
-              onLikeClick={() => likeCandidate(currentCandidate, () => navigate('/match-celebration'))}
-              onPassClick={() => passCandidate(currentCandidate)}
-              onCheckCompatibility={() =>
-                checkCompatibility(currentCandidate, () => navigate('/horoscope-compatibility'))
-              }
-            />
+          <div style={{ width: '100%', height: '100%', minHeight: '520px', position: 'relative' }}>
+            {/* Background Card 3 (Bottom of deck) */}
+            {candidates[2] && (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  transform: 'scale(0.92) translateY(22px)',
+                  transformOrigin: 'bottom center',
+                  opacity: 0.5,
+                  filter: 'brightness(0.65)',
+                  borderRadius: '28px',
+                  overflow: 'hidden',
+                  pointerEvents: 'none',
+                  transition: 'all 0.35s ease',
+                  zIndex: 1
+                }}
+              >
+                <CandidateCardView
+                  candidate={candidates[2]}
+                  isStaticPreview={true}
+                  onCardClick={() => {}}
+                  onLikeClick={() => {}}
+                  onPassClick={() => {}}
+                  onCheckCompatibility={() => {}}
+                />
+              </div>
+            )}
+
+            {/* Background Card 2 (Middle of deck) */}
+            {candidates[1] && (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  transform: 'scale(0.96) translateY(11px)',
+                  transformOrigin: 'bottom center',
+                  opacity: 0.85,
+                  filter: 'brightness(0.82)',
+                  borderRadius: '28px',
+                  overflow: 'hidden',
+                  pointerEvents: 'none',
+                  transition: 'all 0.35s ease',
+                  zIndex: 2
+                }}
+              >
+                <CandidateCardView
+                  candidate={candidates[1]}
+                  isStaticPreview={true}
+                  onCardClick={() => {}}
+                  onLikeClick={() => {}}
+                  onPassClick={() => {}}
+                  onCheckCompatibility={() => {}}
+                />
+              </div>
+            )}
+
+            {/* Active Top Interactive Card */}
+            <div style={{ position: 'relative', width: '100%', height: '100%', zIndex: 10 }}>
+              <CandidateCardView
+                key={currentCandidate.id}
+                candidate={currentCandidate}
+                onCardClick={() => {
+                  selectCandidate(currentCandidate);
+                  navigate('/candidate-detail');
+                }}
+                onLikeClick={() => likeCandidate(currentCandidate, () => navigate('/match-celebration'))}
+                onPassClick={() => passCandidate(currentCandidate)}
+                onCheckCompatibility={() =>
+                  checkCompatibility(currentCandidate, () => navigate('/horoscope-compatibility'))
+                }
+              />
+            </div>
           </div>
         ) : (
           <div style={{ textAlign: 'center', padding: '40px 20px', position: 'relative', zIndex: 10 }}>

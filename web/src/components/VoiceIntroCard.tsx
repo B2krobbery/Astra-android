@@ -101,76 +101,111 @@ export const VoiceIntroCard: React.FC<VoiceIntroCardProps> = ({
   return (
     <div
       style={{
-        padding: '16px',
-        borderRadius: '20px',
-        background: 'linear-gradient(135deg, rgba(30, 24, 54, 0.9) 0%, rgba(42, 14, 26, 0.85) 100%)',
-        border: '1px solid var(--border-glow)',
+        padding: '8px 14px',
+        borderRadius: '16px',
+        background: 'linear-gradient(135deg, rgba(24, 20, 36, 0.78) 0%, rgba(14, 12, 22, 0.85) 100%)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        border: '1px solid rgba(212, 175, 55, 0.25)',
         display: 'flex',
-        flexDirection: 'column',
-        gap: '10px',
-        boxShadow: 'var(--shadow-card)'
+        alignItems: 'center',
+        gap: '12px',
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)',
+        width: '100%',
+        maxWidth: '100%',
+        transition: 'border-color 0.25s ease'
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      {/* Play/Pause Gold Button */}
+      <button
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={togglePlay}
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: '50%',
+          border: 'none',
+          background: 'linear-gradient(135deg, #D4AF37 0%, #B8942E 100%)',
+          color: '#0B0B0E',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          flexShrink: 0,
+          boxShadow: isPlaying
+            ? '0 0 16px rgba(212, 175, 55, 0.65)'
+            : '0 2px 10px rgba(212, 175, 55, 0.25)',
+          transition: 'transform 0.15s ease, box-shadow 0.25s ease'
+        }}
+      >
+        {isPlaying ? (
+          <Pause size={16} fill="#0B0B0E" />
+        ) : (
+          <Play size={16} fill="#0B0B0E" style={{ marginLeft: 2 }} />
+        )}
+      </button>
+
+      {/* Center Details: Prompt & Mini Dynamic Equalizer */}
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Mic size={14} color="var(--accent-rose)" />
-          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-amber-light)', textTransform: 'uppercase' }}>
-            {candidateName}'s Voice Note 🎙️
+          <Mic size={11} color="var(--accent-amber)" />
+          <span
+            style={{
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              color: 'var(--accent-amber-light)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.3px',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}
+          >
+            {candidateName}'s Voice Note
           </span>
         </div>
-        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-          0:{isPlaying ? String(Math.floor((progress / 100) * durationSeconds)).padStart(2, '0') : durationSeconds}
-        </span>
-      </div>
 
-      <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
-        "{promptText}"
-      </p>
-
-      {/* Audio Waveform Bar Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
-        <button
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={togglePlay}
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: '50%',
-            border: 'none',
-            background: 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
-            color: '#0B0B0E',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            flexShrink: 0,
-            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)'
-          }}
-        >
-          {isPlaying ? <Pause size={18} fill="#0B0B0E" /> : <Play size={18} fill="#0B0B0E" style={{ marginLeft: 2 }} />}
-        </button>
-
-        {/* Waveform Equalizer Visualizer */}
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '3px', height: '28px' }}>
-          {[35, 60, 85, 40, 95, 70, 50, 90, 65, 40, 80, 55, 90, 75, 45, 85, 60, 30].map((heightPct, idx) => {
-            const barProgress = (idx / 18) * 100;
+        {/* Equalizer Visualizer Bars */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2.5px', height: '14px', width: '100%' }}>
+          {[35, 65, 90, 45, 100, 75, 50, 95, 70, 40, 85, 60, 90, 80, 50, 85].map((heightPct, idx) => {
+            const barProgress = (idx / 16) * 100;
             const isActive = barProgress <= progress;
             return (
               <div
                 key={idx}
                 style={{
                   flex: 1,
-                  height: isPlaying ? `${Math.max(20, (heightPct * (0.6 + Math.random() * 0.5)))}%` : `${heightPct}%`,
+                  height: isPlaying
+                    ? `${Math.max(25, heightPct * (0.4 + Math.random() * 0.7))}%`
+                    : `${Math.max(20, heightPct * 0.45)}%`,
                   borderRadius: '9999px',
-                  background: isActive ? 'var(--accent-amber)' : 'rgba(255, 255, 255, 0.15)',
+                  background: isActive
+                    ? 'linear-gradient(180deg, #FDE68A 0%, #D4AF37 100%)'
+                    : 'rgba(255, 255, 255, 0.18)',
                   transition: 'height 0.15s ease, background 0.15s ease'
                 }}
               />
             );
           })}
         </div>
+      </div>
 
-        <Volume2 size={16} color="var(--text-muted)" />
+      {/* Right Duration Badge */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          background: 'rgba(212, 175, 55, 0.12)',
+          border: '1px solid rgba(212, 175, 55, 0.25)',
+          padding: '3px 8px',
+          borderRadius: '9999px',
+          flexShrink: 0
+        }}
+      >
+        <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--accent-amber-light)' }}>
+          0:{isPlaying ? String(Math.floor((progress / 100) * durationSeconds)).padStart(2, '0') : durationSeconds}
+        </span>
       </div>
     </div>
   );

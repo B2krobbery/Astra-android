@@ -97,11 +97,15 @@ export class VedicAstrologyEngine {
     const month = (!isNaN(dateParts[1]) && dateParts[1] >= 1 && dateParts[1] <= 12) ? dateParts[1] : 1;
     const day   = (!isNaN(dateParts[2]) && dateParts[2] >= 1 && dateParts[2] <= 31) ? dateParts[2] : 1;
 
-    // Sanitize time — strip AM/PM, handle partial input, validate range
+    // Sanitize time — handle 12-hour AM/PM and 24-hour formats
+    const isPM = /pm/i.test(timeStr || '');
+    const isAM = /am/i.test(timeStr || '');
     const cleanTime = (timeStr || '12:00').replace(/\s*(am|pm)/gi, '').trim();
     const timeParts = cleanTime.split(':').map(s => parseInt(s, 10));
-    const hours   = (!isNaN(timeParts[0]) && timeParts[0] >= 0 && timeParts[0] <= 23) ? timeParts[0] : 12;
+    let hours = (!isNaN(timeParts[0]) && timeParts[0] >= 0 && timeParts[0] <= 23) ? timeParts[0] : 12;
     const minutes = (!isNaN(timeParts[1]) && timeParts[1] >= 0 && timeParts[1] <= 59) ? timeParts[1] : 0;
+    if (isPM && hours < 12) hours += 12;
+    if (isAM && hours === 12) hours = 0;
 
     // Convert local time to UTC
     const localUtcDate = new Date(Date.UTC(year, month - 1, day, hours, minutes, 0));

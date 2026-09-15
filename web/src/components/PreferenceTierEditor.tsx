@@ -54,7 +54,7 @@ export const PreferenceTierEditor: React.FC<Props> = ({ attributeName, label, op
           <option value="MUST_HAVE">Must Have</option>
           <option value="PREFERRED">Preferred</option>
           <option value="FLEXIBLE">Flexible</option>
-          <option value="DEAL_BREAKER">Deal Breaker</option>
+          <option value="DEAL_BREAKER">Doesn't Matter</option>
         </select>
       </div>
     </div>

@@ -162,6 +162,8 @@ export const DiscoveryService = {
         voiceNotePrompt: p.voice_note_prompt,
         healthStatus: p.health_status,
         healthCondition: p.pre_existing_conditions || undefined,
+        annualIncome: p.annual_income,
+        familyIncome: p.family_income,
         regionalCategory: p.region || (() => {
           const loc = (p.location || '').toLowerCase();
           if (loc.includes('kerala')) return 'Kerala';
@@ -202,16 +204,25 @@ export const DiscoveryService = {
   },
 
   async resetInteractions() {
+    let actorId: string | undefined;
     const { data: userData } = await supabase.auth.getUser();
-    const actorId = userData?.user?.id;
+    actorId = userData?.user?.id;
+    if (!actorId) {
+      const { data: sessionData } = await supabase.auth.getSession();
+      actorId = sessionData?.session?.user?.id;
+    }
     if (!actorId) throw new Error('Not authenticated');
 
-    const { error } = await supabase
-      .from('interactions')
-      .delete()
-      .eq('actor_id', actorId);
-      
-    if (error) throw error;
+    const { error: rpcError } = await supabase.rpc('reset_user_discovery_feed');
+    if (rpcError) {
+      console.warn('[DiscoveryService] reset_user_discovery_feed RPC error, falling back to direct delete:', rpcError);
+      const { error } = await supabase
+        .from('interactions')
+        .delete()
+        .eq('actor_id', actorId);
+        
+      if (error) throw error;
+    }
   },
 
   async unmatchCandidate(targetId: string) {

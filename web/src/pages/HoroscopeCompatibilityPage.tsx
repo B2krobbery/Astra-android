@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAstra } from '../context/AstraContext';
-import { ArrowLeft, Sparkles, Heart, ShieldCheck, Flame, Gem, Hash, ScrollText, CheckCircle2, Lock, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Sparkles, Heart, ShieldCheck, Flame, Gem, Hash, ScrollText, CheckCircle2, Lock, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { CandidateAvatar } from '../components/CandidateAvatar';
 import { PrimaryButton, SecondaryOutlineButton } from '../components/AstraButtons';
 import { KootaBreakdownWheel } from '../components/KootaBreakdownWheel';
@@ -45,6 +45,159 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
     const candAnswers = (candidate as any).chemistryAnswers || (candidate as any).marriageQuestionnaire || {};
     return ChemistryEngine.computeChemistry(userAnswers, candAnswers);
   }, [userProfile, candidate]);
+
+  // 4. Compute Comprehensive Vedic Doshas
+  const doshasList = useMemo(() => {
+    if (!candidate) return [];
+    const list: {
+      name: string;
+      status: 'DETECTED' | 'NEUTRALIZED' | 'CLEAR';
+      statusText: string;
+      details: string;
+      impact: string;
+      remedy?: string;
+    }[] = [];
+
+    // 1. Kuja / Manglik Dosha
+    const userIsManglik = userProfile.manglik === 'Yes';
+    const candIsManglik = candidate.manglik === 'Yes';
+    if (userIsManglik && candIsManglik) {
+      list.push({
+        name: 'Kuja / Manglik Dosha',
+        status: 'NEUTRALIZED',
+        statusText: 'Neutralized (Both Manglik)',
+        details: 'Both individuals share active Mars placement; mutual intensity neutralizes friction and creates high shared drive.',
+        impact: 'Balanced fiery energy & mutual understanding',
+        remedy: 'No special puja needed; harmonious mutual alignment.'
+      });
+    } else if (userIsManglik || candIsManglik) {
+      const who = userIsManglik ? userProfile.name || 'Seeker' : candidate.name;
+      list.push({
+        name: 'Kuja / Manglik Dosha',
+        status: 'DETECTED',
+        statusText: 'Present (Single Manglik)',
+        details: `${who} has Mars (Kuja) influence in a marital quadrant (House 1, 2, 4, 7, 8, or 12).`,
+        impact: 'High fiery drive, dynamic temperamental intensity',
+        remedy: 'Hanuman Chalisa recitation on Tuesdays or traditional Kumbh Vivah prior to marriage.'
+      });
+    } else {
+      list.push({
+        name: 'Kuja / Manglik Dosha',
+        status: 'CLEAR',
+        statusText: 'Clear (No Dosha)',
+        details: 'Neither individual exhibits adverse Mars placement from Lagna or Moon.',
+        impact: 'Calm and steady foundational harmony'
+      });
+    }
+
+    // 2. Nadi Dosha
+    const nadiGuna = astroResult?.detailedGunas?.find(g => g.name === 'Nadi');
+    const isNadiDosha = nadiGuna ? nadiGuna.score === 0 : false;
+    const isNadiCancelled = nadiGuna?.score === 8 && nadiGuna?.boyValue === nadiGuna?.girlValue;
+    if (isNadiCancelled) {
+      list.push({
+        name: 'Nadi Dosha',
+        status: 'NEUTRALIZED',
+        statusText: 'Neutralized (Pada Difference)',
+        details: `Same Nadi (${nadiGuna?.boyValue || 'Constitutional'}), but different Nakshatra Padas cancel genetic clash by Vedic exception rules.`,
+        impact: 'Biological alignment restored to full 8/8 points'
+      });
+    } else if (isNadiDosha) {
+      list.push({
+        name: 'Nadi Dosha',
+        status: 'DETECTED',
+        statusText: 'Present (0/8 Points)',
+        details: `Both partners share the identical Nadi (${nadiGuna?.boyValue || 'Same Constitution'}), reflecting identical physiological constitution.`,
+        impact: 'Potential sensitivity in biological resonance and progeny energy',
+        remedy: 'Maha Mrityunjaya Japa or gold donation traditionally advised by Vedic astrologers.'
+      });
+    } else {
+      list.push({
+        name: 'Nadi Dosha',
+        status: 'CLEAR',
+        statusText: 'Clear (8/8 Full Points)',
+        details: `Distinct physiological energies (${nadiGuna?.boyValue || 'Aadi/Madhya'} vs ${nadiGuna?.girlValue || 'Antya'}).`,
+        impact: 'Optimal genetic compatibility and vitality'
+      });
+    }
+
+    // 3. Bhakoot Dosha
+    const bhakootGuna = astroResult?.detailedGunas?.find(g => g.name === 'Bhakoot');
+    const isBhakootDosha = bhakootGuna ? bhakootGuna.score === 0 : false;
+    if (isBhakootDosha) {
+      list.push({
+        name: 'Bhakoot Dosha',
+        status: 'DETECTED',
+        statusText: 'Present (0/7 Points)',
+        details: bhakootGuna?.description || 'Moon sign relative distance falls in inharmonious placement (2/12, 6/8, or 9/5).',
+        impact: 'Requires mindful communication around finance and emotional expectations',
+        remedy: 'Cultivate conscious empathy; chanting Vishnu Sahasranama brings emotional equilibrium.'
+      });
+    } else {
+      list.push({
+        name: 'Bhakoot Dosha',
+        status: 'CLEAR',
+        statusText: 'Clear (7/7 Full Points)',
+        details: 'Moon signs form mutually supportive houses, fostering natural emotional bonding.',
+        impact: 'Long-term familial prosperity and deep emotional connection'
+      });
+    }
+
+    // 4. Gana Dosha
+    const ganaGuna = astroResult?.detailedGunas?.find(g => g.name === 'Gana');
+    const isGanaDosha = ganaGuna ? ganaGuna.score === 0 : false;
+    const isGanaPartial = ganaGuna ? ganaGuna.score > 0 && ganaGuna.score < 5 : false;
+    if (isGanaDosha) {
+      list.push({
+        name: 'Gana Dosha',
+        status: 'DETECTED',
+        statusText: 'Present (0/6 Points)',
+        details: `Temperament clash (${ganaGuna?.boyValue || 'Deva'} vs ${ganaGuna?.girlValue || 'Rakshasa'}).`,
+        impact: 'Distinct daily pacing, lifestyle philosophies, and behavioral expectations',
+        remedy: 'Practice conscious patience and respect for individual lifestyles.'
+      });
+    } else if (isGanaPartial) {
+      list.push({
+        name: 'Gana Dosha',
+        status: 'NEUTRALIZED',
+        statusText: 'Moderate Harmony',
+        details: `${ganaGuna?.boyValue || 'Temperament'} & ${ganaGuna?.girlValue || 'Temperament'} have moderate differences with workable synergy.`,
+        impact: 'Complementary strengths with occasional friction'
+      });
+    } else {
+      list.push({
+        name: 'Gana Dosha',
+        status: 'CLEAR',
+        statusText: 'Clear (6/6 Full Points)',
+        details: `Harmonious temperaments (${ganaGuna?.boyValue || 'Deva/Manushya'}).`,
+        impact: 'Effortless daily communication and shared life rhythm'
+      });
+    }
+
+    // 5. Rahu in 7th / Kalathra Factor
+    const seekerChart = userProfile.dateOfBirth && userProfile.birthTime ? AstrologyEngine.calculateChart(userProfile.dateOfBirth, userProfile.birthTime, userProfile.birthLocation || '') : null;
+    const isRahuIn7th = seekerChart?.planets?.['Rahu']?.houseFromLagna === 7;
+    if (isRahuIn7th) {
+      list.push({
+        name: 'Rahu in 7th House (Kalathra Factor)',
+        status: 'DETECTED',
+        statusText: 'Observed Placement',
+        details: 'Rahu is positioned in the 7th house (house of union) in the primary birth chart.',
+        impact: 'Desires unconventional partnership; requires transparency around expectations',
+        remedy: 'Rahu Shanti mantra recitation or Shiva Aradhana on Saturdays.'
+      });
+    } else {
+      list.push({
+        name: 'Rahu in 7th (Kalathra)',
+        status: 'CLEAR',
+        statusText: 'Clear (Auspicious)',
+        details: '7th house is unencumbered by Rahu/Ketu nodal axis in primary placement.',
+        impact: 'Stable foundational energy for lifelong partnership'
+      });
+    }
+
+    return list;
+  }, [userProfile, candidate, astroResult]);
 
   if (!candidate) {
     return (
@@ -351,23 +504,144 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {userProfile.manglik === 'Yes' || candidate.manglik === 'Yes' ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderRadius: '14px', background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.3)' }}>
-                  <AlertTriangle size={16} color="#F43F5E" />
-                  <div>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#FFF' }}>Kuja Dosha Remedy</div>
-                    <div style={{ fontSize: '0.72rem', color: '#FDA4AF' }}>Hanuman Chalisa recitation on Tuesdays or Kumbh Vivah ceremony prior to marriage.</div>
+              {doshasList.some(d => d.status === 'DETECTED' && d.remedy) ? (
+                doshasList.filter(d => d.status === 'DETECTED' && d.remedy).map(d => (
+                  <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderRadius: '14px', background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.3)' }}>
+                    <AlertTriangle size={16} color="#F43F5E" style={{ flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#FFF' }}>{d.name} Remedy</div>
+                      <div style={{ fontSize: '0.72rem', color: '#FDA4AF', marginTop: '2px' }}>{d.remedy}</div>
+                    </div>
                   </div>
-                </div>
+                ))
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderRadius: '14px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-                  <CheckCircle2 size={16} color="#10B981" />
+                  <CheckCircle2 size={16} color="#10B981" style={{ flexShrink: 0 }} />
                   <div>
                     <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#FFF' }}>No Major Doshas Detected</div>
                     <div style={{ fontSize: '0.72rem', color: '#6EE7B7' }}>Planetary positions show favorable foundational harmony for marital harmony.</div>
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* SECTION F: Doshas */}
+        {candidate.intent === 'Marriage' && (
+          <div
+            style={{
+              padding: '20px',
+              borderRadius: '24px',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '14px',
+              boxShadow: 'var(--shadow-card)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ShieldAlert size={20} color="var(--accent-amber)" />
+                <h3 className="heading-font" style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--accent-amber-light)' }}>
+                  Doshas 🛡️
+                </h3>
+              </div>
+              <span style={{ fontSize: '0.7rem', padding: '3px 8px', borderRadius: '9999px', background: 'rgba(245, 158, 11, 0.12)', color: 'var(--accent-amber-light)', border: '1px solid rgba(245, 158, 11, 0.25)', fontWeight: 700 }}>
+                {doshasList.filter(d => d.status === 'DETECTED').length === 0 ? 'All Clear' : `${doshasList.filter(d => d.status === 'DETECTED').length} Active`}
+              </span>
+            </div>
+
+            <p style={{ fontSize: '0.76rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.4 }}>
+              Comprehensive Vedic evaluation covering Kuja (Manglik), Nadi, Bhakoot, Gana, and Kalathra afflictions with authentic Parashari cancellation rules.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {doshasList.map(dosha => {
+                const isDetected = dosha.status === 'DETECTED';
+                const isNeutralized = dosha.status === 'NEUTRALIZED';
+
+                const badgeBg = isDetected
+                  ? 'rgba(244, 63, 94, 0.15)'
+                  : isNeutralized
+                  ? 'rgba(245, 158, 11, 0.15)'
+                  : 'rgba(34, 197, 94, 0.15)';
+
+                const badgeBorder = isDetected
+                  ? 'rgba(244, 63, 94, 0.35)'
+                  : isNeutralized
+                  ? 'rgba(245, 158, 11, 0.35)'
+                  : 'rgba(34, 197, 94, 0.35)';
+
+                const badgeText = isDetected
+                  ? '#FDA4AF'
+                  : isNeutralized
+                  ? '#FDE047'
+                  : '#86EFAC';
+
+                const cardBorder = isDetected
+                  ? '1px solid rgba(244, 63, 94, 0.25)'
+                  : isNeutralized
+                  ? '1px solid rgba(245, 158, 11, 0.2)'
+                  : '1px solid rgba(255, 255, 255, 0.08)';
+
+                return (
+                  <div
+                    key={dosha.name}
+                    style={{
+                      padding: '12px 14px',
+                      borderRadius: '16px',
+                      background: 'rgba(255, 255, 255, 0.025)',
+                      border: cardBorder,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '6px'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.86rem', color: '#FFF' }}>
+                        {dosha.name}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '0.68rem',
+                          fontWeight: 700,
+                          padding: '3px 8px',
+                          borderRadius: '9999px',
+                          background: badgeBg,
+                          border: `1px solid ${badgeBorder}`,
+                          color: badgeText,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        {isDetected && <AlertTriangle size={11} />}
+                        {isNeutralized && <Sparkles size={11} />}
+                        {!isDetected && !isNeutralized && <CheckCircle2 size={11} />}
+                        {dosha.statusText}
+                      </span>
+                    </div>
+
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4 }}>
+                      {dosha.details}
+                    </p>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '3px', paddingTop: '6px', borderTop: '1px solid rgba(255, 255, 255, 0.06)', fontSize: '0.71rem' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Energy Influence:</span>
+                      <span style={{ color: isDetected ? '#FDA4AF' : 'var(--text-secondary)', fontWeight: 600 }}>{dosha.impact}</span>
+                    </div>
+
+                    {isDetected && dosha.remedy && (
+                      <div style={{ marginTop: '2px', padding: '6px 10px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.08)', border: '1px dashed rgba(244, 63, 94, 0.25)', fontSize: '0.71rem', color: '#FECDD3', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>🪔</span>
+                        <span><strong>Remedy:</strong> {dosha.remedy}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

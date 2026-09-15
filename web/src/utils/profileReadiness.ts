@@ -41,6 +41,7 @@ export const MARRIAGE_REQUIRED_FIELDS: ReadinessFieldDef[] = [
   { key: 'profession', label: 'Profession', category: 'Career', getValue: p => p.profession },
   { key: 'employer', label: 'Employer / Business', category: 'Career', getValue: p => p.employer },
   { key: 'annualIncome', label: 'Annual Income', category: 'Career', getValue: p => p.annualIncome || p.annual_income },
+  { key: 'familyIncome', label: 'Family Income', category: 'Career', getValue: p => p.familyIncome || p.family_income },
 
   // Health & Lifestyle
   { key: 'healthStatus', label: 'Health Status', category: 'Health', getValue: p => p.healthStatus || p.health_status },

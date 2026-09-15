@@ -200,6 +200,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
            education12th: dbProfile.education_12th,
            higherEducation: dbProfile.higher_education,
            annualIncome: dbProfile.annual_income,
+           familyIncome: dbProfile.family_income,
            diet: dbProfile.diet,
            alcohol: dbProfile.alcohol_frequency,
            smoking: dbProfile.smoking_frequency,
@@ -249,9 +250,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           if (Object.keys(mustHave).length > 0) initFilters['must_have'] = mustHave;
           if (Object.keys(dealBreaker).length > 0) initFilters['deal_breaker'] = dealBreaker;
           let dbCandidates = await DiscoveryService.getCandidates(initFilters);
-          if (dbCandidates && dbCandidates.length > 0) {
-             setCandidates(dbCandidates as any);
-          }
+          setCandidates((dbCandidates as any) || []);
       }
       
       const dbConversations = await ChatService.getConversations(currentUser.id);
@@ -842,15 +841,12 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const resetFeed = async () => {
     try {
-      await DiscoveryService.resetInteractions();
-      const dbCandidates = await DiscoveryService.getCandidates();
-      if (dbCandidates) {
-        setCandidates(dbCandidates as any);
-      }
       setPassedCandidatesHistory([]);
       setSentRequests([]);
       setPendingRequests([]);
       setConversations([]);
+      await DiscoveryService.resetInteractions();
+      await loadBackendData();
     } catch (e) {
       console.error("Error resetting feed:", e);
     }

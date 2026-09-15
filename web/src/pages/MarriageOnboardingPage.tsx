@@ -271,7 +271,8 @@ export const MarriageOnboardingPage: React.FC = () => {
   const [higherEducation, setHigherEducation] = useState(userProfile.higherEducation || userProfile.education || '');
   const [profession, setProfession] = useState(userProfile.profession || '');
   const [employer, setEmployer] = useState(userProfile.employer || '');
-  const [annualIncome, setAnnualIncome] = useState(userProfile.annualIncome || '₹15 - ₹25 LPA');
+  const [annualIncome, setAnnualIncome] = useState(userProfile.annualIncome || (userProfile as any).annual_income || '₹15 - ₹25 LPA');
+  const [familyIncome, setFamilyIncome] = useState(userProfile.familyIncome || (userProfile as any).family_income || '₹25 - ₹50 LPA');
   
   // Health & Lifestyle
   const [healthStatus, setHealthStatus] = useState((userProfile as any).healthStatus || userProfile.healthInfo || 'Excellent');
@@ -345,7 +346,8 @@ export const MarriageOnboardingPage: React.FC = () => {
       setHigherEducation(userProfile.higherEducation || userProfile.education || '');
       setProfession(userProfile.profession || '');
       setEmployer(userProfile.employer || '');
-      setAnnualIncome(userProfile.annualIncome || '₹15 - ₹25 LPA');
+      setAnnualIncome(userProfile.annualIncome || (userProfile as any).annual_income || '₹15 - ₹25 LPA');
+      setFamilyIncome(userProfile.familyIncome || (userProfile as any).family_income || '₹25 - ₹50 LPA');
       
       setHealthStatus((userProfile as any).healthStatus || userProfile.healthInfo || 'Excellent');
       setDiet(userProfile.diet || 'Vegetarian');
@@ -403,6 +405,7 @@ export const MarriageOnboardingPage: React.FC = () => {
     profession,
     employer,
     annualIncome,
+    familyIncome,
     healthStatus,
     diet,
     maritalStatus,
@@ -480,6 +483,7 @@ export const MarriageOnboardingPage: React.FC = () => {
         profession,
         employer,
         annual_income: annualIncome,
+        family_income: familyIncome,
         health_status: healthStatus,
         diet,
         alcohol_frequency: alcohol,
@@ -684,6 +688,7 @@ export const MarriageOnboardingPage: React.FC = () => {
             {renderInput('Profession / Job Title', profession, setProfession, 'e.g. Senior Software Architect')}
             {renderInput('Employer / Company', employer, setEmployer, 'e.g. Microsoft / Self-Employed')}
             {renderSelect('Annual Income', annualIncome, setAnnualIncome, ['₹5 - ₹10 LPA', '₹10 - ₹15 LPA', '₹15 - ₹25 LPA', '₹25 - ₹50 LPA', '₹50 LPA+'])}
+            {renderSelect('Family Income', familyIncome, setFamilyIncome, ['Under ₹10 LPA', '₹10 - ₹25 LPA', '₹25 - ₹50 LPA', '₹50 LPA - ₹1 Cr', '₹1 Cr+'])}
           </div>
         );
       case 4: // Health & Lifestyle
@@ -777,7 +782,7 @@ export const MarriageOnboardingPage: React.FC = () => {
           <div>
             <h4 style={{ color: 'white', marginBottom: '24px' }}>Partner Preferences & Criteria</h4>
             <p style={{ color: '#94A3B8', fontSize: '0.85rem', marginBottom: '24px' }}>
-              Set strict MUST HAVE, PREFERRED, and DEAL BREAKER criteria for your matrimonial search.
+              Set strict MUST HAVE, PREFERRED, and DOESN'T MATTER criteria for your matrimonial search.
             </p>
             
             <div style={{ padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', marginBottom: '16px' }}>
@@ -799,7 +804,7 @@ export const MarriageOnboardingPage: React.FC = () => {
                   <option value="MUST_HAVE">MUST HAVE</option>
                   <option value="PREFERRED">PREFERRED</option>
                   <option value="FLEXIBLE">FLEXIBLE</option>
-                  <option value="DEAL_BREAKER">DEAL BREAKER</option>
+                  <option value="DEAL_BREAKER">DOESN'T MATTER</option>
                 </select>
               </div>
             </div>
@@ -823,7 +828,7 @@ export const MarriageOnboardingPage: React.FC = () => {
                   <option value="MUST_HAVE">MUST HAVE</option>
                   <option value="PREFERRED">PREFERRED</option>
                   <option value="FLEXIBLE">FLEXIBLE</option>
-                  <option value="DEAL_BREAKER">DEAL BREAKER</option>
+                  <option value="DEAL_BREAKER">DOESN'T MATTER</option>
                 </select>
               </div>
             </div>
@@ -857,7 +862,7 @@ export const MarriageOnboardingPage: React.FC = () => {
                   <option value="MUST_HAVE">MUST HAVE</option>
                   <option value="PREFERRED">PREFERRED</option>
                   <option value="FLEXIBLE">FLEXIBLE</option>
-                  <option value="DEAL_BREAKER">DEAL BREAKER</option>
+                  <option value="DEAL_BREAKER">DOESN'T MATTER</option>
                 </select>
               </div>
             </div>
@@ -883,12 +888,12 @@ export const MarriageOnboardingPage: React.FC = () => {
                 <select 
                   value={gotraTier} 
                   onChange={e => setGotraTier(e.target.value as any)}
-                  style={{ width: '130px', flexShrink: 0, padding: '10px', borderRadius: '8px', background: '#0B0B0E', border: '1px solid #F43F5E', color: '#FDA4AF', fontWeight: 700, boxSizing: 'border-box' }}
+                  style={{ width: '130px', flexShrink: 0, padding: '10px', borderRadius: '8px', background: '#0B0B0E', border: '1px solid var(--accent-amber)', color: 'var(--accent-amber-light)', fontWeight: 700, boxSizing: 'border-box' }}
                 >
                   <option value="MUST_HAVE">MUST HAVE</option>
                   <option value="PREFERRED">PREFERRED</option>
                   <option value="FLEXIBLE">FLEXIBLE</option>
-                  <option value="DEAL_BREAKER">DEAL BREAKER</option>
+                  <option value="DEAL_BREAKER">DOESN'T MATTER</option>
                 </select>
               </div>
             </div>
@@ -908,12 +913,12 @@ export const MarriageOnboardingPage: React.FC = () => {
                 <select 
                   value={dietTier} 
                   onChange={e => setDietTier(e.target.value as any)}
-                  style={{ width: '130px', flexShrink: 0, padding: '10px', borderRadius: '8px', background: '#0B0B0E', border: '1px solid #F43F5E', color: '#FDA4AF', fontWeight: 700, boxSizing: 'border-box' }}
+                  style={{ width: '130px', flexShrink: 0, padding: '10px', borderRadius: '8px', background: '#0B0B0E', border: '1px solid var(--accent-amber)', color: 'var(--accent-amber-light)', fontWeight: 700, boxSizing: 'border-box' }}
                 >
                   <option value="MUST_HAVE">MUST HAVE</option>
                   <option value="PREFERRED">PREFERRED</option>
                   <option value="FLEXIBLE">FLEXIBLE</option>
-                  <option value="DEAL_BREAKER">DEAL BREAKER</option>
+                  <option value="DEAL_BREAKER">DOESN'T MATTER</option>
                 </select>
               </div>
             </div>

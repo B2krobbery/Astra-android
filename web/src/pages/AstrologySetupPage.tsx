@@ -123,16 +123,19 @@ export const AstrologySetupPage: React.FC = () => {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-              Birth Time
-            </label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                Birth Time
+              </label>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>12-hour (AM/PM) or 24-hour</span>
+            </div>
             <div style={{ position: 'relative' }}>
               <Clock size={18} color="var(--text-muted)" style={{ position: 'absolute', left: 14, top: 14 }} />
               <input
                 type="text"
                 value={time}
                 onChange={e => setTime(e.target.value)}
-                placeholder="e.g. 08:45 AM"
+                placeholder="e.g. 08:45 AM or 14:30"
                 style={{
                   width: '100%',
                   padding: '12px 14px 12px 42px',

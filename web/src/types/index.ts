@@ -143,6 +143,7 @@ export interface UserProfile {
   higherEducation?: string;
   employer?: string;
   annualIncome?: string;
+  familyIncome?: string;
   healthStatus?: string;
   healthInfo?: string;
   healthPrivacy?: string;
