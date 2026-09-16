@@ -8,7 +8,11 @@ export interface GoogleAuthResult {
   cancelled?: boolean;
 }
 
-async function generateNonce(): Promise<{ rawNonce: string; hashedNonce: string } | null> {
+let cachedNonceObj: { rawNonce: string; hashedNonce: string } | null = null;
+
+async function getOrGenerateNonce(): Promise<{ rawNonce: string; hashedNonce: string } | null> {
+  if (cachedNonceObj) return cachedNonceObj;
+
   if (typeof crypto === 'undefined' || !crypto.subtle) {
     console.warn('crypto.subtle is not available. Nonce generation skipped.');
     return null;
@@ -34,7 +38,8 @@ async function generateNonce(): Promise<{ rawNonce: string; hashedNonce: string 
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   const hashedNonce = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 
-  return { rawNonce, hashedNonce };
+  cachedNonceObj = { rawNonce, hashedNonce };
+  return cachedNonceObj;
 }
 
 function parseJwtPayload(token: string): Record<string, any> | null {
@@ -74,7 +79,7 @@ export const AuthService = {
       }
 
       try {
-        const nonceObj = await generateNonce();
+        const nonceObj = await getOrGenerateNonce();
         const initOptions: any = { clientId };
         if (nonceObj) {
           initOptions.nonce = nonceObj.hashedNonce;
@@ -90,6 +95,7 @@ export const AuthService = {
           const info = result.noSuccess?.noSuccessAdditionalInfo || '';
 
           if (reasonCode === 'SIGN_IN_CANCELLED' || info.toLowerCase().includes('cancel')) {
+            alert('Sign-in cancelled (Button Flow). Reason: ' + reasonCode + ', Info: ' + info);
             return { data: null, error: null, cancelled: true };
           }
 
@@ -98,6 +104,7 @@ export const AuthService = {
           if (!result.isSuccess) {
             if (result.noSuccess?.noSuccessReasonCode === 'SIGN_IN_CANCELLED' ||
                 result.noSuccess?.noSuccessAdditionalInfo?.toLowerCase().includes('cancel')) {
+              alert('Sign-in cancelled (Auto Flow). Reason: ' + result.noSuccess?.noSuccessReasonCode + ', Info: ' + result.noSuccess?.noSuccessAdditionalInfo);
               return { data: null, error: null, cancelled: true };
             }
             return {
