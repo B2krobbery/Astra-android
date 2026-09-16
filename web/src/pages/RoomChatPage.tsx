@@ -76,7 +76,7 @@ export const RoomChatPage: React.FC = () => {
       isMounted = false;
       unsubscribe();
     };
-  }, [roomId, userCoords]);
+  }, [roomId]);
 
   const handleJoin = async () => {
     if (!roomId || isJoining) return;

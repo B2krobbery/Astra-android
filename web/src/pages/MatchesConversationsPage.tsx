@@ -56,7 +56,7 @@ export const MatchesConversationsPage: React.FC = () => {
     if (isDatingMode && activeTab === 'rooms') {
       loadRooms();
     }
-  }, [isDatingMode, activeTab, selectedCategory, userCoords]);
+  }, [isDatingMode, activeTab, selectedCategory, userCoords?.latitude, userCoords?.longitude]);
 
   const handleManualRefresh = async () => {
     if (isManualRefreshing) return;

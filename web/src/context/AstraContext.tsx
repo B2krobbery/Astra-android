@@ -1,6 +1,6 @@
 import { calculateMarriageReadiness } from '../utils/profileReadiness';
 import { PhotoService, PhotoRequestRecord, ProfilePhoto, PhotoUploadResult } from '../services/PhotoService';
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 import {
   UserProfile,
@@ -510,17 +510,27 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [isPreferenceStrictFilterOn, setIsPreferenceStrictFilterOn] = useState(false);
   const [isNearbyOnly, setIsNearbyOnly] = useState(false);
-  const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(() => {
+    const cached = LocationService.getCachedPosition();
+    return cached ? { latitude: cached.latitude, longitude: cached.longitude } : null;
+  });
 
   const enableNearbyDiscovery = async (radiusKm: number = 25): Promise<boolean> => {
     try {
+      // 1. Fast network coordinates (cached or low-power network triangulation)
       const coords = await LocationService.getCurrentPosition();
-      setUserCoords({ latitude: coords.latitude, longitude: coords.longitude });
+      setUserCoords(prev => {
+        if (prev && prev.latitude === coords.latitude && prev.longitude === coords.longitude) {
+          return prev;
+        }
+        return { latitude: coords.latitude, longitude: coords.longitude };
+      });
       setIsNearbyOnly(true);
 
-      // Background sync to profile
-      LocationService.syncUserLocation(coords);
+      // 2. Background non-blocking sync to Supabase
+      LocationService.syncUserLocation(coords).catch(() => {});
 
+      // 3. Fetch candidates
       const nearbyCandidates = await DiscoveryService.getCandidates({
         radius_km: radiusKm,
         latitude: coords.latitude,
@@ -545,104 +555,118 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  const filteredCandidates = candidates.filter((c: any) => {
-    // Nearby radius filter
-    if (isNearbyOnly && c.distanceKm !== undefined && c.distanceKm > 25) {
-      return false;
-    }
-
-    // Filter by Intent strictly
-    if (userProfile.intent && c.intent && userProfile.intent !== c.intent) return false;
-
-    // Strict Partner Preferences — honour tiers (MUST_HAVE = hard filter, DEAL_BREAKER = hard exclude)
-    if (isPreferenceStrictFilterOn && userProfile.partnerPreferences) {
-      const prefs = userProfile.partnerPreferences;
-
-      if (userProfile.intent === 'Marriage') {
-        // MUST_HAVE: hard include filters
-        if (prefs.tierReligion === 'MUST_HAVE' && prefs.preferredReligion && prefs.preferredReligion !== 'Any') {
-          if (!c.religion || !c.religion.toLowerCase().includes(prefs.preferredReligion.toLowerCase())) return false;
-        }
-        if (prefs.tierCaste === 'MUST_HAVE' && prefs.preferredCaste && prefs.preferredCaste !== 'Any') {
-          if (!c.caste || !c.caste.toLowerCase().includes(prefs.preferredCaste.toLowerCase())) return false;
-        }
-        if (prefs.tierSubCaste === 'MUST_HAVE' && prefs.preferredSubCaste && prefs.preferredSubCaste !== 'Any') {
-          if (!c.subCaste || !c.subCaste.toLowerCase().includes(prefs.preferredSubCaste.toLowerCase())) return false;
-        }
-        // Gotra 4-lineage extraction for exogamy & matching
-        const userGotras = [
-          userProfile.gotra,
-          userProfile.fatherMotherGotra,
-          userProfile.motherFatherGotra,
-          userProfile.motherMotherGotra,
-        ].filter((g): g is string => Boolean(g && g.trim())).map(g => g.trim().toLowerCase());
-
-        const candidateGotras = [
-          c.gotra,
-          c.fatherMotherGotra,
-          c.motherFatherGotra,
-          c.motherMotherGotra,
-        ].filter((g): g is string => Boolean(g && g.trim())).map(g => g.trim().toLowerCase());
-
-        if (prefs.tierGotra === 'MUST_HAVE' && prefs.preferredGotra && prefs.preferredGotra !== 'Any') {
-          if (prefs.preferredGotra === 'Any (Except My Own)') {
-            if (userGotras.some(ug => candidateGotras.includes(ug))) return false;
-          } else {
-            const target = prefs.preferredGotra.trim().toLowerCase();
-            if (!candidateGotras.some(cg => cg.includes(target))) return false;
-          }
-        }
-
-        // DEAL_BREAKER: hard exclude filters
-        if (prefs.tierReligion === 'DEAL_BREAKER' && prefs.preferredReligion && prefs.preferredReligion !== 'Any') {
-          if (c.religion && c.religion.toLowerCase().includes(prefs.preferredReligion.toLowerCase())) return false;
-        }
-        if (prefs.tierCaste === 'DEAL_BREAKER' && prefs.preferredCaste && prefs.preferredCaste !== 'Any') {
-          if (c.caste && c.caste.toLowerCase().includes(prefs.preferredCaste.toLowerCase())) return false;
-        }
-        if (prefs.tierSubCaste === 'DEAL_BREAKER' && prefs.preferredSubCaste && prefs.preferredSubCaste !== 'Any') {
-          if (c.subCaste && c.subCaste.toLowerCase().includes(prefs.preferredSubCaste.toLowerCase())) return false;
-        }
-        if (prefs.tierGotra === 'DEAL_BREAKER' && prefs.preferredGotra && prefs.preferredGotra !== 'Any') {
-          if (prefs.preferredGotra === 'Any (Except My Own)') {
-            if (userGotras.some(ug => candidateGotras.includes(ug))) return false;
-          } else {
-            const target = prefs.preferredGotra.trim().toLowerCase();
-            if (candidateGotras.some(cg => cg.includes(target))) return false;
-          }
-        }
-      } else {
-        // Dating mode filters
-        if (prefs.preferredEducation && prefs.preferredEducation !== 'Any' && !c.education?.includes(prefs.preferredEducation)) return false;
-        if (prefs.preferredLocation && prefs.preferredLocation !== 'Any' && c.location !== prefs.preferredLocation) return false;
+  const filteredCandidates = useMemo(() => {
+    return candidates.filter((c: any) => {
+      // Nearby radius filter
+      if (isNearbyOnly && c.distanceKm !== undefined && c.distanceKm > 25) {
+        return false;
       }
-    }
 
-    if (userProfile.gender === 'Male' && c.gender === 'Male') return false;
-    if (userProfile.gender === 'Female' && c.gender === 'Female') return false;
-    
-    // Regional Prefs
-    const userRegionalPref = userProfile.regionalPreference || 'ALL';
-    if (userRegionalPref === 'ALL') return true;
-    if (!c.regionalCategory || c.regionalCategory === 'ALL') return true;
-    
-    // Map the enum keys to the human readable strings used in the DB
-    const regionalMapping: Record<string, string> = {
-      'KERALA': 'Kerala',
-      'NORTH_INDIA': 'North India',
-      'SOUTH_INDIA': 'South India',
-      'WEST_INDIA': 'West India',
-      'EAST_INDIA': 'East India',
-      'CENTRAL_INDIA': 'Central India',
-      'NRI': 'NRI'
-    };
-    
-    const mappedPref = regionalMapping[userRegionalPref] || userRegionalPref;
-    if (userRegionalPref === 'KERALA') {
-      return c.regionalCategory === 'Kerala' || c.regionalCategory === 'South India' || c.regionalCategory === 'ALL';
-    }
-    return c.regionalCategory === mappedPref || c.regionalCategory === 'ALL';
-  });
+      // Filter by Intent strictly
+      if (userProfile.intent && c.intent && userProfile.intent !== c.intent) return false;
+
+      // Strict Partner Preferences — honour tiers (MUST_HAVE = hard filter, DEAL_BREAKER = hard exclude)
+      if (isPreferenceStrictFilterOn && userProfile.partnerPreferences) {
+        const prefs = userProfile.partnerPreferences;
+
+        if (userProfile.intent === 'Marriage') {
+          // MUST_HAVE: hard include filters
+          if (prefs.tierReligion === 'MUST_HAVE' && prefs.preferredReligion && prefs.preferredReligion !== 'Any') {
+            if (!c.religion || !c.religion.toLowerCase().includes(prefs.preferredReligion.toLowerCase())) return false;
+          }
+          if (prefs.tierCaste === 'MUST_HAVE' && prefs.preferredCaste && prefs.preferredCaste !== 'Any') {
+            if (!c.caste || !c.caste.toLowerCase().includes(prefs.preferredCaste.toLowerCase())) return false;
+          }
+          if (prefs.tierSubCaste === 'MUST_HAVE' && prefs.preferredSubCaste && prefs.preferredSubCaste !== 'Any') {
+            if (!c.subCaste || !c.subCaste.toLowerCase().includes(prefs.preferredSubCaste.toLowerCase())) return false;
+          }
+          // Gotra 4-lineage extraction for exogamy & matching
+          const userGotras = [
+            userProfile.gotra,
+            userProfile.fatherMotherGotra,
+            userProfile.motherFatherGotra,
+            userProfile.motherMotherGotra,
+          ].filter((g): g is string => Boolean(g && g.trim())).map(g => g.trim().toLowerCase());
+
+          const candidateGotras = [
+            c.gotra,
+            c.fatherMotherGotra,
+            c.motherFatherGotra,
+            c.motherMotherGotra,
+          ].filter((g): g is string => Boolean(g && g.trim())).map(g => g.trim().toLowerCase());
+
+          if (prefs.tierGotra === 'MUST_HAVE' && prefs.preferredGotra && prefs.preferredGotra !== 'Any') {
+            if (prefs.preferredGotra === 'Any (Except My Own)') {
+              if (userGotras.some(ug => candidateGotras.includes(ug))) return false;
+            } else {
+              const target = prefs.preferredGotra.trim().toLowerCase();
+              if (!candidateGotras.some(cg => cg.includes(target))) return false;
+            }
+          }
+
+          // DEAL_BREAKER: hard exclude filters
+          if (prefs.tierReligion === 'DEAL_BREAKER' && prefs.preferredReligion && prefs.preferredReligion !== 'Any') {
+            if (c.religion && c.religion.toLowerCase().includes(prefs.preferredReligion.toLowerCase())) return false;
+          }
+          if (prefs.tierCaste === 'DEAL_BREAKER' && prefs.preferredCaste && prefs.preferredCaste !== 'Any') {
+            if (c.caste && c.caste.toLowerCase().includes(prefs.preferredCaste.toLowerCase())) return false;
+          }
+          if (prefs.tierSubCaste === 'DEAL_BREAKER' && prefs.preferredSubCaste && prefs.preferredSubCaste !== 'Any') {
+            if (c.subCaste && c.subCaste.toLowerCase().includes(prefs.preferredSubCaste.toLowerCase())) return false;
+          }
+          if (prefs.tierGotra === 'DEAL_BREAKER' && prefs.preferredGotra && prefs.preferredGotra !== 'Any') {
+            if (prefs.preferredGotra === 'Any (Except My Own)') {
+              if (userGotras.some(ug => candidateGotras.includes(ug))) return false;
+            } else {
+              const target = prefs.preferredGotra.trim().toLowerCase();
+              if (candidateGotras.some(cg => cg.includes(target))) return false;
+            }
+          }
+        } else {
+          // Dating mode filters
+          if (prefs.preferredEducation && prefs.preferredEducation !== 'Any' && !c.education?.includes(prefs.preferredEducation)) return false;
+          if (prefs.preferredLocation && prefs.preferredLocation !== 'Any' && c.location !== prefs.preferredLocation) return false;
+        }
+      }
+
+      if (userProfile.gender === 'Male' && c.gender === 'Male') return false;
+      if (userProfile.gender === 'Female' && c.gender === 'Female') return false;
+      
+      // Regional Prefs
+      const userRegionalPref = userProfile.regionalPreference || 'ALL';
+      if (userRegionalPref === 'ALL') return true;
+      if (!c.regionalCategory || c.regionalCategory === 'ALL') return true;
+      
+      // Map the enum keys to the human readable strings used in the DB
+      const regionalMapping: Record<string, string> = {
+        'KERALA': 'Kerala',
+        'NORTH_INDIA': 'North India',
+        'SOUTH_INDIA': 'South India',
+        'WEST_INDIA': 'West India',
+        'EAST_INDIA': 'East India',
+        'CENTRAL_INDIA': 'Central India',
+        'NRI': 'NRI'
+      };
+      
+      const mappedPref = regionalMapping[userRegionalPref] || userRegionalPref;
+      if (userRegionalPref === 'KERALA') {
+        return c.regionalCategory === 'Kerala' || c.regionalCategory === 'South India' || c.regionalCategory === 'ALL';
+      }
+      return c.regionalCategory === mappedPref || c.regionalCategory === 'ALL';
+    });
+  }, [
+    candidates,
+    isNearbyOnly,
+    userProfile.intent,
+    isPreferenceStrictFilterOn,
+    userProfile.partnerPreferences,
+    userProfile.gender,
+    userProfile.gotra,
+    userProfile.fatherMotherGotra,
+    userProfile.motherFatherGotra,
+    userProfile.motherMotherGotra,
+    userProfile.regionalPreference
+  ]);
 
   const activeCandidateList = filteredCandidates;
   const currentCandidate = activeCandidateList[0] || null;
