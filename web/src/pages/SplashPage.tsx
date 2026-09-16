@@ -176,10 +176,12 @@ export const SplashPage: React.FC = () => {
       
       const result = await AuthService.signInWithGoogleNative();
       if (result.cancelled) {
+        // alert('Sign in was cancelled'); // Silenced to avoid annoying the user if they actually cancelled
         setIsLoading(false);
         return;
       }
       if (result.error) {
+        alert('Google Sign In Error: ' + result.error.message);
         throw result.error;
       }
 

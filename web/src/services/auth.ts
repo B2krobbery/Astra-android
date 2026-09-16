@@ -8,9 +8,13 @@ export interface GoogleAuthResult {
   cancelled?: boolean;
 }
 
-async function generateNonce(): Promise<{ rawNonce: string; hashedNonce: string }> {
+async function generateNonce(): Promise<{ rawNonce: string; hashedNonce: string } | null> {
+  if (typeof crypto === 'undefined' || !crypto.subtle) {
+    console.warn('crypto.subtle is not available. Nonce generation skipped.');
+    return null;
+  }
   const array = new Uint8Array(32);
-  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+  if (crypto.getRandomValues) {
     crypto.getRandomValues(array);
   } else {
     for (let i = 0; i < 32; i++) {
@@ -70,12 +74,13 @@ export const AuthService = {
       }
 
       try {
-        const { rawNonce, hashedNonce } = await generateNonce();
+        const nonceObj = await generateNonce();
+        const initOptions: any = { clientId };
+        if (nonceObj) {
+          initOptions.nonce = nonceObj.hashedNonce;
+        }
 
-        await GoogleOneTapAuth.initialize({
-          clientId,
-          nonce: hashedNonce,
-        });
+        await GoogleOneTapAuth.initialize(initOptions);
 
         // Trigger native Google button flow (Credential Manager / Play Services)
         let result = await GoogleOneTapAuth.signInWithGoogleButtonFlowForNativePlatform();
@@ -107,9 +112,9 @@ export const AuthService = {
           const payload = parseJwtPayload(result.success.idToken);
           let passedNonce: string | undefined = undefined;
           
-          if (payload?.nonce) {
-            if (payload.nonce === hashedNonce) {
-              passedNonce = rawNonce;
+          if (payload?.nonce && nonceObj) {
+            if (payload.nonce === nonceObj.hashedNonce) {
+              passedNonce = nonceObj.rawNonce;
             } else {
               passedNonce = payload.nonce;
             }
@@ -120,11 +125,14 @@ export const AuthService = {
             token: result.success.idToken,
             nonce: passedNonce,
           });
+          if (error) alert('Supabase Auth Error: ' + error.message);
           return { data, error, cancelled: false };
         }
 
+        alert('No ID token received. Result: ' + JSON.stringify(result));
         return { data: null, error: new Error('No Google ID token received from device'), cancelled: false };
       } catch (err: any) {
+        alert('Caught Error in signInWithGoogleNative: ' + (err?.message || JSON.stringify(err)));
         if (err?.message?.toLowerCase().includes('cancel')) {
           return { data: null, error: null, cancelled: true };
         }
