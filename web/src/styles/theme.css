@@ -31,7 +31,7 @@
   --guna-bar-bg: rgba(255, 255, 255, 0.08);
 
   --glass-bg: rgba(30, 22, 46, 0.55);
-  --glass-backdrop: blur(20px) saturate(150%);
+  --glass-backdrop: blur(8px) saturate(150%);
   --shadow-cosmic: 0 12px 35px -8px rgba(212, 175, 55, 0.22);
   --shadow-card: 0 16px 40px rgba(5, 3, 12, 0.55);
 
@@ -74,7 +74,7 @@
   --guna-bar-bg: rgba(15, 23, 42, 0.08);
 
   --glass-bg: rgba(255, 255, 255, 0.55);
-  --glass-backdrop: blur(16px) saturate(140%);
+  --glass-backdrop: blur(8px) saturate(140%);
   --shadow-cosmic: 0 10px 25px -5px rgba(212, 175, 55, 0.18);
   --shadow-card: 0 10px 30px rgba(15, 23, 42, 0.1);
 
