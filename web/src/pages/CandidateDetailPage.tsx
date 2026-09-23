@@ -5,6 +5,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Sparkles, MapPin, Briefcase, Grad
 import { VerificationBadge } from '../components/VerificationBadge';
 import { VerificationType } from '../types';
 import { PassCircleButton, LikeCircleButton, CosmicCheckButton } from '../components/AstraButtons';
+import { preloadImages } from '../utils/imagePreloader';
 
 export const CandidateDetailPage: React.FC = () => {
   const navigate = useNavigate();
@@ -19,6 +20,12 @@ export const CandidateDetailPage: React.FC = () => {
   useEffect(() => {
     setImageIndex(0);
   }, [candidate?.id]);
+
+  useEffect(() => {
+    if (candidate?.photoUrls && candidate.photoUrls.length > 0) {
+      preloadImages(candidate.photoUrls);
+    }
+  }, [candidate?.photoUrls]);
 
   if (!candidate) return null;
 
@@ -112,12 +119,12 @@ export const CandidateDetailPage: React.FC = () => {
       </div>
 
       {/* Main Image Header */}
-      <div style={{ position: 'relative', width: '100%', height: '360px' }}>
+      <div style={{ position: 'relative', width: '100%', height: '390px', overflow: 'hidden' }}>
         {activePhoto ? (
           <img
             src={activePhoto}
             alt={candidate.name}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'opacity 0.2s ease-in-out' }}
           />
         ) : (
           <div style={{ width: '100%', height: '100%', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -128,78 +135,188 @@ export const CandidateDetailPage: React.FC = () => {
           style={{
             position: 'absolute',
             inset: 0,
-            background: 'linear-gradient(to bottom, transparent 40%, var(--bg-primary) 100%)'
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, transparent 30%, transparent 60%, var(--bg-primary) 100%)',
+            pointerEvents: 'none'
           }}
         />
 
-        {/* Image navigation controls when more than one photo */}
+        {/* Top Story Progress Bars */}
+        {photos.length > 1 && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '16px',
+              left: '66px',
+              right: isFriend ? '116px' : '20px',
+              display: 'flex',
+              gap: '4px',
+              zIndex: 12,
+              pointerEvents: 'none'
+            }}
+          >
+            {photos.map((_, idx) => (
+              <div
+                key={idx}
+                style={{
+                  flex: 1,
+                  height: '3px',
+                  borderRadius: '9999px',
+                  background: idx === safeImageIndex ? '#FFF' : 'rgba(255, 255, 255, 0.35)',
+                  boxShadow: idx === safeImageIndex ? '0 0 6px rgba(255, 255, 255, 0.7)' : 'none',
+                  transition: 'background 0.2s ease'
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Invisible Tap Zones (Left 35% / Right 35%) */}
         {photos.length > 1 && (
           <>
-            <button
+            <div
               onClick={() => setImageIndex(i => (i - 1 + photos.length) % photos.length)}
               style={{
-                position: 'absolute', top: '50%', left: '12px', transform: 'translateY(-50%)',
-                width: 36, height: 36, borderRadius: '50%',
-                background: 'rgba(11, 11, 14, 0.6)', backdropFilter: 'blur(8px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)', color: '#FFF',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                position: 'absolute',
+                top: 0,
+                bottom: '60px',
+                left: 0,
+                width: '35%',
+                zIndex: 10,
+                cursor: 'pointer'
               }}
-              title="Previous photo"
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <button
+              title="Previous photo (tap left)"
+              aria-label="Previous photo tap zone"
+            />
+            <div
               onClick={() => setImageIndex(i => (i + 1) % photos.length)}
               style={{
-                position: 'absolute', top: '50%', right: '12px', transform: 'translateY(-50%)',
-                width: 36, height: 36, borderRadius: '50%',
-                background: 'rgba(11, 11, 14, 0.6)', backdropFilter: 'blur(8px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)', color: '#FFF',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                position: 'absolute',
+                top: 0,
+                bottom: '60px',
+                right: 0,
+                width: '35%',
+                zIndex: 10,
+                cursor: 'pointer'
               }}
-              title="Next photo"
-            >
-              <ChevronRight size={20} />
-            </button>
-            {/* Thumbnail strip */}
-            <div style={{ position: 'absolute', bottom: '60px', left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: '6px' }}>
-              {photos.map((url, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setImageIndex(idx)}
-                  style={{
-                    width: idx === safeImageIndex ? 24 : 8,
-                    height: 8, borderRadius: '4px',
-                    background: idx === safeImageIndex ? 'var(--accent-amber)' : 'rgba(255, 255, 255, 0.5)',
-                    border: 'none', cursor: 'pointer', transition: 'all 0.2s ease'
-                  }}
-                  title={`Photo ${idx + 1}`}
-                />
-              ))}
-            </div>
+              title="Next photo (tap right)"
+              aria-label="Next photo tap zone"
+            />
           </>
         )}
 
-        {/* Compatibility Floating Badge */}
-        <div style={{ position: 'absolute', bottom: '20px', right: '20px' }}>
+        {/* Prominent Floating Glass Chevrons (< and >) */}
+        {photos.length > 1 && (
+          <>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setImageIndex(i => (i - 1 + photos.length) % photos.length);
+              }}
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '14px',
+                transform: 'translateY(-50%)',
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                background: 'rgba(15, 12, 24, 0.65)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                border: '1.5px solid rgba(255, 255, 255, 0.25)',
+                color: '#FFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                zIndex: 15,
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.5), 0 0 10px rgba(255, 255, 255, 0.1)',
+                transition: 'all 0.18s ease'
+              }}
+              title="Previous photo"
+              aria-label="Previous photo"
+            >
+              <ChevronLeft size={24} strokeWidth={2.5} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setImageIndex(i => (i + 1) % photos.length);
+              }}
+              style={{
+                position: 'absolute',
+                top: '50%',
+                right: '14px',
+                transform: 'translateY(-50%)',
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                background: 'rgba(15, 12, 24, 0.65)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                border: '1.5px solid rgba(255, 255, 255, 0.25)',
+                color: '#FFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                zIndex: 15,
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.5), 0 0 10px rgba(255, 255, 255, 0.1)',
+                transition: 'all 0.18s ease'
+              }}
+              title="Next photo"
+              aria-label="Next photo"
+            >
+              <ChevronRight size={24} strokeWidth={2.5} />
+            </button>
+          </>
+        )}
+
+        {/* Photo Counter Pill Badge */}
+        {photos.length > 1 && (
           <div
             style={{
-              padding: '8px 16px',
+              position: 'absolute',
+              bottom: '24px',
+              left: '20px',
+              padding: '4px 10px',
               borderRadius: '9999px',
-              background: 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
-              color: '#0B0B0E',
-              fontWeight: 800,
-              fontSize: '0.85rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              boxShadow: 'var(--shadow-cosmic)'
+              background: 'rgba(10, 10, 14, 0.7)',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255, 255, 255, 0.18)',
+              color: '#FFF',
+              fontSize: '0.72rem',
+              fontWeight: 700,
+              letterSpacing: '0.5px',
+              zIndex: 12
             }}
           >
-            <Sparkles size={16} fill="#0B0B0E" />
-            {candidate.compatibilityScore}% {t('compatibility_score')}
+            {safeImageIndex + 1} / {photos.length}
           </div>
-        </div>
+        )}
+
+        {/* Compatibility Floating Badge (Only when score > 0) */}
+        {candidate.compatibilityScore > 0 && (
+          <div style={{ position: 'absolute', bottom: '20px', right: '20px', zIndex: 12 }}>
+            <div
+              style={{
+                padding: '8px 16px',
+                borderRadius: '9999px',
+                background: 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
+                color: '#0B0B0E',
+                fontWeight: 800,
+                fontSize: '0.85rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: 'var(--shadow-cosmic)'
+              }}
+            >
+              <Sparkles size={16} fill="#0B0B0E" />
+              {candidate.compatibilityScore}% {t('compatibility_score')}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Main Details Body */}

@@ -405,39 +405,41 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
         </div>
       )}
 
-      {/* Deep Seamless Vignette Overlay */}
+      {/* Soft Cinematic Bottom Vignette (Leaves 85%+ photo bright and clear) */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(to bottom, transparent 20%, rgba(8, 7, 12, 0.25) 50%, rgba(8, 7, 12, 0.88) 75%, #08070C 100%)',
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.06) 0%, transparent 25%, rgba(8, 7, 14, 0.25) 55%, rgba(8, 7, 14, 0.85) 82%, #08070C 100%)',
           pointerEvents: 'none',
           zIndex: 10
         }}
       />
 
-      {/* Compatibility Badge Pill */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '20px',
-          right: '16px',
-          padding: '6px 14px',
-          borderRadius: '9999px',
-          background: 'linear-gradient(135deg, #D4AF37 0%, #B8942E 100%)',
-          color: '#0B0B0E',
-          fontWeight: 800,
-          fontSize: '0.78rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          boxShadow: '0 4px 16px rgba(212, 175, 55, 0.3)',
-          zIndex: 25
-        }}
-      >
-        <Sparkles size={13} fill="#0B0B0E" />
-        {candidate.compatibilityScore}% {candidate.intent === 'Marriage' ? 'Kundali Match' : 'Match'}
-      </div>
+      {/* Compatibility Badge Pill (Only displayed when score > 0) */}
+      {candidate.compatibilityScore > 0 && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '20px',
+            right: '16px',
+            padding: '5px 12px',
+            borderRadius: '9999px',
+            background: 'linear-gradient(135deg, #D4AF37 0%, #B8942E 100%)',
+            color: '#0B0B0E',
+            fontWeight: 800,
+            fontSize: '0.74rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            boxShadow: '0 4px 16px rgba(212, 175, 55, 0.35)',
+            zIndex: 25
+          }}
+        >
+          <Sparkles size={12} fill="#0B0B0E" />
+          {candidate.compatibilityScore}% {candidate.intent === 'Marriage' ? 'Kundali Match' : 'Match'}
+        </div>
+      )}
 
       {/* Bottom Content Card Details */}
       <div
@@ -446,60 +448,88 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
           bottom: 0,
           left: 0,
           right: 0,
-          padding: '20px 18px 18px 18px',
+          padding: '16px 16px 14px 16px',
           color: '#FFF',
           zIndex: 25,
           display: 'flex',
           flexDirection: 'column',
-          gap: '9px'
+          gap: '8px'
         }}
       >
-        {/* Name, Age & Verified Shield */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <h2 className="heading-font" style={{ fontSize: '1.65rem', fontWeight: 800, textShadow: '0 2px 10px rgba(0,0,0,0.7)' }}>
-            {candidate.name}, {candidate.age}
-          </h2>
-          {candidate.isVerified && (
-            <ShieldCheck size={20} color="var(--accent-amber)" style={{ filter: 'drop-shadow(0 0 8px rgba(212, 175, 55, 0.5))' }} />
-          )}
+        {/* Name, Age, Verified Shield & Info Chevron */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+            <h2 className="heading-font" style={{ fontSize: '1.5rem', fontWeight: 800, textShadow: '0 2px 10px rgba(0,0,0,0.8)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {candidate.name}, {candidate.age}
+            </h2>
+            {candidate.isVerified && (
+              <ShieldCheck size={18} color="var(--accent-amber)" style={{ flexShrink: 0, filter: 'drop-shadow(0 0 8px rgba(212, 175, 55, 0.6))' }} />
+            )}
+          </div>
+
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={onCardClick}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              background: 'rgba(255, 255, 255, 0.15)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.25)',
+              color: '#FFF',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              flexShrink: 0,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+              transition: 'transform 0.15s ease'
+            }}
+            title="View full profile"
+          >
+            <ChevronRight size={17} />
+          </button>
         </div>
 
-        {/* Micro-Pill Metadata Chips */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px', fontSize: '0.78rem' }}>
-          {candidate.profession && (
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px',
-                padding: '3px 10px',
-                borderRadius: '9999px',
-                background: 'rgba(255, 255, 255, 0.12)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                color: 'rgba(255, 255, 255, 0.95)'
-              }}
-            >
-              <Briefcase size={12} color="var(--accent-amber)" />
-              <span>{candidate.profession}</span>
-            </div>
-          )}
+        {/* Micro-Pill Metadata Chips (Deduplicated) */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '5px', fontSize: '0.74rem' }}>
+          {/* Profession (Only if different from location) */}
+          {candidate.profession &&
+            candidate.profession.trim().toLowerCase() !== (candidate.location || '').trim().toLowerCase() && (
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '3px 9px',
+                  borderRadius: '9999px',
+                  background: 'rgba(255, 255, 255, 0.12)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  color: 'rgba(255, 255, 255, 0.95)'
+                }}
+              >
+                <Briefcase size={11} color="var(--accent-amber)" />
+                <span>{candidate.profession}</span>
+              </div>
+            )}
 
           {candidate.location && (
             <div
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '5px',
-                padding: '3px 10px',
+                gap: '4px',
+                padding: '3px 9px',
                 borderRadius: '9999px',
                 background: 'rgba(255, 255, 255, 0.12)',
-                backdropFilter: 'blur(10px)',
+                backdropFilter: 'blur(8px)',
                 border: '1px solid rgba(255, 255, 255, 0.15)',
                 color: 'rgba(255, 255, 255, 0.95)'
               }}
             >
-              <MapPin size={12} color="var(--accent-rose)" />
+              <MapPin size={11} color="var(--accent-rose)" />
               <span>{candidate.location}</span>
             </div>
           )}
@@ -509,17 +539,17 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '5px',
-                padding: '3px 10px',
+                gap: '4px',
+                padding: '3px 9px',
                 borderRadius: '9999px',
-                background: 'rgba(34, 197, 94, 0.18)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(34, 197, 94, 0.4)',
+                background: 'rgba(34, 197, 94, 0.16)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(34, 197, 94, 0.35)',
                 color: '#4ADE80',
                 fontWeight: 600
               }}
             >
-              <MapPin size={12} color="#4ADE80" />
+              <MapPin size={11} color="#4ADE80" />
               <span>{candidate.distanceKm < 1 ? '< 1 km away' : `${candidate.distanceKm} km away`}</span>
             </div>
           )}
@@ -529,11 +559,11 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '5px',
-                padding: '3px 10px',
+                gap: '4px',
+                padding: '3px 9px',
                 borderRadius: '9999px',
                 background: 'rgba(255, 255, 255, 0.12)',
-                backdropFilter: 'blur(10px)',
+                backdropFilter: 'blur(8px)',
                 border: '1px solid rgba(255, 255, 255, 0.15)',
                 color: 'rgba(255, 255, 255, 0.95)'
               }}
@@ -542,23 +572,23 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
             </div>
           )}
 
-          {candidate.nakshatra && candidate.rashi && (
+          {candidate.nakshatra && (
             <div
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '5px',
-                padding: '3px 10px',
+                gap: '4px',
+                padding: '3px 9px',
                 borderRadius: '9999px',
-                background: 'rgba(212, 175, 55, 0.18)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(212, 175, 55, 0.4)',
+                background: 'rgba(212, 175, 55, 0.15)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(212, 175, 55, 0.35)',
                 color: 'var(--accent-amber-light)',
                 fontWeight: 700
               }}
             >
-              <Sparkles size={11} color="var(--accent-amber)" />
-              <span>{candidate.nakshatra} ({candidate.rashi.split(' ')[0]})</span>
+              <Sparkles size={10} color="var(--accent-amber)" />
+              <span>{candidate.nakshatra}{candidate.rashi ? ` (${candidate.rashi.split(' ')[0]})` : ''}</span>
             </div>
           )}
         </div>
@@ -569,55 +599,6 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
           promptText={candidate.voiceNotePrompt || candidate.bio || "Hi, I'd love to connect and see where this goes!"}
           audioUrl={candidate.voiceNoteUrl}
         />
-
-        {/* Action Button Bar */}
-        <div onPointerDown={(e) => e.stopPropagation()} style={{ display: 'flex', gap: '8px', marginTop: '2px' }}>
-          <button
-            onClick={onCheckCompatibility}
-            style={{
-              flex: 1,
-              padding: '10px 14px',
-              borderRadius: '9999px',
-              background: 'rgba(255, 255, 255, 0.08)',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(212, 175, 55, 0.35)',
-              color: 'var(--accent-amber-light)',
-              fontWeight: 700,
-              fontSize: '0.78rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              cursor: 'pointer',
-              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.3)',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <Sparkles size={13} color="var(--accent-amber)" /> {candidate.intent === 'Marriage' ? 'Check Kundali' : 'View Compatibility'}
-          </button>
-
-          <button
-            onClick={onCardClick}
-            style={{
-              padding: '10px 16px',
-              borderRadius: '9999px',
-              background: 'linear-gradient(135deg, #D4AF37 0%, #B8942E 100%)',
-              border: 'none',
-              color: '#0B0B0E',
-              fontWeight: 800,
-              fontSize: '0.78rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '4px',
-              cursor: 'pointer',
-              boxShadow: '0 4px 14px rgba(212, 175, 55, 0.3)',
-              transition: 'transform 0.15s ease'
-            }}
-          >
-            View <ChevronRight size={15} />
-          </button>
-        </div>
       </div>
     </div>
   );

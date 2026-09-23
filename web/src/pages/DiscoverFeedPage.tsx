@@ -4,7 +4,7 @@ import { useAstra } from '../context/AstraContext';
 import { CandidateCardView } from '../components/CandidateCardView';
 import { AstraBottomNavigation } from '../components/AstraBottomNavigation';
 import { FloatingHeartsBackground } from '../components/FloatingHeartsBackground';
-import { Sparkles, Moon, Sun, ShieldCheck, Share2, Bot, Globe, RotateCcw, MapPin } from 'lucide-react';
+import { Sparkles, Moon, Sun, ShieldCheck, Share2, Bot, Globe, RotateCcw, MapPin, X, Heart, SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import { RegionalPreference } from '../types';
 import { preloadImages } from '../utils/imagePreloader';
 
@@ -39,6 +39,7 @@ export const DiscoverFeedPage: React.FC = () => {
   const isDatingMode = userProfile.intent === 'Dating';
   const [isAcquiringLocation, setIsAcquiringLocation] = React.useState(false);
   const [locationError, setLocationError] = React.useState<string | null>(null);
+  const [showFilters, setShowFilters] = React.useState(false);
 
   const handleToggleNearby = async () => {
     setLocationError(null);
@@ -94,12 +95,13 @@ export const DiscoverFeedPage: React.FC = () => {
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
-        overflowY: 'auto',
+        overflow: 'hidden',
         background: 'transparent'
       }}
     >
       <FloatingHeartsBackground />
-      {/* FIXED TOP HEADER CONTAINER */}
+
+      {/* LUXURY SLIM FIXED TOP BAR */}
       <div
         style={{
           position: 'fixed',
@@ -109,71 +111,85 @@ export const DiscoverFeedPage: React.FC = () => {
           maxWidth: '100%',
           margin: '0 auto',
           zIndex: 40,
-          background: themeMode === 'LIGHT' ? 'rgba(255, 245, 247, 0.78)' : 'rgba(11, 11, 14, 0.78)',
+          background: themeMode === 'LIGHT' ? 'rgba(255, 245, 247, 0.9)' : 'rgba(11, 9, 18, 0.9)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          borderBottom: '1px solid rgba(245, 158, 11, 0.25)',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)'
+          borderBottom: '1px solid rgba(245, 158, 11, 0.2)',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
         }}
       >
-        {/* Top Header Bar */}
         <header
           style={{
-            padding: 'calc(12px + env(safe-area-inset-top, 0px)) 16px 12px 16px',
+            padding: 'calc(10px + env(safe-area-inset-top, 0px)) 16px 10px 16px',
             display: 'flex',
             justifyContent: 'space-between',
-            alignItems: 'center',
-            background: 'transparent'
+            alignItems: 'center'
           }}
         >
+          {/* Logo & Mode Pill */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Sparkles size={20} color="var(--accent-amber)" className="spin-slow" />
-            <h1 className="heading-font" style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--accent-amber-light)' }}>
+            <Sparkles size={18} color="var(--accent-amber)" className="spin-slow" />
+            <h1 className="heading-font" style={{ fontSize: '1.18rem', fontWeight: 800, color: 'var(--accent-amber-light)', margin: 0, letterSpacing: '-0.3px' }}>
               {t('app_name')}
             </h1>
+            <span
+              style={{
+                fontSize: '0.65rem',
+                fontWeight: 700,
+                padding: '2px 8px',
+                borderRadius: '9999px',
+                background: isDatingMode ? 'rgba(236, 72, 153, 0.15)' : 'rgba(212, 175, 55, 0.15)',
+                color: isDatingMode ? '#F472B6' : 'var(--accent-amber-light)',
+                border: isDatingMode ? '1px solid rgba(236, 72, 153, 0.3)' : '1px solid rgba(212, 175, 55, 0.3)'
+              }}
+            >
+              {isDatingMode ? 'Dating' : 'Matrimony'}
+            </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            {/* Language Switcher Button */}
-            <button
-              onClick={toggleLanguage}
+          {/* Quick Actions */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {/* Streak Pill */}
+            <div
               style={{
-                padding: '4px 8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '3px',
+                padding: '3px 8px',
                 borderRadius: '9999px',
-                background: 'rgba(255, 255, 255, 0.08)',
-                border: '1px solid var(--border-color)',
+                background: 'rgba(245, 158, 11, 0.15)',
+                border: '1px solid rgba(245, 158, 11, 0.3)',
                 color: 'var(--accent-amber-light)',
-                fontSize: '0.7rem',
-                fontWeight: 700,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '3px',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap'
+                fontSize: '0.68rem',
+                fontWeight: 800
               }}
+              title="7-Day Streak"
             >
-              <Globe size={11} /> {language === 'EN' ? 'മലയാളം' : language === 'ML' ? 'हिंदी' : 'EN'}
-            </button>
+              🔥 7
+            </div>
 
-            {/* Admin Panel Link */}
+            {/* Filter Toggle Button */}
             <button
-              onClick={() => navigate('/admin/ai-agents')}
+              onClick={() => setShowFilters(!showFilters)}
               style={{
-                padding: '4px 8px',
+                padding: '5px 9px',
                 borderRadius: '9999px',
-                background: 'rgba(79, 70, 229, 0.2)',
-                border: '1px solid var(--accent-indigo)',
-                color: 'var(--accent-indigo)',
+                background: showFilters || isNearbyOnly ? 'rgba(245, 158, 11, 0.25)' : 'rgba(255, 255, 255, 0.08)',
+                border: showFilters || isNearbyOnly ? '1px solid var(--accent-amber)' : '1px solid var(--border-color)',
+                color: showFilters || isNearbyOnly ? 'var(--accent-amber-light)' : 'var(--text-primary)',
                 fontSize: '0.7rem',
                 fontWeight: 700,
                 display: 'flex',
                 alignItems: 'center',
-                gap: '3px',
+                gap: '4px',
                 cursor: 'pointer',
-                whiteSpace: 'nowrap'
+                transition: 'all 0.2s ease'
               }}
+              title="Preferences & Filters"
             >
-              <Bot size={12} /> {t('btn_admin')}
+              <SlidersHorizontal size={12} />
+              <span>Filters</span>
+              {showFilters ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
             </button>
 
             {/* Referral Modal Button */}
@@ -184,7 +200,7 @@ export const DiscoverFeedPage: React.FC = () => {
                 width: 28,
                 height: 28,
                 borderRadius: '50%',
-                background: 'rgba(245, 158, 11, 0.15)',
+                background: 'rgba(245, 158, 11, 0.12)',
                 border: '1px solid var(--accent-amber)',
                 color: 'var(--accent-amber-light)',
                 display: 'flex',
@@ -197,10 +213,28 @@ export const DiscoverFeedPage: React.FC = () => {
               <Share2 size={13} />
             </button>
 
+            {/* Language Switcher */}
+            <button
+              onClick={toggleLanguage}
+              style={{
+                padding: '4px 7px',
+                borderRadius: '9999px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-muted)',
+                fontSize: '0.68rem',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              <Globe size={11} />
+            </button>
+
+            {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
               style={{
-                background: 'var(--bg-card)',
+                background: 'rgba(255, 255, 255, 0.08)',
                 border: '1px solid var(--border-color)',
                 borderRadius: '50%',
                 width: 28,
@@ -209,23 +243,122 @@ export const DiscoverFeedPage: React.FC = () => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'var(--text-primary)',
-                cursor: 'pointer',
-                flexShrink: 0
+                cursor: 'pointer'
               }}
             >
-              {themeMode === 'DARK' ? <Sun size={13} color="var(--accent-amber)" /> : <Moon size={13} />}
+              {themeMode === 'DARK' ? <Sun size={12} color="var(--accent-amber)" /> : <Moon size={12} />}
             </button>
           </div>
         </header>
 
-        {/* Profile Nudge Banner */}
+        {/* Collapsible / Floating Filter Drawer */}
+        {showFilters && (
+          <div
+            style={{
+              padding: '10px 16px 14px',
+              borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+              background: themeMode === 'LIGHT' ? 'rgba(255, 250, 251, 0.96)' : 'rgba(15, 12, 24, 0.96)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px'
+            }}
+          >
+            {/* Nearby & Strict Toggles */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+              <button
+                onClick={handleToggleNearby}
+                disabled={isAcquiringLocation}
+                style={{
+                  flex: 1,
+                  padding: '6px 12px',
+                  borderRadius: '9999px',
+                  border: isNearbyOnly ? '1px solid #22C55E' : '1px solid var(--border-color)',
+                  background: isNearbyOnly ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255, 255, 255, 0.04)',
+                  color: isNearbyOnly ? '#4ADE80' : 'var(--text-muted)',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '5px'
+                }}
+              >
+                <MapPin size={12} color={isNearbyOnly ? '#4ADE80' : 'var(--text-muted)'} />
+                {isAcquiringLocation ? 'Locating...' : isNearbyOnly ? 'Nearby (<25km) Active' : 'Nearby (<25km)'}
+              </button>
+
+              <button
+                onClick={() => setIsPreferenceStrictFilterOn(!isPreferenceStrictFilterOn)}
+                style={{
+                  flex: 1,
+                  padding: '6px 12px',
+                  borderRadius: '9999px',
+                  border: isPreferenceStrictFilterOn ? '1px solid var(--accent-amber)' : '1px solid var(--border-color)',
+                  background: isPreferenceStrictFilterOn ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255, 255, 255, 0.04)',
+                  color: isPreferenceStrictFilterOn ? 'var(--accent-amber-light)' : 'var(--text-muted)',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '5px'
+                }}
+              >
+                <Sparkles size={12} color={isPreferenceStrictFilterOn ? 'var(--accent-amber)' : 'var(--text-muted)'} />
+                {isPreferenceStrictFilterOn ? 'Strict Filters: ON' : 'Strict Filters: OFF'}
+              </button>
+            </div>
+
+            {/* Regional Filter Chips */}
+            <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '2px' }}>
+              {[
+                { key: 'ALL', label: t('filter_all') },
+                { key: 'KERALA', label: t('filter_kerala') },
+                { key: 'NORTH_INDIA', label: t('filter_north') },
+                { key: 'WEST_INDIA', label: t('filter_west') },
+                { key: 'NRI', label: t('filter_nri') }
+              ].map(item => {
+                const isSelected = userProfile.regionalPreference === item.key;
+                return (
+                  <button
+                    key={item.key}
+                    onClick={() => setRegionalPreference(item.key as RegionalPreference)}
+                    style={{
+                      padding: '4px 10px',
+                      borderRadius: '9999px',
+                      border: isSelected ? '1px solid var(--accent-amber)' : '1px solid var(--border-color)',
+                      background: isSelected ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                      color: isSelected ? 'var(--accent-amber-light)' : 'var(--text-muted)',
+                      fontSize: '0.68rem',
+                      fontWeight: isSelected ? 800 : 500,
+                      whiteSpace: 'nowrap',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Shubh Muhurat info line */}
+            <div style={{ fontSize: '0.68rem', color: 'rgba(212, 175, 55, 0.85)', display: 'flex', alignItems: 'center', gap: '6px', paddingTop: '2px' }}>
+              <Sparkles size={11} color="var(--accent-amber)" />
+              <span><strong>Today's Shubh Muhurat:</strong> Abhijit 11:48 AM – 12:36 PM</span>
+            </div>
+          </div>
+        )}
+
+        {/* Profile Completion Nudge (Only if < 100%) */}
         {userProfile.completionPercentage < 100 && (
           <div
             onClick={() => openChaanbean()}
             style={{
-              padding: '8px 16px',
-              background: 'linear-gradient(90deg, rgba(245, 158, 11, 0.2) 0%, rgba(79, 70, 229, 0.2) 100%)',
-              borderBottom: '1px solid var(--accent-amber)',
+              padding: '5px 16px',
+              background: 'linear-gradient(90deg, rgba(245, 158, 11, 0.18) 0%, rgba(79, 70, 229, 0.18) 100%)',
+              borderTop: '1px solid rgba(245, 158, 11, 0.2)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -233,263 +366,31 @@ export const DiscoverFeedPage: React.FC = () => {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <ShieldCheck size={15} color="var(--accent-amber-light)" />
-              <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                {t('profile_nudge')}
+              <ShieldCheck size={13} color="var(--accent-amber-light)" />
+              <span style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                Profile {userProfile.completionPercentage}% complete
               </span>
             </div>
-            <span style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--accent-amber-light)', flexShrink: 0 }}>
-              Complete
+            <span style={{ fontSize: '0.66rem', fontWeight: 800, color: 'var(--accent-amber-light)' }}>
+              Complete now &gt;
             </span>
           </div>
         )}
-
-        {/* Regional Preference Selector Strip */}
-        <div
-          style={{
-            position: 'relative',
-            zIndex: 10,
-            padding: '6px 16px',
-            background: 'var(--bg-secondary)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            overflowX: 'auto'
-          }}
-        >
-          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-            <Globe size={12} /> {t('filter_label')}
-          </span>
-
-          {/* Nearby (<25km) Pill */}
-          <button
-            onClick={handleToggleNearby}
-            disabled={isAcquiringLocation}
-            style={{
-              padding: '4px 10px',
-              borderRadius: '9999px',
-              border: isNearbyOnly ? '1px solid #22C55E' : '1px solid var(--border-color)',
-              background: isNearbyOnly ? 'rgba(34, 197, 94, 0.25)' : 'rgba(255, 255, 255, 0.04)',
-              color: isNearbyOnly ? '#4ADE80' : 'var(--text-muted)',
-              fontSize: '0.7rem',
-              fontWeight: isNearbyOnly ? 800 : 600,
-              whiteSpace: 'nowrap',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              flexShrink: 0
-            }}
-          >
-            <MapPin size={11} color={isNearbyOnly ? '#4ADE80' : 'var(--text-muted)'} />
-            {isAcquiringLocation ? 'Locating...' : 'Nearby (<25km)'}
-          </button>
-
-          {[
-            { key: 'ALL', label: t('filter_all') },
-            { key: 'KERALA', label: t('filter_kerala') },
-            { key: 'NORTH_INDIA', label: t('filter_north') },
-            { key: 'WEST_INDIA', label: t('filter_west') },
-            { key: 'NRI', label: t('filter_nri') }
-          ].map(item => {
-            const isSelected = userProfile.regionalPreference === item.key;
-            return (
-              <button
-                key={item.key}
-                onClick={() => setRegionalPreference(item.key as RegionalPreference)}
-                style={{
-                  padding: '4px 10px',
-                  borderRadius: '9999px',
-                  border: isSelected ? '1px solid var(--accent-amber)' : '1px solid var(--border-color)',
-                  background: isSelected ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                  color: isSelected ? 'var(--accent-amber-light)' : 'var(--text-muted)',
-                  fontSize: '0.7rem',
-                  fontWeight: isSelected ? 800 : 500,
-                  whiteSpace: 'nowrap',
-                  cursor: 'pointer'
-                }}
-              >
-                {item.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Nearby Active Bar */}
-        {isNearbyOnly && (
-          <div
-            style={{
-              padding: '5px 16px',
-              background: 'rgba(34, 197, 94, 0.15)',
-              borderBottom: '1px solid rgba(34, 197, 94, 0.3)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              fontSize: '0.72rem',
-              color: '#4ADE80',
-              fontWeight: 600
-            }}
-          >
-            <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <MapPin size={13} /> Showing matches within 25 km of you
-            </span>
-            <button
-              onClick={handleToggleNearby}
-              style={{ background: 'none', border: 'none', color: '#86EFAC', cursor: 'pointer', fontSize: '0.7rem', textDecoration: 'underline' }}
-            >
-              Reset
-            </button>
-          </div>
-        )}
-
-        {/* Location Error Feedback */}
-        {locationError && (
-          <div style={{ padding: '6px 16px', background: 'rgba(239, 68, 68, 0.2)', color: '#FCA5A5', fontSize: '0.72rem', textAlign: 'center' }}>
-            {locationError}
-          </div>
-        )}
-
-        {/* Community Activity Rooms Teaser Card (ONLY in Dating Mode) */}
-        {isDatingMode && (
-          <div
-            onClick={() => navigate('/matches?tab=rooms')}
-            style={{
-              margin: '6px 16px 4px',
-              padding: '7px 12px',
-              borderRadius: '14px',
-              background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.18) 0%, rgba(236, 72, 153, 0.18) 100%)',
-              border: '1px solid rgba(168, 85, 247, 0.3)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              cursor: 'pointer'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '1rem' }}>🏏</span>
-              <div>
-                <div style={{ fontSize: '0.73rem', fontWeight: 800, color: '#F8FAFC' }}>
-                  Wanna play cricket or hangout nearby?
-                </div>
-                <div style={{ fontSize: '0.65rem', color: '#94A3B8' }}>
-                  Join local 25km activity rooms & group chats
-                </div>
-              </div>
-            </div>
-            <span style={{ fontSize: '0.7rem', color: 'var(--accent-amber-light)', fontWeight: 800, whiteSpace: 'nowrap' }}>
-              Rooms &gt;
-            </span>
-          </div>
-        )}
-
-        {/* Strict Partner Preferences Toggle & Rewind Bar */}
-        <div
-          style={{
-            position: 'relative',
-            zIndex: 10,
-            padding: '6px 16px',
-            background: 'rgba(236, 72, 153, 0.1)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '6px',
-            margin: '0 16px 16px',
-            borderRadius: '12px',
-            border: '1px solid rgba(236, 72, 153, 0.2)'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Sparkles size={14} color="var(--accent-amber)" />
-            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-              🎯 For You
-            </span>
-            {passedCandidatesHistory.length > 0 && (
-              <button 
-                onClick={rewindCandidate} 
-                style={{ 
-                  background: 'rgba(245, 158, 11, 0.2)', 
-                  border: '1px solid var(--accent-amber)', 
-                  borderRadius: '50%',
-                  color: 'var(--accent-amber)', 
-                  cursor: 'pointer', 
-                  padding: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginLeft: '8px'
-                }}
-                title="Rewind last pass"
-              >
-                <RotateCcw size={12} />
-              </button>
-            )}
-          </div>
-          
-          <button
-            onClick={() => setIsPreferenceStrictFilterOn(!isPreferenceStrictFilterOn)}
-            style={{
-              width: '40px',
-              height: '22px',
-              borderRadius: '11px',
-              background: isPreferenceStrictFilterOn ? 'var(--accent-amber)' : 'rgba(255,255,255,0.2)',
-              position: 'relative',
-              cursor: 'pointer',
-              border: 'none',
-              transition: 'background 0.3s'
-            }}
-          >
-            <div style={{
-              position: 'absolute',
-              top: '2px',
-              left: isPreferenceStrictFilterOn ? '20px' : '2px',
-              width: '18px',
-              height: '18px',
-              borderRadius: '50%',
-              background: '#FFF',
-              transition: 'left 0.3s cubic-bezier(0.68, -0.55, 0.26, 1.55)'
-            }} />
-          </button>
-        </div>
-
-        {/* Daily Shubh Muhurat & Reward Streak Ticker */}
-        <div
-          style={{
-            position: 'relative',
-            zIndex: 10,
-            padding: '6px 16px',
-            background: 'rgba(245, 158, 11, 0.12)',
-            borderTop: '1px solid rgba(245, 158, 11, 0.2)',
-            borderBottom: '1px solid rgba(245, 158, 11, 0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            fontSize: '0.7rem',
-            color: 'var(--accent-amber-light)',
-            marginBottom: '16px'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Sparkles size={12} color="var(--accent-amber)" />
-            <span><strong>Today's Shubh Muhurat:</strong> Abhijit 11:48 AM – 12:36 PM</span>
-          </div>
-          <span style={{ fontWeight: 800, background: 'rgba(245, 158, 11, 0.25)', padding: '2px 8px', borderRadius: '9999px', fontSize: '0.65rem' }}>
-            🔥 7-Day Streak (+350 pts)
-          </span>
-        </div>
       </div>
 
-      {/* MIDDLE CANDIDATE CARD VIEWPORT (Single Clean Card) */}
+      {/* MIDDLE CANDIDATE CARD & FLOATING ACTION BAR */}
       <main
         style={{
-          paddingTop: userProfile.completionPercentage < 100 ? '184px' : '152px',
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
-          paddingLeft: '16px',
-          paddingRight: '16px',
+          marginTop: `calc(${userProfile.completionPercentage < 100 ? '78px' : '54px'} + env(safe-area-inset-top, 0px))`,
+          marginBottom: 'calc(84px + env(safe-area-inset-bottom, 0px))',
+          padding: '8px 16px 4px 16px',
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          minHeight: 0,
+          overflow: 'hidden'
         }}
       >
         {userProfile.intent === 'Marriage' && userProfile.completionPercentage < 100 ? (
@@ -520,78 +421,201 @@ export const DiscoverFeedPage: React.FC = () => {
             </button>
           </div>
         ) : currentCandidate ? (
-          <div style={{ width: '100%', height: '100%', maxWidth: '440px', margin: '0 auto', minHeight: '520px', position: 'relative' }}>
-            {/* Background Card 3 (Bottom of deck) */}
-            {candidates[2] && (
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  transform: 'scale(0.92) translateY(22px)',
-                  transformOrigin: 'bottom center',
-                  opacity: 0.5,
-                  filter: 'brightness(0.65)',
-                  borderRadius: '28px',
-                  overflow: 'hidden',
-                  pointerEvents: 'none',
-                  transition: 'all 0.35s ease',
-                  zIndex: 1
-                }}
-              >
+          <div
+            style={{
+              width: '100%',
+              maxWidth: '410px',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              minHeight: 0
+            }}
+          >
+            {/* Card Deck Viewport */}
+            <div style={{ position: 'relative', width: '100%', flex: 1, minHeight: 0, borderRadius: '24px' }}>
+              {/* Background Card 3 (Bottom of deck) */}
+              {candidates[2] && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    transform: 'scale(0.92) translateY(18px)',
+                    transformOrigin: 'bottom center',
+                    opacity: 0.5,
+                    filter: 'brightness(0.65)',
+                    borderRadius: '24px',
+                    overflow: 'hidden',
+                    pointerEvents: 'none',
+                    transition: 'all 0.35s ease',
+                    zIndex: 1
+                  }}
+                >
+                  <CandidateCardView
+                    candidate={candidates[2]}
+                    isStaticPreview={true}
+                    onCardClick={() => {}}
+                    onLikeClick={() => {}}
+                    onPassClick={() => {}}
+                    onCheckCompatibility={() => {}}
+                  />
+                </div>
+              )}
+
+              {/* Background Card 2 (Middle of deck) */}
+              {candidates[1] && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    transform: 'scale(0.96) translateY(9px)',
+                    transformOrigin: 'bottom center',
+                    opacity: 0.82,
+                    filter: 'brightness(0.8)',
+                    borderRadius: '24px',
+                    overflow: 'hidden',
+                    pointerEvents: 'none',
+                    transition: 'all 0.35s ease',
+                    zIndex: 2
+                  }}
+                >
+                  <CandidateCardView
+                    candidate={candidates[1]}
+                    isStaticPreview={true}
+                    onCardClick={() => {}}
+                    onLikeClick={() => {}}
+                    onPassClick={() => {}}
+                    onCheckCompatibility={() => {}}
+                  />
+                </div>
+              )}
+
+              {/* Active Top Interactive Card */}
+              <div style={{ position: 'relative', width: '100%', height: '100%', zIndex: 10 }}>
                 <CandidateCardView
-                  candidate={candidates[2]}
-                  isStaticPreview={true}
-                  onCardClick={() => {}}
-                  onLikeClick={() => {}}
-                  onPassClick={() => {}}
-                  onCheckCompatibility={() => {}}
+                  key={currentCandidate.id}
+                  candidate={currentCandidate}
+                  onCardClick={() => {
+                    selectCandidate(currentCandidate);
+                    navigate('/candidate-detail');
+                  }}
+                  onLikeClick={() => likeCandidate(currentCandidate, () => navigate('/match-celebration'))}
+                  onPassClick={() => passCandidate(currentCandidate)}
+                  onCheckCompatibility={() =>
+                    checkCompatibility(currentCandidate, () => navigate('/horoscope-compatibility'))
+                  }
                 />
               </div>
-            )}
+            </div>
 
-            {/* Background Card 2 (Middle of deck) */}
-            {candidates[1] && (
-              <div
+            {/* Tactical Floating Action Bar */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '18px',
+                paddingTop: '10px',
+                paddingBottom: '2px',
+                zIndex: 20
+              }}
+            >
+              {/* Rewind Button */}
+              <button
+                onClick={rewindCandidate}
+                disabled={passedCandidatesHistory.length === 0}
                 style={{
-                  position: 'absolute',
-                  inset: 0,
-                  transform: 'scale(0.96) translateY(11px)',
-                  transformOrigin: 'bottom center',
-                  opacity: 0.85,
-                  filter: 'brightness(0.82)',
-                  borderRadius: '28px',
-                  overflow: 'hidden',
-                  pointerEvents: 'none',
-                  transition: 'all 0.35s ease',
-                  zIndex: 2
+                  width: 44,
+                  height: 44,
+                  borderRadius: '50%',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(245, 158, 11, 0.35)',
+                  color: passedCandidatesHistory.length > 0 ? 'var(--accent-amber)' : 'rgba(255, 255, 255, 0.25)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: passedCandidatesHistory.length > 0 ? 'pointer' : 'default',
+                  boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2)',
+                  transition: 'all 0.2s ease',
+                  opacity: passedCandidatesHistory.length > 0 ? 1 : 0.4
                 }}
+                title="Rewind last pass"
               >
-                <CandidateCardView
-                  candidate={candidates[1]}
-                  isStaticPreview={true}
-                  onCardClick={() => {}}
-                  onLikeClick={() => {}}
-                  onPassClick={() => {}}
-                  onCheckCompatibility={() => {}}
-                />
-              </div>
-            )}
+                <RotateCcw size={18} />
+              </button>
 
-            {/* Active Top Interactive Card */}
-            <div style={{ position: 'relative', width: '100%', height: '100%', zIndex: 10 }}>
-              <CandidateCardView
-                key={currentCandidate.id}
-                candidate={currentCandidate}
-                onCardClick={() => {
-                  selectCandidate(currentCandidate);
-                  navigate('/candidate-detail');
+              {/* Pass Button */}
+              <button
+                onClick={() => passCandidate(currentCandidate)}
+                style={{
+                  width: 58,
+                  height: 58,
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.16) 0%, rgba(185, 28, 28, 0.28) 100%)',
+                  backdropFilter: 'blur(16px)',
+                  border: '2px solid rgba(239, 68, 68, 0.55)',
+                  color: '#F87171',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  boxShadow: '0 8px 24px rgba(239, 68, 68, 0.25)',
+                  transition: 'transform 0.15s ease, box-shadow 0.2s ease'
                 }}
-                onLikeClick={() => likeCandidate(currentCandidate, () => navigate('/match-celebration'))}
-                onPassClick={() => passCandidate(currentCandidate)}
-                onCheckCompatibility={() =>
+                title="Pass"
+              >
+                <X size={28} strokeWidth={2.8} />
+              </button>
+
+              {/* Kundali / Astro Button */}
+              <button
+                onClick={() =>
                   checkCompatibility(currentCandidate, () => navigate('/horoscope-compatibility'))
                 }
-              />
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(184, 148, 46, 0.3) 100%)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1.5px solid rgba(212, 175, 55, 0.65)',
+                  color: 'var(--accent-amber)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  boxShadow: '0 6px 20px rgba(212, 175, 55, 0.25)',
+                  transition: 'transform 0.15s ease'
+                }}
+                title={userProfile.intent === 'Marriage' ? 'Check Kundali' : 'Check Compatibility'}
+              >
+                <Sparkles size={22} fill="var(--accent-amber)" />
+              </button>
+
+              {/* Like Button */}
+              <button
+                onClick={() =>
+                  likeCandidate(currentCandidate, () => navigate('/match-celebration'))
+                }
+                style={{
+                  width: 62,
+                  height: 62,
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                  border: 'none',
+                  color: '#FFF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  boxShadow: '0 8px 28px rgba(16, 185, 129, 0.45)',
+                  transition: 'transform 0.15s ease, box-shadow 0.2s ease'
+                }}
+                title="Like"
+              >
+                <Heart size={30} fill="#FFF" />
+              </button>
             </div>
           </div>
         ) : (

@@ -100,29 +100,29 @@ export const VoiceIntroCard: React.FC<VoiceIntroCardProps> = ({
 
   return (
     <div
+      onPointerDown={(e) => e.stopPropagation()}
       style={{
-        padding: '8px 14px',
-        borderRadius: '16px',
-        background: 'linear-gradient(135deg, rgba(24, 20, 36, 0.78) 0%, rgba(14, 12, 22, 0.85) 100%)',
+        padding: '5px 12px 5px 6px',
+        borderRadius: '9999px',
+        background: 'rgba(14, 11, 22, 0.72)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        border: '1px solid rgba(212, 175, 55, 0.25)',
-        display: 'flex',
+        border: '1px solid rgba(212, 175, 55, 0.35)',
+        display: 'inline-flex',
         alignItems: 'center',
-        gap: '12px',
-        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)',
-        width: '100%',
+        gap: '8px',
+        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.35)',
+        width: 'fit-content',
         maxWidth: '100%',
-        transition: 'border-color 0.25s ease'
+        transition: 'all 0.2s ease'
       }}
     >
       {/* Play/Pause Gold Button */}
       <button
-        onPointerDown={(e) => e.stopPropagation()}
         onClick={togglePlay}
         style={{
-          width: 36,
-          height: 36,
+          width: 26,
+          height: 26,
           borderRadius: '50%',
           border: 'none',
           background: 'linear-gradient(135deg, #D4AF37 0%, #B8942E 100%)',
@@ -132,43 +132,36 @@ export const VoiceIntroCard: React.FC<VoiceIntroCardProps> = ({
           justifyContent: 'center',
           cursor: 'pointer',
           flexShrink: 0,
-          boxShadow: isPlaying
-            ? '0 0 16px rgba(212, 175, 55, 0.65)'
-            : '0 2px 10px rgba(212, 175, 55, 0.25)',
-          transition: 'transform 0.15s ease, box-shadow 0.25s ease'
+          boxShadow: isPlaying ? '0 0 10px rgba(212, 175, 55, 0.7)' : '0 1px 4px rgba(0,0,0,0.3)',
+          transition: 'transform 0.15s ease'
         }}
       >
         {isPlaying ? (
-          <Pause size={16} fill="#0B0B0E" />
+          <Pause size={11} fill="#0B0B0E" />
         ) : (
-          <Play size={16} fill="#0B0B0E" style={{ marginLeft: 2 }} />
+          <Play size={11} fill="#0B0B0E" style={{ marginLeft: 1 }} />
         )}
       </button>
 
-      {/* Center Details: Prompt & Mini Dynamic Equalizer */}
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Mic size={11} color="var(--accent-amber)" />
-          <span
-            style={{
-              fontSize: '0.72rem',
-              fontWeight: 700,
-              color: 'var(--accent-amber-light)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.3px',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis'
-            }}
-          >
-            {candidateName}'s Voice Note
-          </span>
-        </div>
+      {/* Label & Dynamic Visualizer Bars */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Mic size={10} color="var(--accent-amber)" />
+        <span
+          style={{
+            fontSize: '0.68rem',
+            fontWeight: 700,
+            color: 'var(--accent-amber-light)',
+            letterSpacing: '0.2px',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          Voice Intro
+        </span>
 
-        {/* Equalizer Visualizer Bars */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '2.5px', height: '14px', width: '100%' }}>
-          {[35, 65, 90, 45, 100, 75, 50, 95, 70, 40, 85, 60, 90, 80, 50, 85].map((heightPct, idx) => {
-            const barProgress = (idx / 16) * 100;
+        {/* Mini Waveform Bars */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2px', height: '11px', width: '44px' }}>
+          {[40, 80, 50, 100, 60, 90, 45, 75].map((heightPct, idx) => {
+            const barProgress = (idx / 8) * 100;
             const isActive = barProgress <= progress;
             return (
               <div
@@ -181,8 +174,8 @@ export const VoiceIntroCard: React.FC<VoiceIntroCardProps> = ({
                   borderRadius: '9999px',
                   background: isActive
                     ? 'linear-gradient(180deg, #FDE68A 0%, #D4AF37 100%)'
-                    : 'rgba(255, 255, 255, 0.18)',
-                  transition: 'height 0.15s ease, background 0.15s ease'
+                    : 'rgba(255, 255, 255, 0.25)',
+                  transition: 'height 0.15s ease'
                 }}
               />
             );
@@ -190,23 +183,10 @@ export const VoiceIntroCard: React.FC<VoiceIntroCardProps> = ({
         </div>
       </div>
 
-      {/* Right Duration Badge */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-          background: 'rgba(212, 175, 55, 0.12)',
-          border: '1px solid rgba(212, 175, 55, 0.25)',
-          padding: '3px 8px',
-          borderRadius: '9999px',
-          flexShrink: 0
-        }}
-      >
-        <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--accent-amber-light)' }}>
-          0:{isPlaying ? String(Math.floor((progress / 100) * durationSeconds)).padStart(2, '0') : durationSeconds}
-        </span>
-      </div>
+      {/* Duration */}
+      <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.65)', flexShrink: 0 }}>
+        0:{isPlaying ? String(Math.floor((progress / 100) * durationSeconds)).padStart(2, '0') : durationSeconds}
+      </span>
     </div>
   );
 };

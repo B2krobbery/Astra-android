@@ -6,7 +6,7 @@ export const translations: Record<AppLanguage, Record<string, string>> = {
     app_name: 'MANGALSUTRA',
     tab_discover: 'Discover',
     tab_matches: 'Matches',
-    tab_astro_ai: 'Astro AI',
+    tab_astro_ai: 'Kundali',
     tab_profile: 'Profile',
 
     // Header & Actions
@@ -88,7 +88,7 @@ export const translations: Record<AppLanguage, Record<string, string>> = {
     app_name: 'മംഗളസൂത്ര',
     tab_discover: 'കണ്ടെത്തുക',
     tab_matches: 'പൊരുത്തങ്ങൾ',
-    tab_astro_ai: 'അസ്ട്രോ AI',
+    tab_astro_ai: 'ജാതകം',
     tab_profile: 'പ്രൊഫൈൽ',
 
     // Header & Actions
@@ -170,7 +170,7 @@ export const translations: Record<AppLanguage, Record<string, string>> = {
     app_name: 'मंगलसूत्र',
     tab_discover: 'खोजें',
     tab_matches: 'जोड़ियां',
-    tab_astro_ai: 'एस्ट्रो AI',
+    tab_astro_ai: 'कुंडली',
     tab_profile: 'प्रोफ़ाइल',
 
     // Header & Actions

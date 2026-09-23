@@ -83,6 +83,29 @@ export const DiscoveryService = {
         userPhotoPathsMap[p.id] = paths;
       });
 
+      // Check avatars storage folder for candidates who uploaded multiple photos to storage
+      for (const p of profiles) {
+        let paths = userPhotoPathsMap[p.id] || [];
+        if (paths.length <= 1 && p.id && !p.id.startsWith('mock_')) {
+          try {
+            const { data: storageFiles } = await supabase.storage.from('avatars').list(p.id);
+            if (storageFiles && storageFiles.length > 0) {
+              storageFiles.forEach((f: any) => {
+                if (f && f.name && !f.name.startsWith('.')) {
+                  const fullPath = `${p.id}/${f.name}`;
+                  if (!paths.includes(fullPath)) {
+                    paths.push(fullPath);
+                  }
+                }
+              });
+              userPhotoPathsMap[p.id] = paths.slice(0, 5);
+            }
+          } catch (_) {
+            // Silently ignore if storage listing not permitted
+          }
+        }
+      }
+
       // Collect all distinct paths to sign
       const allPaths: string[] = [];
       Object.values(userPhotoPathsMap).forEach(paths => {
