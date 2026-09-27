@@ -310,7 +310,12 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   useEffect(() => {
-    if (sessionUser) loadBackendData();
+    if (sessionUser) {
+      loadBackendData();
+      import('../services/PushNotificationService').then((m) => {
+        m.PushNotificationService.register(sessionUser.id);
+      });
+    }
   }, [sessionUser, loadBackendData]);
 
   useEffect(() => {
