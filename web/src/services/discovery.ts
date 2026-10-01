@@ -261,7 +261,8 @@ export const DiscoveryService = {
       const { error } = await supabase
         .from('interactions')
         .delete()
-        .eq('actor_id', actorId);
+        .eq('actor_id', actorId)
+        .eq('action_type', 'PASS');
         
       if (error) throw error;
     }

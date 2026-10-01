@@ -941,9 +941,6 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const resetFeed = async () => {
     try {
       setPassedCandidatesHistory([]);
-      setSentRequests([]);
-      setPendingRequests([]);
-      setConversations([]);
       await DiscoveryService.resetInteractions();
       await loadBackendData();
     } catch (e) {
