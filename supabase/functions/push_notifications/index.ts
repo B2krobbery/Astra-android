@@ -16,19 +16,38 @@ async function getAccessToken(clientEmail: string, privateKey: string): Promise<
   return tokens.token as string;
 }
 
-async function sendPushNotification(token: string, title: string, body: string, projectId: string, accessToken: string) {
+async function sendPushNotification(token: string, title: string, body: string, projectId: string, accessToken: string, imageUrl?: string) {
+  const message: any = {
+    token: token,
+    notification: { title, body }
+  };
+  
+  if (imageUrl) {
+    message.notification.image = imageUrl;
+    message.android = {
+      notification: {
+        image: imageUrl
+      }
+    };
+    message.apns = {
+      payload: {
+        aps: {
+          'mutable-content': 1
+        }
+      },
+      fcm_options: {
+        image: imageUrl
+      }
+    };
+  }
+
   const response = await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${accessToken}`
     },
-    body: JSON.stringify({
-      message: {
-        token: token,
-        notification: { title, body }
-      }
-    })
+    body: JSON.stringify({ message })
   });
   return response.json();
 }
@@ -46,12 +65,13 @@ serve(async (req) => {
     // ==========================================
     if (payload.type === 'INSERT' && payload.table === 'interactions') {
       const interaction = payload.record;
-      if (interaction.type !== 'LIKE') {
+      const actionType = interaction.action_type || interaction.type;
+      if (actionType !== 'LIKE') {
          return new Response(JSON.stringify({ message: "Ignored non-like" }), { headers: { "Content-Type": "application/json" } });
       }
 
-      const targetUserId = interaction.target_user_id;
-      const sourceUserId = interaction.user_id;
+      const targetUserId = interaction.target_id || interaction.target_user_id;
+      const sourceUserId = interaction.actor_id || interaction.user_id;
 
       const { data: targetProfile } = await supabase.from('profiles').select('*').eq('id', targetUserId).single();
       const { data: sourceProfile } = await supabase.from('profiles').select('*').eq('id', sourceUserId).single();
@@ -85,14 +105,30 @@ serve(async (req) => {
         try {
           const serviceAccount = JSON.parse(FIREBASE_SA);
           const accessToken = await getAccessToken(serviceAccount.client_email, serviceAccount.private_key);
-          
+
+          let sourceImageUrl = sourceProfile.photo_url || sourceProfile.avatar_url;
+          if (!sourceImageUrl) {
+            const { data: primaryPhoto } = await supabase.from('profile_photos').select('storage_path').eq('user_id', sourceUserId).eq('is_primary', true).maybeSingle();
+            if (primaryPhoto?.storage_path) {
+              if (primaryPhoto.storage_path.startsWith('http')) {
+                sourceImageUrl = primaryPhoto.storage_path;
+              } else {
+                const { data: urlData } = await supabase.storage.from('avatars').createSignedUrl(primaryPhoto.storage_path, 3600);
+                if (urlData?.signedUrl) {
+                  sourceImageUrl = urlData.signedUrl;
+                }
+              }
+            }
+          }
+
           for (const pt of pushTokens) {
             const pushResult = await sendPushNotification(
               pt.token, 
               "You got a new like! ✨", 
               `${sourceProfile.display_name} just swiped right on you.`, 
               serviceAccount.project_id, 
-              accessToken
+              accessToken,
+              sourceImageUrl
             );
             console.log("Push result:", pushResult);
           }
