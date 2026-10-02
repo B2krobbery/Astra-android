@@ -4,6 +4,8 @@ import { AstraProvider, useAstra } from './context/AstraContext';
 import { ChaanbeanModal } from './components/ChaanbeanModal';
 import { ReferralModal } from './components/ReferralModal';
 import { SplashScreenOverlay } from './components/SplashScreenOverlay';
+import { DesktopNavigation } from './components/DesktopNavigation';
+import { DesktopAstroAiDrawer } from './components/DesktopAstroAiDrawer';
 
 const SplashPage = React.lazy(() => import('./pages/SplashPage').then(m => ({ default: m.SplashPage })));
 const TypeformOnboardingPage = React.lazy(() => import('./pages/TypeformOnboardingPage').then(m => ({ default: m.TypeformOnboardingPage })));
@@ -65,12 +67,22 @@ const AppRoutes: React.FC = () => {
       const refreshToken = params.get('refresh_token');
       if (accessToken && refreshToken) {
         supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }).then(() => {
-          // Clear hash from URL for cleaner history
           window.history.replaceState(null, '', window.location.pathname);
-          // Reload page to let AstraContext pick up the session cleanly and redirect
           window.location.reload();
         });
       }
+    }
+
+    // Handle Web browser OAuth redirect (PKCE flow with ?code=...)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('code')) {
+      const code = urlParams.get('code')!;
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (!error) {
+          window.history.replaceState(null, '', window.location.pathname);
+          navigate('/discover');
+        }
+      });
     }
   }, [navigate]);
 
@@ -78,6 +90,12 @@ const AppRoutes: React.FC = () => {
     <div className="app-container">
       {/* Animated Celestial Splash Screen Overlay on Initial App Load */}
       <SplashScreenOverlay />
+
+      {/* Desktop Top Navigation Header (hidden on mobile, visible on desktop >= 1024px) */}
+      <DesktopNavigation />
+
+      {/* Persistent Floating Astro AI Assistant Drawer (Desktop only, >= 1024px) */}
+      <DesktopAstroAiDrawer />
 
       <React.Suspense fallback={<div className="glass-page" style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}><span className="spin-slow" style={{ fontSize: "2rem" }}>✨</span></div>}><Routes>
         <Route path="/" element={<SplashPage />} />

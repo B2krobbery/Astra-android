@@ -19,7 +19,7 @@ import {
   ReferralData
 } from '../types';
 
-import { getVerificationDetail, initialAiAgents, initialAdminMetrics, initialMarketingCampaigns, initialReferralData, astroAiKnowledge, suggestedQuestions, initialAiMessages } from '../data/mockData';
+import { getVerificationDetail, initialAiAgents, initialAdminMetrics, initialMarketingCampaigns, initialReferralData, astroAiKnowledge, suggestedQuestions, initialAiMessages, mockCandidates } from '../data/mockData';
 import { translations } from '../data/translations';
 import { AstrologyEngine } from '../data/astrologyEngine';
 
@@ -113,6 +113,9 @@ interface AstraContextType {
   astroAiMessages: ChatMessage[];
   askAstroAi: (question: string) => void;
   isAstroAiTyping: boolean;
+  isAstroAiDrawerOpen: boolean;
+  setIsAstroAiDrawerOpen: (open: boolean) => void;
+  toggleAstroAiDrawer: () => void;
 
   isChaanbeanOpen: boolean;
   chaanbeanTarget: Candidate | null;
@@ -155,6 +158,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [isPreferenceStrictFilterOn, setIsPreferenceStrictFilterOn] = useState(false);
   const strictFilterRef = useRef(false);
+  const hasUserToggledStrictRef = useRef(false);
   useEffect(() => { strictFilterRef.current = isPreferenceStrictFilterOn; }, [isPreferenceStrictFilterOn]);
 
   const [isNearbyOnly, setIsNearbyOnly] = useState(false);
@@ -346,14 +350,19 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
            }
          } as any));
 
-          // If the user explicitly configured MUST_HAVE or PREFERRED with a specific caste/religion, default strict filter to true!
-          const hasStrictPref = !!(
-            preferencesData?.tier_caste === 'MUST_HAVE' ||
-            preferencesData?.tier_religion === 'MUST_HAVE'
-          );
-          const activeStrict = hasStrictPref ? true : strictFilterRef.current;
-          setIsPreferenceStrictFilterOn(activeStrict);
-          strictFilterRef.current = activeStrict;
+          // Honor user's explicit strict filter setting. Only default to true on initial load if user hasn't toggled it!
+          let activeStrict = strictFilterRef.current;
+          if (!hasUserToggledStrictRef.current) {
+            const hasStrictPref = !!(
+              preferencesData?.tier_caste === 'MUST_HAVE' ||
+              preferencesData?.tier_religion === 'MUST_HAVE'
+            );
+            if (hasStrictPref) {
+              activeStrict = true;
+              setIsPreferenceStrictFilterOn(true);
+              strictFilterRef.current = true;
+            }
+          }
 
           const initFilters = buildDiscoveryFilters(
             activeStrict,
@@ -583,7 +592,9 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Candidates & Regional Filtering
   const [passedCandidatesHistory, setPassedCandidatesHistory] = useState<Candidate[]>([]);
-  const [pendingRequests, setPendingRequests] = useState<Candidate[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<Candidate[]>(() => {
+    return mockCandidates && mockCandidates.length > 2 ? [mockCandidates[2]] : [];
+  });
   const [incomingPhotoRequests, setIncomingPhotoRequests] = useState<PhotoRequestRecord[]>([]);
   const loadIncomingPhotoRequests = async () => { const reqs = await PhotoService.getIncomingRequests(); setIncomingPhotoRequests(reqs); };
   const [sentRequests, setSentRequests] = useState<Candidate[]>([]);
@@ -592,6 +603,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [lastMatchedCandidate, setLastMatchedCandidate] = useState<Candidate | null>(null);
 
   const setPreferenceStrictFilter = async (val: boolean) => {
+    hasUserToggledStrictRef.current = true;
     setIsPreferenceStrictFilterOn(val);
     strictFilterRef.current = val;
     try {
@@ -798,6 +810,8 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Astro AI
   const [astroAiMessages, setAstroAiMessages] = useState<ChatMessage[]>(initialAiMessages);
   const [isAstroAiTyping, setIsAstroAiTyping] = useState(false);
+  const [isAstroAiDrawerOpen, setIsAstroAiDrawerOpen] = useState(false);
+  const toggleAstroAiDrawer = () => setIsAstroAiDrawerOpen(prev => !prev);
 
   // Verification Modal
   const [isChaanbeanOpen, setIsChaanbeanOpen] = useState(false);
@@ -960,23 +974,53 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const likeCandidate = async (candidate: Candidate, onMatch?: () => void, onNotMatch?: () => void) => {
     const currentUserId = sessionUser?.id;
+    const isIncoming = pendingRequests.some(c => c.id === candidate.id);
 
-    // Remove from UI immediately for snappy feel
+    // Remove from candidate feed immediately for snappy feel
     setCandidates((prev: any) => {
       return prev.filter((c: any) => c.id !== candidate.id);
     });
     
-    // Optimistically add to Sent Requests
-    setSentRequests((prev: any) => [candidate, ...prev]);
+    // If it was an incoming request, remove from pending requests immediately
+    if (isIncoming) {
+      setPendingRequests((prev: any) => prev.filter((c: any) => c.id !== candidate.id));
+    } else {
+      // Optimistically add to Sent Requests
+      setSentRequests((prev: any) => [candidate, ...prev.filter((c: any) => c.id !== candidate.id)]);
+    }
 
     try {
       // Save to backend using atomic SECURITY DEFINER RPC
       const { isMatch } = await DiscoveryService.interact(candidate.id, 'LIKE', currentUserId);
 
-      if (isMatch) {
+      if (isMatch || isIncoming) {
         setLastMatchedCandidate(candidate);
-        // Remove from sent requests if it became a mutual match
+        // Remove from sent and pending requests if it became a mutual match
         setSentRequests((prev: any) => prev.filter((c: any) => c.id !== candidate.id));
+        setPendingRequests((prev: any) => prev.filter((c: any) => c.id !== candidate.id));
+
+        // Optimistically create the conversation so the user can chat right away
+        setConversations(prev => {
+          if (prev.some(c => c.candidate.id === candidate.id)) return prev;
+          const newConv: MatchConversation = {
+            id: `conv_${candidate.id}_${Date.now()}`,
+            candidate: candidate,
+            lastMessage: 'Match confirmed! Start chatting.',
+            timestamp: 'Just now',
+            unreadCount: 0,
+            messages: [
+              {
+                id: `welcome_${Date.now()}`,
+                senderName: candidate.name,
+                message: `Namaste! You both liked each other. Say hello to ${candidate.name}!`,
+                timestamp: 'Just now',
+                isFromUser: false
+              }
+            ]
+          };
+          return [newConv, ...prev];
+        });
+
         if (onMatch) {
           onMatch();
         }
@@ -1004,10 +1048,10 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           
           if (dbConversations && dbConversations.length > 0) setConversations(dbConversations as any);
           if (dbCandidates) setCandidates(dbCandidates);
-          if (dbPending) setPendingRequests(dbPending);
-          if (dbSent) setSentRequests(dbSent);
+          if (dbPending && dbPending.length > 0) setPendingRequests(dbPending);
+          if (dbSent && dbSent.length > 0) setSentRequests(dbSent);
           
-          if (isMatch) {
+          if (isMatch || isIncoming) {
             const match = dbConversations?.find(c => c.candidate.id === candidate.id);
             if (match) {
               setActiveConversation(match as any);
@@ -1036,6 +1080,12 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     DiscoveryService.interact(candidate.id, 'PASS', currentUserId).catch(console.error);
 
     setCandidates((prev: any) => {
+      return prev.filter((c: any) => c.id !== candidate.id);
+    });
+    setPendingRequests((prev: any) => {
+      return prev.filter((c: any) => c.id !== candidate.id);
+    });
+    setSentRequests((prev: any) => {
       return prev.filter((c: any) => c.id !== candidate.id);
     });
   };
@@ -1358,6 +1408,9 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         astroAiMessages,
         askAstroAi,
         isAstroAiTyping,
+        isAstroAiDrawerOpen,
+        setIsAstroAiDrawerOpen,
+        toggleAstroAiDrawer,
         isChaanbeanOpen, chaanbeanTarget, openChaanbean, closeChaanbean,
         
         

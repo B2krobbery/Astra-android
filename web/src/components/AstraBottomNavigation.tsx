@@ -20,7 +20,7 @@ export const AstraBottomNavigation: React.FC = () => {
 
   return (
     <nav
-      className="glass-bottom-nav floating-tube-nav"
+      className="glass-bottom-nav floating-tube-nav mobile-only"
       style={{
         position: 'fixed',
         bottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',

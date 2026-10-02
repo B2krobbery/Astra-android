@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAstra } from '../context/AstraContext';
 import { AstraBottomNavigation } from '../components/AstraBottomNavigation';
 import { ChatBubble } from '../components/ChatBubble';
@@ -6,9 +7,18 @@ import { Sparkles, Send, Bot } from 'lucide-react';
 import { suggestedQuestions } from '../data/mockData';
 
 export const AstroAiAssistantPage: React.FC = () => {
-  const { astroAiMessages, askAstroAi, isAstroAiTyping, t } = useAstra();
+  const { astroAiMessages, askAstroAi, isAstroAiTyping, t, setIsAstroAiDrawerOpen } = useAstra();
+  const navigate = useNavigate();
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // If accessed on desktop, open the floating assistant drawer and redirect to /discover
+    if (window.innerWidth >= 1024) {
+      setIsAstroAiDrawerOpen(true);
+      navigate('/discover', { replace: true });
+    }
+  }, [navigate, setIsAstroAiDrawerOpen]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -32,40 +42,42 @@ export const AstroAiAssistantPage: React.FC = () => {
         background: 'transparent'
       }}
     >
-      {/* Top Header Bar */}
-      <header
-        style={{
-          padding: 'calc(16px + env(safe-area-inset-top, 0px)) 20px 16px 20px',
-          background: 'var(--ai-header-bg)',
-          borderBottom: '1px solid var(--accent-amber)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px'
-        }}
-      >
-        <div
+      <div style={{ maxWidth: '920px', margin: '0 auto', width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {/* Mobile Header Bar */}
+        <header
+          className="mobile-only"
           style={{
-            width: 42,
-            height: 42,
-            borderRadius: '50%',
-            background: 'rgba(245, 158, 11, 0.2)',
+            padding: 'calc(16px + env(safe-area-inset-top, 0px)) 20px 16px 20px',
+            background: 'var(--ai-header-bg)',
+            borderBottom: '1px solid var(--accent-amber)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            border: '1px solid var(--accent-amber)'
+            gap: '12px'
           }}
         >
-          <Bot size={22} color="var(--accent-amber)" />
-        </div>
-        <div>
-          <h2 className="heading-font" style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--accent-amber)' }}>
-            {t('astro_ai_guide')} ✨
-          </h2>
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
-            Vedic Astrology Intelligence
-          </span>
-        </div>
-      </header>
+          <div
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: '50%',
+              background: 'rgba(245, 158, 11, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '1px solid var(--accent-amber)'
+            }}
+          >
+            <Bot size={22} color="var(--accent-amber)" />
+          </div>
+          <div>
+            <h2 className="heading-font" style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--accent-amber)' }}>
+              {t('astro_ai_guide')} ✨
+            </h2>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+              Vedic Astrology Intelligence
+            </span>
+          </div>
+        </header>
 
       {/* Messages */}
       <main style={{ flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', maxWidth: '800px', margin: '0 auto', width: '100%' }}>
@@ -163,6 +175,7 @@ export const AstroAiAssistantPage: React.FC = () => {
           <Send size={18} />
         </button>
       </form>
+      </div>
 
       <AstraBottomNavigation />
     </div>

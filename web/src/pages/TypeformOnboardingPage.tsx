@@ -152,6 +152,7 @@ export const TypeformOnboardingPage: React.FC = () => {
         style={{ display: 'none' }}
       />
 
+      <div style={{ maxWidth: '640px', width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between' }}>
       {/* Top Header & Progress Bar */}
       <div style={{ position: 'relative', zIndex: 5 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -580,6 +581,7 @@ export const TypeformOnboardingPage: React.FC = () => {
       >
         {step === totalSteps ? t('btn_complete') : t('btn_continue')} <ArrowRight size={18} />
       </button>
+      </div>
     </div>
   );
 };

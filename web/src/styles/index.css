@@ -64,7 +64,90 @@ body {
   pointer-events: none;
 }
 
-/* Desktop styles are now handled natively without phone emulation */
+/* Desktop vs Mobile Responsive Shell */
+@media (min-width: 1024px) {
+  .app-container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    box-shadow: none;
+    overflow-y: auto;
+  }
+
+  .desktop-only {
+    display: flex !important;
+  }
+
+  .mobile-only {
+    display: none !important;
+  }
+
+  .desktop-page-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .discover-main {
+    margin-top: 14px !important;
+    margin-bottom: 24px !important;
+  }
+
+  .matches-glass-page,
+  .profile-glass-page,
+  .horoscope-glass-page,
+  .astro-ai-glass-page,
+  .admin-glass-page,
+  .candidate-detail-glass-page,
+  .chat-glass-page {
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+    border-left: none !important;
+    border-right: none !important;
+    height: calc(100vh - 68px) !important;
+    min-height: calc(100vh - 68px) !important;
+    box-shadow: none !important;
+    padding-bottom: 0 !important;
+    overflow-y: auto;
+  }
+
+  .discover-glass-page {
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    height: calc(100vh - 68px) !important;
+    min-height: calc(100vh - 68px) !important;
+    overflow: hidden !important;
+  }
+
+  .onboarding-step-card {
+    max-width: 680px !important;
+    margin: 20px auto !important;
+  }
+
+  /* Desktop Two-Column Layout Helpers */
+  .desktop-two-col {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 28px !important;
+    max-width: 1240px !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .desktop-sticky-pane {
+    position: sticky !important;
+    top: 0 !important;
+    align-self: flex-start !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .desktop-only {
+    display: none !important;
+  }
+}
 /* Scrollbar customization */
 ::-webkit-scrollbar {
   width: 5px;
@@ -111,6 +194,17 @@ body {
 
 .float-orb {
   animation: floatOrb 4s ease-in-out infinite;
+}
+
+@keyframes astroDrawerIn {
+  from {
+    opacity: 0;
+    transform: translateX(32px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
 }
 
 /* Glassmorphism Cards */
@@ -292,3 +386,20 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Desktop Candidate Catalog Feed (Amazon/Flipkart Style) */
+.desktop-catalog-scroll {
+  scroll-behavior: smooth;
+}
+
+.desktop-catalog-card {
+  flex-shrink: 0 !important;
+  min-height: 380px !important;
+}
+
+.desktop-catalog-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(212, 175, 55, 0.4) !important;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45) !important;
+}
+

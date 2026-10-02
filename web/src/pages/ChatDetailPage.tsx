@@ -7,7 +7,7 @@ import { ChatBubble } from '../components/ChatBubble';
 
 export const ChatDetailPage: React.FC = () => {
   const navigate = useNavigate();
-  const { activeConversation, sendChatMessage, selectedCandidate, userProfile } = useAstra();
+  const { activeConversation, sendChatMessage, selectedCandidate, userProfile, selectCandidate } = useAstra();
   const [inputText, setInputText] = useState('');
   const [showIcebreakers, setShowIcebreakers] = useState(false);
 
@@ -41,6 +41,18 @@ export const ChatDetailPage: React.FC = () => {
         background: 'var(--bg-primary)'
       }}
     >
+      <div
+        style={{
+          maxWidth: '960px',
+          margin: '0 auto',
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          borderLeft: '1px solid var(--border-color)',
+          borderRight: '1px solid var(--border-color)'
+        }}
+      >
       {/* Top Bar Header */}
       <header
         style={{
@@ -75,7 +87,25 @@ export const ChatDetailPage: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-secondary)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-secondary)' }}>
+          <button
+            onClick={() => {
+              selectCandidate(candidate);
+              navigate('/candidate-detail');
+            }}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '9999px',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid var(--border-color)',
+              color: 'var(--text-primary)',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            Profile
+          </button>
           <Phone size={18} style={{ cursor: 'pointer' }} />
           <Video size={18} style={{ cursor: 'pointer' }} />
         </div>
@@ -201,6 +231,7 @@ export const ChatDetailPage: React.FC = () => {
           <Send size={16} />
         </button>
       </form>
+      </div>
     </div>
   );
 };

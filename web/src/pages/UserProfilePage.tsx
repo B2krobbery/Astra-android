@@ -186,6 +186,7 @@ export const UserProfilePage: React.FC = () => {
 
       {/* Top Bar */}
       <header
+        className="mobile-only"
         style={{
           padding: 'calc(16px + env(safe-area-inset-top, 0px)) 20px 16px 20px',
           background: 'var(--bg-secondary)',
@@ -207,7 +208,7 @@ export const UserProfilePage: React.FC = () => {
         </button>
       </header>
 
-      <main style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '600px', margin: '0 auto', width: '100%' }}>
+      <main style={{ padding: '24px 20px 48px', display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '860px', margin: '0 auto', width: '100%' }}>
         {/* User Card with Photo Upload Overlay */}
         <div
           style={{

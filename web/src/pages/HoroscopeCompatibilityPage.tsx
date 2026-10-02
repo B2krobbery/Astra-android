@@ -12,8 +12,9 @@ import { NadiShastraProvider } from '../data/NadiShastraProvider';
 
 export const HoroscopeCompatibilityPage: React.FC = () => {
   const navigate = useNavigate();
-  const { userProfile, selectedCandidate, openConversationForCandidate } = useAstra();
-  const candidate = selectedCandidate;
+  const { userProfile, selectedCandidate, openConversationForCandidate, candidates, conversations, selectCandidate } = useAstra();
+  const [localCandidate, setLocalCandidate] = React.useState<any>(null);
+  const candidate = localCandidate || selectedCandidate;
 
   const handleStartChatting = () => {
     if (candidate) {
@@ -200,10 +201,134 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
   }, [userProfile, candidate, astroResult]);
 
   if (!candidate) {
+    const allAvailable = [
+      ...conversations.map(c => ({ ...c.candidate, isMatch: true })),
+      ...candidates.filter(c => !conversations.some(con => con.candidate.id === c.id))
+    ];
+
     return (
-      <div style={{ padding: '40px 20px', textAlign: 'center' }}>
-        <p>No candidate selected.</p>
-        <PrimaryButton onClick={() => navigate('/discover')}>Return to Discover Feed</PrimaryButton>
+      <div
+        className="glass-page horoscope-glass-page"
+        style={{
+          minHeight: '100vh',
+          height: '100vh',
+          background: 'transparent',
+          color: 'var(--text-primary)',
+          padding: '24px 20px 60px',
+          overflowY: 'auto'
+        }}
+      >
+        <div style={{ maxWidth: '1040px', margin: '0 auto', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+            <button
+              onClick={() => navigate(-1)}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: '50%',
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer'
+              }}
+            >
+              <ArrowLeft size={18} />
+            </button>
+            <div>
+              <h1 className="heading-font" style={{ fontSize: '1.6rem', fontWeight: 800, margin: 0 }}>
+                Select a Partner for Kundali Compatibility ✨
+              </h1>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 0' }}>
+                Compare Ashtakoota Guna Milan (36 Points), Vedic Doshas, and planetary synastry with any connection.
+              </p>
+            </div>
+          </div>
+
+          {allAvailable.length === 0 ? (
+            <div style={{ padding: '48px 24px', textAlign: 'center', background: 'var(--bg-secondary)', borderRadius: '24px', border: '1px solid var(--border-color)' }}>
+              <Sparkles size={36} color="var(--accent-amber)" style={{ margin: '0 auto 16px' }} />
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '8px' }}>No Profiles in Queue</h3>
+              <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', marginBottom: '20px' }}>
+                Discover candidates in your feed to calculate horoscope harmony.
+              </p>
+              <button
+                onClick={() => navigate('/discover')}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '9999px',
+                  background: 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
+                  border: 'none',
+                  color: '#0B0B0E',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                Go to Discovery
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+              {allAvailable.map(cand => (
+                <div
+                  key={cand.id}
+                  style={{
+                    background: 'var(--bg-secondary)',
+                    borderRadius: '20px',
+                    border: '1px solid var(--border-color)',
+                    padding: '18px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                    transition: 'all 0.2s ease',
+                    boxShadow: 'var(--shadow-card)'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <CandidateAvatar src={cand.photoUrls?.[0]} name={cand.name} size={54} isVerified={cand.isVerified} />
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <h3 className="heading-font" style={{ fontSize: '1rem', fontWeight: 800, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {cand.name}, {cand.age}
+                      </h3>
+                      <p style={{ fontSize: '0.78rem', color: 'var(--accent-amber-light)', fontWeight: 600, margin: '2px 0 0' }}>
+                        {cand.nakshatra || 'Nakshatra Unspecified'} · {cand.rashi || 'Rashi'}
+                      </p>
+                      <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {cand.profession || cand.location}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      selectCandidate(cand);
+                      setLocalCandidate(cand);
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      borderRadius: '12px',
+                      background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(124, 58, 237, 0.15) 100%)',
+                      border: '1px solid var(--border-glow)',
+                      color: 'var(--accent-amber-light)',
+                      fontWeight: 700,
+                      fontSize: '0.82rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Sparkles size={14} /> Calculate Kundali Match
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -225,10 +350,10 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
       {/* Fixed Top Bar */}
       <header
         style={{
-          padding: 'calc(16px + env(safe-area-inset-top, 0px)) 20px 16px 20px',
+          padding: 'calc(16px + env(safe-area-inset-top, 0px)) 24px 16px',
           display: 'flex',
           alignItems: 'center',
-          gap: '12px',
+          justifyContent: 'space-between',
           background: 'var(--glass-bg)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
@@ -238,18 +363,42 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
           zIndex: 50
         }}
       >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button
+            onClick={() => navigate(-1)}
+            style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer' }}
+          >
+            <ArrowLeft size={22} />
+          </button>
+          <h1 className="heading-font" style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0 }}>
+            {candidate.intent === 'Marriage' ? `Kundali Harmony: ${candidate.name} 🪐` : `Compatibility: ${candidate.name}`}
+          </h1>
+        </div>
+
         <button
-          onClick={() => navigate('/discover')}
-          style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer' }}
+          onClick={() => {
+            selectCandidate(null as any);
+            setLocalCandidate(null);
+          }}
+          style={{
+            padding: '6px 14px',
+            borderRadius: '9999px',
+            background: 'rgba(245, 158, 11, 0.12)',
+            border: '1px solid var(--accent-amber)',
+            color: 'var(--accent-amber-light)',
+            fontWeight: 700,
+            fontSize: '0.78rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}
         >
-          <ArrowLeft size={22} />
+          <Sparkles size={14} /> Compare Another Profile
         </button>
-        <h1 className="heading-font" style={{ fontSize: '1.1rem', fontWeight: 800 }}>
-          {candidate.intent === 'Marriage' ? 'Vedic Kundali Harmony Report 🪐' : 'Compatibility Report'}
-        </h1>
       </header>
 
-      <main style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '600px', margin: '0 auto', width: '100%' }}>
+      <main style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '860px', margin: '0 auto', width: '100%' }}>
         {/* Avatars Header */}
         <div style={{ textAlign: 'center', marginTop: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', marginBottom: '16px' }}>

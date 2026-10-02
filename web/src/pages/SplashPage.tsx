@@ -372,7 +372,7 @@ export const SplashPage: React.FC = () => {
         </div>
       )}
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', zIndex: 5 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', zIndex: 5, maxWidth: '480px', margin: '0 auto', width: '100%' }}>
         <CelestialLogo size="large" />
 
         <p
@@ -389,7 +389,7 @@ export const SplashPage: React.FC = () => {
         </p>
       </div>
 
-      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px', zIndex: 5 }}>
+      <div style={{ width: '100%', maxWidth: '440px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px', zIndex: 5 }}>
         <h3 style={{ color: 'white', fontSize: '1.1rem', textAlign: 'center', marginBottom: '4px', fontWeight: 700 }}>Choose Your Path</h3>
         
         <PrimaryButton onClick={() => { setSelectedIntent('Dating'); setLoginMethod('EmailSignup'); setIsPhoneModalOpen(true); }} style={{ background: 'linear-gradient(135deg, #F43F5E, #FB923C)', display: 'flex', justifyContent: 'space-between', padding: '16px 20px' }}>

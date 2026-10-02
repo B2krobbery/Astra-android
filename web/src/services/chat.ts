@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { MatchConversation, ChatMessage } from '../types';
+import { DiscoveryService } from './discovery';
 
 export const ChatService = {
   async getConversations(targetUserId?: string): Promise<MatchConversation[]> {
@@ -33,13 +34,19 @@ export const ChatService = {
       .select('*')
       .in('id', otherUserIds);
 
-    const profileMap = new Map((profiles || []).map(p => [p.id, p]));
+    // Map full Candidate objects with all gallery photos and signed URLs
+    const candidates = await DiscoveryService.mapProfilesToCandidates(profiles || []);
+    const candidateMap = new Map(candidates.map(c => [c.id, c]));
 
     // Parallel fetch last message per conversation
     const matchConversations = await Promise.all(
       otherParts.map(async part => {
-        const rawProfile = profileMap.get(part.user_id);
-        if (!rawProfile) return null;
+        const candidate = candidateMap.get(part.user_id);
+        if (!candidate) return null;
+
+        if (!candidate.compatibilityScore) {
+          candidate.compatibilityScore = 90;
+        }
 
         const { data: lastMsg } = await supabase
           .from('messages')
@@ -49,36 +56,9 @@ export const ChatService = {
           .limit(1)
           .maybeSingle();
 
-        let avatarUrl = rawProfile.photo_url || '';
-        if (!avatarUrl && rawProfile.avatar_storage_path) {
-          if (rawProfile.avatar_storage_path.startsWith('http')) {
-            avatarUrl = rawProfile.avatar_storage_path;
-          } else {
-            const { data: signedData } = await supabase.storage
-              .from('avatars')
-              .createSignedUrl(rawProfile.avatar_storage_path, 3600);
-            if (signedData) avatarUrl = signedData.signedUrl;
-          }
-        }
-
         return {
           id: part.conversation_id,
-          candidate: {
-            id: rawProfile.id,
-            name: rawProfile.display_name || 'Unknown',
-            age: rawProfile.date_of_birth ? Math.max(18, new Date().getFullYear() - new Date(rawProfile.date_of_birth).getFullYear()) : 25,
-            profession: rawProfile.profession || '',
-            location: rawProfile.location || '',
-            bio: rawProfile.bio || '',
-            photoUrls: avatarUrl ? [avatarUrl] : [],
-            isVerified: true,
-            educationVerified: true,
-            policeVerified: true,
-            creditVerified: true,
-            interests: [],
-            education: rawProfile.higher_education || '',
-            compatibilityScore: 90
-          },
+          candidate,
           lastMessage: lastMsg ? lastMsg.content : 'New Match!',
           timestamp: lastMsg ? new Date(lastMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now',
           unreadCount: 0,

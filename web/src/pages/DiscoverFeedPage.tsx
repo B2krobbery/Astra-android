@@ -4,9 +4,10 @@ import { useAstra } from '../context/AstraContext';
 import { CandidateCardView } from '../components/CandidateCardView';
 import { AstraBottomNavigation } from '../components/AstraBottomNavigation';
 import { FloatingHeartsBackground } from '../components/FloatingHeartsBackground';
-import { Sparkles, Moon, Sun, ShieldCheck, Share2, Bot, Globe, RotateCcw, MapPin, X, Heart, SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sparkles, Moon, Sun, ShieldCheck, Share2, Globe, RotateCcw, MapPin, X, Heart, SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import { RegionalPreference } from '../types';
 import { preloadImages } from '../utils/imagePreloader';
+import { DesktopDiscoverView } from '../components/DesktopDiscoverView';
 
 export const DiscoverFeedPage: React.FC = () => {
   const navigate = useNavigate();
@@ -85,6 +86,37 @@ export const DiscoverFeedPage: React.FC = () => {
     }
   }, [filteredCandidates]);
 
+  // Desktop Keyboard Shortcuts (Arrow Left = Pass, Arrow Right = Like, Space/Up = Detail, K = Kundali)
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) {
+        return;
+      }
+      if (!currentCandidate) return;
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        passCandidate(currentCandidate);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        likeCandidate(currentCandidate, () => navigate('/match-celebration'));
+      } else if (e.key === ' ' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        selectCandidate(currentCandidate);
+        navigate('/candidate-detail');
+      } else if (e.key === 'k' || e.key === 'K') {
+        e.preventDefault();
+        checkCompatibility(currentCandidate, () => navigate('/horoscope-compatibility'));
+      } else if (e.key === 'z' || e.key === 'Z') {
+        e.preventDefault();
+        rewindCandidate();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentCandidate, passCandidate, likeCandidate, selectCandidate, checkCompatibility, rewindCandidate, navigate]);
+
   return (
     <div
       className="glass-page discover-glass-page"
@@ -102,17 +134,23 @@ export const DiscoverFeedPage: React.FC = () => {
     >
       <FloatingHeartsBackground />
 
-      {/* LUXURY SLIM FIXED TOP BAR */}
+      {/* DESKTOP DUAL-PANE VIEWPORT (>= 1024px) */}
+      <DesktopDiscoverView />
+
+      {/* LUXURY SLIM TOP BAR (Mobile Only) */}
       <div
+        className="mobile-only"
         style={{
-          position: 'fixed',
+          position: 'sticky',
           top: 0,
           left: 0,
           right: 0,
+          width: '100%',
           maxWidth: '100%',
-          margin: '0 auto',
           zIndex: 40,
-          background: themeMode === 'LIGHT' ? 'rgba(255, 245, 247, 0.9)' : 'rgba(11, 9, 18, 0.9)',
+          display: 'flex',
+          flexDirection: 'column',
+          background: themeMode === 'LIGHT' ? 'rgba(255, 245, 247, 0.95)' : 'rgba(11, 9, 18, 0.95)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           borderBottom: '1px solid rgba(245, 158, 11, 0.2)',
@@ -199,13 +237,58 @@ export const DiscoverFeedPage: React.FC = () => {
           </div>
         </header>
 
-        {/* Collapsible / Floating Filter Drawer */}
+        {/* Directly visible Regional / Country Filter Strip */}
+        <div
+          style={{
+            padding: '6px 16px 8px 16px',
+            background: 'var(--bg-secondary)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            overflowX: 'auto',
+            borderBottom: showFilters ? 'none' : '1px solid rgba(255, 255, 255, 0.05)'
+          }}
+        >
+          <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+            <Globe size={12} /> {t('filter_label')}:
+          </span>
+          {[
+            { key: 'ALL', label: t('filter_all') },
+            { key: 'KERALA', label: t('filter_kerala') },
+            { key: 'NORTH_INDIA', label: t('filter_north') },
+            { key: 'WEST_INDIA', label: t('filter_west') },
+            { key: 'NRI', label: t('filter_nri') }
+          ].map(item => {
+            const isSelected = userProfile.regionalPreference === item.key;
+            return (
+              <button
+                key={item.key}
+                onClick={() => setRegionalPreference(item.key as RegionalPreference)}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '9999px',
+                  border: isSelected ? '1px solid var(--accent-amber)' : '1px solid var(--border-color)',
+                  background: isSelected ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                  color: isSelected ? 'var(--accent-amber-light)' : 'var(--text-muted)',
+                  fontSize: '0.7rem',
+                  fontWeight: isSelected ? 800 : 500,
+                  whiteSpace: 'nowrap',
+                  cursor: 'pointer'
+                }}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Collapsible Filter Drawer */}
         {showFilters && (
           <div
             style={{
-              padding: '12px 16px 14px',
+              padding: '10px 16px 12px',
               borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-              background: themeMode === 'LIGHT' ? 'rgba(255, 250, 251, 0.96)' : 'rgba(15, 12, 24, 0.96)',
+              background: themeMode === 'LIGHT' ? 'rgba(255, 250, 251, 0.98)' : 'rgba(15, 12, 24, 0.98)',
               display: 'flex',
               flexDirection: 'column',
               gap: '10px'
@@ -251,7 +334,7 @@ export const DiscoverFeedPage: React.FC = () => {
                   cursor: 'pointer'
                 }}
               >
-                <Globe size={13} />
+                <Globe size={12} />
                 <span>Lang</span>
               </button>
 
@@ -271,10 +354,11 @@ export const DiscoverFeedPage: React.FC = () => {
                   cursor: 'pointer'
                 }}
               >
-                {themeMode === 'DARK' ? <Sun size={13} color="var(--accent-amber)" /> : <Moon size={13} />}
+                {themeMode === 'DARK' ? <Sun size={12} color="var(--accent-amber)" /> : <Moon size={12} />}
                 <span>{themeMode === 'DARK' ? 'Light' : 'Dark'}</span>
               </button>
             </div>
+
             {/* Nearby & Strict Toggles */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
               <button
@@ -319,40 +403,8 @@ export const DiscoverFeedPage: React.FC = () => {
                 }}
               >
                 <Sparkles size={12} color={isPreferenceStrictFilterOn ? 'var(--accent-amber)' : 'var(--text-muted)'} />
-                {isPreferenceStrictFilterOn ? 'Strict Filters: ON' : 'Strict Filters: OFF'}
+                {isPreferenceStrictFilterOn ? 'Strict: ON' : 'Strict: OFF'}
               </button>
-            </div>
-
-            {/* Regional Filter Chips */}
-            <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '2px' }}>
-              {[
-                { key: 'ALL', label: t('filter_all') },
-                { key: 'KERALA', label: t('filter_kerala') },
-                { key: 'NORTH_INDIA', label: t('filter_north') },
-                { key: 'WEST_INDIA', label: t('filter_west') },
-                { key: 'NRI', label: t('filter_nri') }
-              ].map(item => {
-                const isSelected = userProfile.regionalPreference === item.key;
-                return (
-                  <button
-                    key={item.key}
-                    onClick={() => setRegionalPreference(item.key as RegionalPreference)}
-                    style={{
-                      padding: '4px 10px',
-                      borderRadius: '9999px',
-                      border: isSelected ? '1px solid var(--accent-amber)' : '1px solid var(--border-color)',
-                      background: isSelected ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                      color: isSelected ? 'var(--accent-amber-light)' : 'var(--text-muted)',
-                      fontSize: '0.68rem',
-                      fontWeight: isSelected ? 800 : 500,
-                      whiteSpace: 'nowrap',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
             </div>
 
             {/* Shubh Muhurat info line */}
@@ -390,12 +442,13 @@ export const DiscoverFeedPage: React.FC = () => {
         )}
       </div>
 
-      {/* MIDDLE CANDIDATE CARD & FLOATING ACTION BAR */}
+      {/* MIDDLE CANDIDATE CARD & FLOATING ACTION BAR (Mobile Only) */}
       <main
+        className="discover-main mobile-only"
         style={{
-          marginTop: `calc(${userProfile.completionPercentage < 100 ? '78px' : '54px'} + env(safe-area-inset-top, 0px))`,
-          marginBottom: 'calc(84px + env(safe-area-inset-bottom, 0px))',
-          padding: '8px 16px 4px 16px',
+          marginTop: '0px',
+          marginBottom: 'calc(76px + env(safe-area-inset-bottom, 0px))',
+          padding: '6px 16px 4px 16px',
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
@@ -628,6 +681,24 @@ export const DiscoverFeedPage: React.FC = () => {
               >
                 <Heart size={30} fill="#FFF" />
               </button>
+            </div>
+
+            {/* Desktop Keyboard Hints */}
+            <div
+              className="desktop-only"
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '16px',
+                paddingTop: '6px',
+                fontSize: '0.72rem',
+                color: 'var(--text-muted)'
+              }}
+            >
+              <span><kbd style={{ padding: '2px 5px', borderRadius: '4px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>←</kbd> Pass</span>
+              <span><kbd style={{ padding: '2px 5px', borderRadius: '4px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>→</kbd> Like</span>
+              <span><kbd style={{ padding: '2px 5px', borderRadius: '4px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>K</kbd> Kundali</span>
+              <span><kbd style={{ padding: '2px 5px', borderRadius: '4px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>Space</kbd> Details</span>
             </div>
           </div>
         ) : (

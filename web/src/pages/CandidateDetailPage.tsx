@@ -1,24 +1,78 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAstra } from '../context/AstraContext';
-import { ArrowLeft, ChevronLeft, ChevronRight, Sparkles, MapPin, Briefcase, GraduationCap, ShieldCheck, CheckCircle2, Globe, UserX, AlertTriangle, Landmark, Activity, Utensils, Wine, Cigarette, Lock, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Sparkles, MapPin, Briefcase, GraduationCap, ShieldCheck, CheckCircle2, Globe, UserX, AlertTriangle, Landmark, Activity, Utensils, Wine, Cigarette, Lock, ShieldAlert, MessageCircle, Heart, X } from 'lucide-react';
 import { VerificationBadge } from '../components/VerificationBadge';
 import { VerificationType } from '../types';
 import { PassCircleButton, LikeCircleButton, CosmicCheckButton } from '../components/AstraButtons';
 import { preloadImages } from '../utils/imagePreloader';
+import { supabase } from '../lib/supabase';
+import { DiscoveryService } from '../services/discovery';
 
 export const CandidateDetailPage: React.FC = () => {
   const navigate = useNavigate();
-  const { selectedCandidate, likeCandidate, passCandidate, checkCompatibility, openChaanbean, conversations, unfriendCandidate, t } = useAstra();
+  const {
+    selectedCandidate,
+    likeCandidate,
+    passCandidate,
+    checkCompatibility,
+    openChaanbean,
+    conversations,
+    unfriendCandidate,
+    openConversationForCandidate,
+    pendingRequests,
+    sentRequests,
+    t
+  } = useAstra();
   const [showUnfriendModal, setShowUnfriendModal] = useState(false);
   const [isUnfriending, setIsUnfriending] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
 
-  const candidate = selectedCandidate;
+  const [candidate, setCandidate] = useState(selectedCandidate);
 
-  // Reset the active image when the candidate changes; guard empty arrays.
+  // Sync with selectedCandidate changes
   useEffect(() => {
+    setCandidate(selectedCandidate);
     setImageIndex(0);
+  }, [selectedCandidate]);
+
+  // If candidate has <= 1 photo, fetch the complete gallery and profile details from backend
+  useEffect(() => {
+    if (!candidate?.id) return;
+    if (candidate.photoUrls && candidate.photoUrls.length > 1) return;
+
+    let isMounted = true;
+    const fetchFullProfile = async () => {
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', candidate.id)
+          .maybeSingle();
+
+        if (profile && isMounted) {
+          const mapped = await DiscoveryService.mapProfilesToCandidates([profile]);
+          if (mapped && mapped.length > 0 && isMounted) {
+            setCandidate(prev => {
+              if (!prev || prev.id !== candidate.id) return prev;
+              return {
+                ...prev,
+                ...mapped[0],
+                compatibilityScore: prev.compatibilityScore || mapped[0].compatibilityScore || 90
+              };
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load candidate photo gallery:', err);
+      }
+    };
+
+    fetchFullProfile();
+
+    return () => {
+      isMounted = false;
+    };
   }, [candidate?.id]);
 
   useEffect(() => {
@@ -34,6 +88,8 @@ export const CandidateDetailPage: React.FC = () => {
   const activePhoto = photos[safeImageIndex] || '';
 
   const isFriend = conversations.some(c => c.candidate.id === candidate.id);
+  const isIncomingRequest = pendingRequests.some(c => c.id === candidate.id);
+  const isSentRequest = sentRequests.some(c => c.id === candidate.id);
 
   const handleConfirmUnfriend = async () => {
     setIsUnfriending(true);
@@ -48,6 +104,306 @@ export const CandidateDetailPage: React.FC = () => {
     }
   };
 
+  const renderDossierContent = () => (
+    <>
+      {/* Explicit Match Reason Breakdown Card */}
+      {candidate.matchReasons && candidate.matchReasons.length > 0 && (
+        <div
+          style={{
+            padding: '16px',
+            borderRadius: '20px',
+            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(79, 70, 229, 0.12) 100%)',
+            border: '1px solid var(--accent-amber)',
+            marginBottom: '20px'
+          }}
+        >
+          <h4 className="heading-font" style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--accent-amber-light)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Sparkles size={16} color="var(--accent-amber-light)" /> {t('why_matched')} ({candidate.name})
+          </h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {candidate.matchReasons.map((reason, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.8rem', color: 'var(--text-primary)' }}>
+                <CheckCircle2 size={16} color="var(--accent-amber)" style={{ flexShrink: 0, marginTop: 2 }} />
+                <span>{reason}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Astrology Card */}
+      <div
+        style={{
+          padding: '16px',
+          borderRadius: '20px',
+          background: 'linear-gradient(135deg, rgba(30, 24, 54, 0.8) 0%, rgba(42, 14, 26, 0.7) 100%)',
+          border: '1px solid var(--border-glow)',
+          marginBottom: '20px'
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <span style={{ fontSize: '0.75rem', color: 'var(--accent-amber-light)', fontWeight: 600, textTransform: 'uppercase' }}>
+            {t('vedic_placement')}
+          </span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--accent-indigo)' }}>Guna Milan Verified</span>
+        </div>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <div style={{ flex: 1 }}>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Nakshatra</span>
+            <p style={{ fontSize: '0.95rem', fontWeight: 700 }}>{candidate.nakshatra}</p>
+          </div>
+          <div style={{ flex: 1 }}>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Rashi (Moon Sign)</span>
+            <p style={{ fontSize: '0.95rem', fontWeight: 700 }}>{candidate.rashi}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Ancestral 4-Gotra Lineage Card */}
+      {(candidate.gotra || candidate.motherFatherGotra || candidate.fatherMotherGotra || candidate.motherMotherGotra || candidate.religion || candidate.caste) && (
+        <div
+          style={{
+            padding: '16px',
+            borderRadius: '20px',
+            background: 'rgba(255, 255, 255, 0.04)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            marginBottom: '20px'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h3 className="heading-font" style={{ fontSize: '0.9rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Landmark size={15} style={{ color: 'var(--accent-gold)' }} /> Ancestral Gotra Lineage (4 Gotras)
+            </h3>
+            {(candidate.religion || candidate.caste) && (
+              <span style={{ fontSize: '0.75rem', color: 'var(--accent-amber-light)', background: 'rgba(245, 158, 11, 0.12)', padding: '2px 8px', borderRadius: '6px' }}>
+                {[candidate.religion, candidate.caste, candidate.subCaste].filter(Boolean).join(' • ')}
+              </span>
+            )}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '8px 12px', borderRadius: '10px' }}>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Father's Father (Main)</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#F3F4F6' }}>{candidate.gotra || 'Not Specified'}</span>
+            </div>
+            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '8px 12px', borderRadius: '10px' }}>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Father's Mother</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#F3F4F6' }}>{candidate.fatherMotherGotra || 'Not Specified'}</span>
+            </div>
+            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '8px 12px', borderRadius: '10px' }}>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Mother's Father</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#F3F4F6' }}>{candidate.motherFatherGotra || 'Not Specified'}</span>
+            </div>
+            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '8px 12px', borderRadius: '10px' }}>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Mother's Mother</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#F3F4F6' }}>{candidate.motherMotherGotra || 'Not Specified'}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Verification Badges */}
+      <div style={{ marginBottom: '20px' }}>
+        <h3 className="heading-font" style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '10px' }}>
+          {t('trust_badges')}
+        </h3>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          {candidate.educationVerified && (
+            <VerificationBadge
+              type={VerificationType.EDUCATION}
+              onClick={() => openChaanbean(candidate)}
+            />
+          )}
+          {candidate.policeVerified && (
+            <VerificationBadge
+              type={VerificationType.POLICE}
+              onClick={() => openChaanbean(candidate)}
+            />
+          )}
+          {candidate.creditVerified && (
+            <VerificationBadge
+              type={VerificationType.CREDIT}
+              onClick={() => openChaanbean(candidate)}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Health & Lifestyle */}
+      {(candidate.diet || candidate.alcohol || candidate.smoking || candidate.healthCondition !== undefined || candidate.intent === 'Marriage') && (
+        <div
+          style={{
+            marginBottom: '20px',
+            padding: '16px',
+            borderRadius: '16px',
+            background: 'rgba(255, 255, 255, 0.04)',
+            border: '1px solid rgba(255, 255, 255, 0.1)'
+          }}
+        >
+          <h3
+            className="heading-font"
+            style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '12px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Activity size={15} style={{ color: 'var(--accent-gold)' }} /> Health &amp; Lifestyle
+          </h3>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: candidate.healthCondition ? '12px' : '0' }}>
+            {candidate.diet && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '9999px', background: 'rgba(34, 197, 94, 0.12)', border: '1px solid rgba(34, 197, 94, 0.3)', fontSize: '0.78rem', color: '#86efac' }}>
+                <Utensils size={13} /> {candidate.diet}
+              </span>
+            )}
+            {candidate.alcohol && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '9999px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)', fontSize: '0.78rem', color: '#fde68a' }}>
+                <Wine size={13} /> Alcohol: {candidate.alcohol}
+              </span>
+            )}
+            {candidate.smoking && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '9999px', background: 'rgba(148, 163, 184, 0.1)', border: '1px solid rgba(148, 163, 184, 0.25)', fontSize: '0.78rem', color: '#cbd5e1' }}>
+                <Cigarette size={13} /> Smoking: {candidate.smoking}
+              </span>
+            )}
+            {/* Health Status Pill */}
+            {(() => {
+              const statusText = (candidate.healthStatus || '').trim();
+              const lower = statusText.toLowerCase();
+              let statusLabel = 'Not Disclosed';
+              let sBg = 'rgba(59, 130, 246, 0.12)';
+              let sBorder = 'rgba(59, 130, 246, 0.3)';
+              let sColor = '#93c5fd';
+
+              if (lower.includes('private') || lower.includes('inquiry')) {
+                statusLabel = 'Disclosed Privately';
+                sBg = 'rgba(245, 158, 11, 0.15)';
+                sBorder = 'rgba(245, 158, 11, 0.3)';
+                sColor = '#fde68a';
+              } else if (lower.includes('excellent')) {
+                statusLabel = 'Excellent';
+                sBg = 'rgba(34, 197, 94, 0.12)';
+                sBorder = 'rgba(34, 197, 94, 0.3)';
+                sColor = '#86efac';
+              } else if (lower === 'good') {
+                statusLabel = 'Good';
+              } else if (statusText) {
+                statusLabel = statusText;
+              }
+
+              return (
+                <span style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '5px 12px',
+                  borderRadius: '9999px',
+                  background: sBg,
+                  border: `1px solid ${sBorder}`,
+                  fontSize: '0.78rem',
+                  color: sColor
+                }}>
+                  <Lock size={13} /> Health: {statusLabel}
+                </span>
+              );
+            })()}
+
+            {/* Disease / Pre-existing Condition Pill */}
+            {(() => {
+              const condText = (candidate.healthCondition || '').trim();
+              const hasText = condText.length > 0;
+              const displayLabel = hasText ? condText : 'None';
+
+              return (
+                <>
+                  <span style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    padding: '5px 12px',
+                    borderRadius: '9999px',
+                    background: hasText ? 'rgba(239, 68, 68, 0.12)' : 'rgba(100, 116, 139, 0.12)',
+                    border: hasText ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(100, 116, 139, 0.25)',
+                    fontSize: '0.78rem',
+                    color: hasText ? '#fca5a5' : '#94a3b8'
+                  }}>
+                    <ShieldAlert size={13} /> Disease: {displayLabel}
+                  </span>
+                  {hasText && (
+                    <div style={{ width: '100%', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px', marginTop: '10px' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Pre-existing Disease / Medical Condition Disclosure</span>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
+                        {condText}
+                      </p>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* Bio */}
+      <div style={{ marginBottom: '20px' }}>
+        <h3 className="heading-font" style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '8px' }}>
+          {t('about_me')}
+        </h3>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+          {candidate.bio}
+        </p>
+      </div>
+
+      {/* Interests */}
+      <div style={{ marginBottom: '24px' }}>
+        <h3 className="heading-font" style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '10px' }}>
+          {t('passions')}
+        </h3>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          {candidate.interests.map((interest, idx) => (
+            <span
+              key={idx}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '9999px',
+                background: 'rgba(255, 255, 255, 0.06)',
+                border: '1px solid var(--border-color)',
+                fontSize: '0.8rem',
+                color: 'var(--text-primary)'
+              }}
+            >
+              {interest}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Personal Values & Vision (Questionnaire) */}
+      {candidate.marriageQuestionnaire && Object.keys(candidate.marriageQuestionnaire).length > 0 && (
+        <div style={{ marginBottom: '24px' }}>
+          <h3 className="heading-font" style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '12px' }}>
+            Personal Values & Vision
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {[
+              { id: 'q11', text: 'Raising children religiously' },
+              { id: 'q12', text: 'Hanging out with friends after marriage' },
+              { id: 'q13', text: 'How would you like to celebrate your first wedding anniversary?' }
+            ].map(q => {
+              const answer = candidate.marriageQuestionnaire?.[q.id];
+              if (!answer) return null;
+              return (
+                <div key={q.id} style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                  <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
+                    {q.text}
+                  </p>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-primary)', lineHeight: 1.5, margin: 0, whiteSpace: 'pre-wrap' }}>
+                    {answer}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </>
+  );
+
   return (
     <div
       className="glass-page candidate-detail-glass-page"
@@ -60,8 +416,423 @@ export const CandidateDetailPage: React.FC = () => {
         overflowY: 'auto'
       }}
     >
-      {/* Responsive Wrapper for Desktop */}
-      <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%', position: 'relative' }}>
+      {/* ===================== DESKTOP 2-COLUMN VIEW ===================== */}
+      <div className="desktop-only" style={{ maxWidth: '1240px', margin: '0 auto', padding: '24px 32px 48px', width: '100%', gap: '36px', alignItems: 'flex-start' }}>
+        {/* Left Sticky Column (460px) */}
+        <div style={{ width: '460px', flexShrink: 0, position: 'sticky', top: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Back button */}
+          <button
+            onClick={() => navigate(-1)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: 'rgba(255, 255, 255, 0.06)',
+              border: '1px solid var(--border-color)',
+              color: 'var(--text-secondary)',
+              borderRadius: '9999px',
+              padding: '8px 16px',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              alignSelf: 'flex-start'
+            }}
+          >
+            <ArrowLeft size={16} /> Back to Matches / Discovery
+          </button>
+
+          {/* Featured Image Card */}
+          <div style={{ position: 'relative', width: '100%', height: '500px', borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--border-color)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', background: 'var(--bg-secondary)' }}>
+            {activePhoto ? (
+              <img
+                src={activePhoto}
+                alt={candidate.name}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : (
+              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ color: 'var(--text-muted)' }}>No photo</span>
+              </div>
+            )}
+
+            {/* Gradient Overlay */}
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,10,15,0.7) 0%, transparent 40%)', pointerEvents: 'none' }} />
+
+            {/* Chevrons */}
+            {photos.length > 1 && (
+              <>
+                <button
+                  onClick={() => setImageIndex(i => (i - 1 + photos.length) % photos.length)}
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '12px',
+                    transform: 'translateY(-50%)',
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    background: 'rgba(15, 12, 24, 0.75)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
+                    color: '#FFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    zIndex: 10
+                  }}
+                  title="Previous photo"
+                >
+                  <ChevronLeft size={22} />
+                </button>
+                <button
+                  onClick={() => setImageIndex(i => (i + 1) % photos.length)}
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    right: '12px',
+                    transform: 'translateY(-50%)',
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    background: 'rgba(15, 12, 24, 0.75)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
+                    color: '#FFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    zIndex: 10
+                  }}
+                  title="Next photo"
+                >
+                  <ChevronRight size={22} />
+                </button>
+              </>
+            )}
+
+            {/* Photo Counter Pill Badge */}
+            {photos.length > 1 && (
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: '16px',
+                  left: '16px',
+                  padding: '4px 10px',
+                  borderRadius: '9999px',
+                  background: 'rgba(10, 10, 14, 0.75)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255, 255, 255, 0.18)',
+                  color: '#FFF',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  zIndex: 5
+                }}
+              >
+                {safeImageIndex + 1} / {photos.length}
+              </div>
+            )}
+
+            {/* Compatibility Floating Badge */}
+            {candidate.compatibilityScore > 0 && (
+              <div style={{ position: 'absolute', bottom: '16px', right: '16px', zIndex: 5 }}>
+                <div
+                  style={{
+                    padding: '6px 14px',
+                    borderRadius: '9999px',
+                    background: 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
+                    color: '#0B0B0E',
+                    fontWeight: 800,
+                    fontSize: '0.8rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: 'var(--shadow-cosmic)'
+                  }}
+                >
+                  <Sparkles size={14} fill="#0B0B0E" />
+                  {candidate.compatibilityScore}% {t('compatibility_score')}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Clickable Photo Thumbnails Row */}
+          {photos.length > 1 && (
+            <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '4px' }}>
+              {photos.map((url, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setImageIndex(idx)}
+                  style={{
+                    width: 70,
+                    height: 70,
+                    borderRadius: '14px',
+                    overflow: 'hidden',
+                    border: idx === safeImageIndex ? '2px solid var(--accent-amber)' : '2px solid rgba(255,255,255,0.1)',
+                    opacity: idx === safeImageIndex ? 1 : 0.6,
+                    cursor: 'pointer',
+                    padding: 0,
+                    background: 'none',
+                    flexShrink: 0,
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <img src={url} alt={`Thumbnail ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Desktop Action Box */}
+          <div
+            style={{
+              padding: '18px 20px',
+              borderRadius: '20px',
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-color)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}
+          >
+            {isFriend ? (
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  onClick={() => {
+                    openConversationForCandidate(candidate);
+                    navigate('/matches');
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '12px 18px',
+                    borderRadius: '9999px',
+                    background: 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
+                    border: 'none',
+                    color: '#0B0B0E',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    cursor: 'pointer',
+                    boxShadow: 'var(--shadow-cosmic)'
+                  }}
+                >
+                  <MessageCircle size={18} /> Send Message
+                </button>
+                <button
+                  onClick={() => setShowUnfriendModal(true)}
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '9999px',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: '#EF4444',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <UserX size={16} /> Unfriend
+                </button>
+              </div>
+            ) : isIncomingRequest ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '12px',
+                    background: 'rgba(245, 158, 11, 0.12)',
+                    border: '1px solid rgba(245, 158, 11, 0.3)',
+                    color: 'var(--accent-amber-light)',
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
+                    textAlign: 'center'
+                  }}
+                >
+                  ✨ {candidate.name} sent you a Match Request!
+                </div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    onClick={() => {
+                      passCandidate(candidate);
+                      navigate('/matches');
+                    }}
+                    style={{
+                      padding: '12px 20px',
+                      borderRadius: '9999px',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      color: '#F87171',
+                      fontWeight: 700,
+                      fontSize: '0.88rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <X size={16} /> Decline
+                  </button>
+                  <button
+                    onClick={() => {
+                      likeCandidate(candidate, () => navigate('/match-celebration'), () => navigate('/matches'));
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '12px 20px',
+                      borderRadius: '9999px',
+                      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                      border: 'none',
+                      color: '#FFF',
+                      fontWeight: 700,
+                      fontSize: '0.9rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 16px rgba(16, 185, 129, 0.3)'
+                    }}
+                  >
+                    <CheckCircle2 size={18} /> Accept Request & Connect
+                  </button>
+                </div>
+              </div>
+            ) : isSentRequest ? (
+              <div
+                style={{
+                  padding: '14px 20px',
+                  borderRadius: '16px',
+                  background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(217, 119, 6, 0.05) 100%)',
+                  border: '1px solid rgba(245, 158, 11, 0.35)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  color: 'var(--accent-amber-light)',
+                  fontWeight: 700,
+                  fontSize: '0.9rem'
+                }}
+              >
+                <CheckCircle2 size={18} color="var(--accent-amber)" /> Interest Sent · Pending Response
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => {
+                    passCandidate(candidate);
+                    navigate(-1);
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '12px 20px',
+                    borderRadius: '9999px',
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    border: '1px solid var(--border-color)',
+                    color: 'var(--text-secondary)',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <X size={18} color="var(--accent-coral)" /> Pass
+                </button>
+                <button
+                  onClick={() => {
+                    likeCandidate(candidate, () => navigate('/match-celebration'), () => navigate('/discover'));
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '12px 20px',
+                    borderRadius: '9999px',
+                    background: 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
+                    border: 'none',
+                    color: '#0B0B0E',
+                    fontWeight: 800,
+                    fontSize: '0.9rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    cursor: 'pointer',
+                    boxShadow: 'var(--shadow-cosmic)'
+                  }}
+                >
+                  <Heart size={18} fill="#0B0B0E" /> Send Interest
+                </button>
+              </div>
+            )}
+
+            <button
+              onClick={() => {
+                checkCompatibility(candidate, () => navigate('/horoscope-compatibility'));
+              }}
+              style={{
+                width: '100%',
+                padding: '12px 18px',
+                borderRadius: '9999px',
+                background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(245, 158, 11, 0.15) 100%)',
+                border: '1px solid var(--border-glow)',
+                color: 'var(--accent-amber-light)',
+                fontWeight: 700,
+                fontSize: '0.88rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                cursor: 'pointer'
+              }}
+            >
+              <Sparkles size={16} /> Check Kundali Compatibility
+            </button>
+          </div>
+        </div>
+
+        {/* Right Scrollable Dossier Column */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Header Card */}
+          <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '24px', padding: '28px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <h1 className="heading-font" style={{ fontSize: '2.4rem', fontWeight: 800, margin: 0 }}>
+                  {candidate.name}, {candidate.age}
+                </h1>
+                {candidate.isVerified && <ShieldCheck size={28} color="var(--accent-amber)" />}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', color: 'var(--text-secondary)', fontSize: '0.95rem', marginTop: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Briefcase size={18} color="var(--accent-indigo)" /> {candidate.profession}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <GraduationCap size={18} color="var(--accent-indigo)" /> {candidate.education}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <MapPin size={18} color="var(--accent-indigo)" /> {candidate.location}
+              </div>
+            </div>
+          </div>
+
+          {renderDossierContent()}
+        </div>
+      </div>
+
+      {/* ===================== MOBILE VIEW (Strictly Preserved) ===================== */}
+      <div className="mobile-only" style={{ maxWidth: '600px', margin: '0 auto', width: '100%', position: 'relative' }}>
       
       {/* Top Bar Overlay */}
       <div
@@ -340,302 +1111,36 @@ export const CandidateDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Explicit Match Reason Breakdown Card */}
-        {candidate.matchReasons && candidate.matchReasons.length > 0 && (
-          <div
-            style={{
-              padding: '16px',
-              borderRadius: '20px',
-              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(79, 70, 229, 0.12) 100%)',
-              border: '1px solid var(--accent-amber)',
-              marginBottom: '20px'
-            }}
-          >
-            <h4 className="heading-font" style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--accent-amber-light)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Sparkles size={16} color="var(--accent-amber-light)" /> {t('why_matched')} ({candidate.name})
-            </h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {candidate.matchReasons.map((reason, idx) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.8rem', color: 'var(--text-primary)' }}>
-                  <CheckCircle2 size={16} color="var(--accent-amber)" style={{ flexShrink: 0, marginTop: 2 }} />
-                  <span>{reason}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Astrology Card */}
-        <div
-          style={{
-            padding: '16px',
-            borderRadius: '20px',
-            background: 'linear-gradient(135deg, rgba(30, 24, 54, 0.8) 0%, rgba(42, 14, 26, 0.7) 100%)',
-            border: '1px solid var(--border-glow)',
-            marginBottom: '20px'
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--accent-amber-light)', fontWeight: 600, textTransform: 'uppercase' }}>
-              {t('vedic_placement')}
-            </span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--accent-indigo)' }}>Guna Milan Verified</span>
-          </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <div style={{ flex: 1 }}>
-              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Nakshatra</span>
-              <p style={{ fontSize: '0.95rem', fontWeight: 700 }}>{candidate.nakshatra}</p>
-            </div>
-            <div style={{ flex: 1 }}>
-              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Rashi (Moon Sign)</span>
-              <p style={{ fontSize: '0.95rem', fontWeight: 700 }}>{candidate.rashi}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Ancestral 4-Gotra Lineage Card */}
-        {(candidate.gotra || candidate.motherFatherGotra || candidate.fatherMotherGotra || candidate.motherMotherGotra || candidate.religion || candidate.caste) && (
-          <div
-            style={{
-              padding: '16px',
-              borderRadius: '20px',
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              marginBottom: '20px'
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h3 className="heading-font" style={{ fontSize: '0.9rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Landmark size={15} style={{ color: 'var(--accent-gold)' }} /> Ancestral Gotra Lineage (4 Gotras)
-              </h3>
-              {(candidate.religion || candidate.caste) && (
-                <span style={{ fontSize: '0.75rem', color: 'var(--accent-amber-light)', background: 'rgba(245, 158, 11, 0.12)', padding: '2px 8px', borderRadius: '6px' }}>
-                  {[candidate.religion, candidate.caste, candidate.subCaste].filter(Boolean).join(' • ')}
-                </span>
-              )}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <div style={{ background: 'rgba(0,0,0,0.2)', padding: '8px 12px', borderRadius: '10px' }}>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Father's Father (Main)</span>
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#F3F4F6' }}>{candidate.gotra || 'Not Specified'}</span>
-              </div>
-              <div style={{ background: 'rgba(0,0,0,0.2)', padding: '8px 12px', borderRadius: '10px' }}>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Father's Mother</span>
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#F3F4F6' }}>{candidate.fatherMotherGotra || 'Not Specified'}</span>
-              </div>
-              <div style={{ background: 'rgba(0,0,0,0.2)', padding: '8px 12px', borderRadius: '10px' }}>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Mother's Father</span>
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#F3F4F6' }}>{candidate.motherFatherGotra || 'Not Specified'}</span>
-              </div>
-              <div style={{ background: 'rgba(0,0,0,0.2)', padding: '8px 12px', borderRadius: '10px' }}>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Mother's Mother</span>
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#F3F4F6' }}>{candidate.motherMotherGotra || 'Not Specified'}</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Verification Badges */}
-        <div style={{ marginBottom: '20px' }}>
-          <h3 className="heading-font" style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '10px' }}>
-            {t('trust_badges')}
-          </h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            {candidate.educationVerified && (
-              <VerificationBadge
-                type={VerificationType.EDUCATION}
-                onClick={() => openChaanbean(candidate)}
-              />
-            )}
-            {candidate.policeVerified && (
-              <VerificationBadge
-                type={VerificationType.POLICE}
-                onClick={() => openChaanbean(candidate)}
-              />
-            )}
-            {candidate.creditVerified && (
-              <VerificationBadge
-                type={VerificationType.CREDIT}
-                onClick={() => openChaanbean(candidate)}
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Health & Lifestyle */}
-        {(candidate.diet || candidate.alcohol || candidate.smoking || candidate.healthCondition !== undefined || candidate.intent === 'Marriage') && (
-          <div
-            style={{
-              marginBottom: '20px',
-              padding: '16px',
-              borderRadius: '16px',
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.1)'
-            }}
-          >
-            <h3
-              className="heading-font"
-              style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '12px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}
+        {/* Message Button if already matched/friends */}
+        {isFriend && (
+          <div style={{ marginBottom: '16px' }}>
+            <button
+              onClick={() => {
+                openConversationForCandidate(candidate);
+                navigate('/matches');
+              }}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '9999px',
+                background: 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
+                border: 'none',
+                color: '#0B0B0E',
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                cursor: 'pointer'
+              }}
             >
-              <Activity size={15} style={{ color: 'var(--accent-gold)' }} /> Health &amp; Lifestyle
-            </h3>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: candidate.healthCondition ? '12px' : '0' }}>
-              {candidate.diet && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '9999px', background: 'rgba(34, 197, 94, 0.12)', border: '1px solid rgba(34, 197, 94, 0.3)', fontSize: '0.78rem', color: '#86efac' }}>
-                  <Utensils size={13} /> {candidate.diet}
-                </span>
-              )}
-              {candidate.alcohol && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '9999px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)', fontSize: '0.78rem', color: '#fde68a' }}>
-                  <Wine size={13} /> Alcohol: {candidate.alcohol}
-                </span>
-              )}
-              {candidate.smoking && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '9999px', background: 'rgba(148, 163, 184, 0.1)', border: '1px solid rgba(148, 163, 184, 0.25)', fontSize: '0.78rem', color: '#cbd5e1' }}>
-                  <Cigarette size={13} /> Smoking: {candidate.smoking}
-                </span>
-              )}
-              {/* Health Status Pill */}
-              {(() => {
-                const statusText = (candidate.healthStatus || '').trim();
-                const lower = statusText.toLowerCase();
-                let statusLabel = 'Not Disclosed';
-                let sBg = 'rgba(59, 130, 246, 0.12)';
-                let sBorder = 'rgba(59, 130, 246, 0.3)';
-                let sColor = '#93c5fd';
-
-                if (lower.includes('private') || lower.includes('inquiry')) {
-                  statusLabel = 'Disclosed Privately';
-                  sBg = 'rgba(245, 158, 11, 0.15)';
-                  sBorder = 'rgba(245, 158, 11, 0.3)';
-                  sColor = '#fde68a';
-                } else if (lower.includes('excellent')) {
-                  statusLabel = 'Excellent';
-                  sBg = 'rgba(34, 197, 94, 0.12)';
-                  sBorder = 'rgba(34, 197, 94, 0.3)';
-                  sColor = '#86efac';
-                } else if (lower === 'good') {
-                  statusLabel = 'Good';
-                } else if (statusText) {
-                  statusLabel = statusText;
-                }
-
-                return (
-                  <span style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    padding: '5px 12px',
-                    borderRadius: '9999px',
-                    background: sBg,
-                    border: `1px solid ${sBorder}`,
-                    fontSize: '0.78rem',
-                    color: sColor
-                  }}>
-                    <Lock size={13} /> Health: {statusLabel}
-                  </span>
-                );
-              })()}
-
-              {/* Disease / Pre-existing Condition Pill — always visible */}
-              {(() => {
-                const condText = (candidate.healthCondition || '').trim();
-                const hasText = condText.length > 0;
-                const displayLabel = hasText ? condText : 'None';
-
-                return (
-                  <>
-                    <span style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                      padding: '5px 12px',
-                      borderRadius: '9999px',
-                      background: hasText ? 'rgba(239, 68, 68, 0.12)' : 'rgba(100, 116, 139, 0.12)',
-                      border: hasText ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(100, 116, 139, 0.25)',
-                      fontSize: '0.78rem',
-                      color: hasText ? '#fca5a5' : '#94a3b8'
-                    }}>
-                      <ShieldAlert size={13} /> Disease: {displayLabel}
-                    </span>
-                    {hasText && (
-                      <div style={{ width: '100%', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px', marginTop: '10px' }}>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Pre-existing Disease / Medical Condition Disclosure</span>
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
-                          {condText}
-                        </p>
-                      </div>
-                    )}
-                  </>
-                );
-              })()}
-            </div>
+              <MessageCircle size={18} /> Chat with {candidate.name}
+            </button>
           </div>
         )}
 
-        {/* Bio */}
-        <div style={{ marginBottom: '20px' }}>
-          <h3 className="heading-font" style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '8px' }}>
-            {t('about_me')}
-          </h3>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-            {candidate.bio}
-          </p>
-        </div>
-
-        {/* Interests */}
-        <div style={{ marginBottom: '24px' }}>
-          <h3 className="heading-font" style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '10px' }}>
-            {t('passions')}
-          </h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            {candidate.interests.map((interest, idx) => (
-              <span
-                key={idx}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: '9999px',
-                  background: 'rgba(255, 255, 255, 0.06)',
-                  border: '1px solid var(--border-color)',
-                  fontSize: '0.8rem',
-                  color: 'var(--text-primary)'
-                }}
-              >
-                {interest}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Personal Values & Vision (Questionnaire) */}
-        {candidate.marriageQuestionnaire && Object.keys(candidate.marriageQuestionnaire).length > 0 && (
-          <div style={{ marginBottom: '24px' }}>
-            <h3 className="heading-font" style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '12px' }}>
-              Personal Values & Vision
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {[
-                { id: 'q11', text: 'Raising children religiously' },
-                { id: 'q12', text: 'Hanging out with friends after marriage' },
-                { id: 'q13', text: 'How would you like to celebrate your first wedding anniversary?' }
-              ].map(q => {
-                const answer = candidate.marriageQuestionnaire?.[q.id];
-                if (!answer) return null;
-                return (
-                  <div key={q.id} style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-                    <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px' }}>
-                      {q.text}
-                    </p>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-primary)', lineHeight: 1.5, margin: 0, whiteSpace: 'pre-wrap' }}>
-                      {answer}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
+        {renderDossierContent()}
 
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
           <CosmicCheckButton
@@ -647,39 +1152,142 @@ export const CandidateDetailPage: React.FC = () => {
       </div>
       </div>
 
-      {/* Floating Action Footer */}
-      <div
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          maxWidth: '100%',
-          margin: '0 auto',
-          padding: '12px 24px 20px',
-          background: 'var(--glass-bg)',
-          backdropFilter: 'var(--glass-backdrop)',
-          borderTop: '1px solid var(--border-color)',
-          display: 'flex',
-          justifyContent: 'space-around',
-          alignItems: 'center',
-          zIndex: 40
-        }}
-      >
-        <PassCircleButton
-          onClick={() => {
-            passCandidate(candidate);
-            navigate(-1);
-          }}
-          size={58}
-        />
-        <LikeCircleButton
-          onClick={() => {
-            likeCandidate(candidate, () => navigate('/match-celebration'), () => navigate('/discover'));
-          }}
-          size={64}
-        />
-      </div>
+      {/* Floating Action Footer (Mobile Only) */}
+      {!isFriend && (
+        isIncomingRequest ? (
+          <div
+            className="mobile-only"
+            style={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              maxWidth: '100%',
+              margin: '0 auto',
+              padding: '12px 20px 20px',
+              background: 'var(--glass-bg)',
+              backdropFilter: 'var(--glass-backdrop)',
+              borderTop: '1px solid var(--border-color)',
+              display: 'flex',
+              gap: '12px',
+              alignItems: 'center',
+              zIndex: 40
+            }}
+          >
+            <button
+              onClick={() => {
+                passCandidate(candidate);
+                navigate('/matches');
+              }}
+              style={{
+                padding: '12px 18px',
+                borderRadius: '9999px',
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                color: '#F87171',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                cursor: 'pointer'
+              }}
+            >
+              Decline
+            </button>
+            <button
+              onClick={() => {
+                likeCandidate(candidate, () => navigate('/match-celebration'), () => navigate('/matches'));
+              }}
+              style={{
+                flex: 1,
+                padding: '12px 20px',
+                borderRadius: '9999px',
+                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                border: 'none',
+                color: '#FFF',
+                fontWeight: 700,
+                fontSize: '0.88rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px'
+              }}
+            >
+              <CheckCircle2 size={18} /> Accept Request
+            </button>
+          </div>
+        ) : isSentRequest ? (
+          <div
+            className="mobile-only"
+            style={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              maxWidth: '100%',
+              margin: '0 auto',
+              padding: '14px 24px 22px',
+              background: 'var(--glass-bg)',
+              backdropFilter: 'var(--glass-backdrop)',
+              borderTop: '1px solid var(--border-color)',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 40
+            }}
+          >
+            <div
+              style={{
+                padding: '10px 20px',
+                borderRadius: '9999px',
+                background: 'rgba(245, 158, 11, 0.15)',
+                border: '1px solid var(--accent-amber)',
+                color: 'var(--accent-amber-light)',
+                fontSize: '0.85rem',
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              <CheckCircle2 size={16} /> Interest Sent · Pending
+            </div>
+          </div>
+        ) : (
+          <div
+            className="mobile-only"
+            style={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              maxWidth: '100%',
+              margin: '0 auto',
+              padding: '12px 24px 20px',
+              background: 'var(--glass-bg)',
+              backdropFilter: 'var(--glass-backdrop)',
+              borderTop: '1px solid var(--border-color)',
+              display: 'flex',
+              justifyContent: 'space-around',
+              alignItems: 'center',
+              zIndex: 40
+            }}
+          >
+            <PassCircleButton
+              onClick={() => {
+                passCandidate(candidate);
+                navigate(-1);
+              }}
+              size={58}
+            />
+            <LikeCircleButton
+              onClick={() => {
+                likeCandidate(candidate, () => navigate('/match-celebration'), () => navigate('/discover'));
+              }}
+              size={64}
+            />
+          </div>
+        )
+      )}
 
       {/* Unfriend Confirmation Modal */}
       {showUnfriendModal && (
