@@ -1,8 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import { Preferences } from '@capacitor/preferences';
 
-const supabaseUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) || ((globalThis as any).process?.env?.VITE_SUPABASE_URL) || 'https://placeholder.supabase.co';
-const supabaseAnonKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_ANON_KEY) || ((globalThis as any).process?.env?.VITE_SUPABASE_ANON_KEY) || 'placeholder-anon-key';
+const DEFAULT_SUPABASE_URL = 'https://xpkkathtikucwtyjzfja.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY = 'sb_publishable_7C4Qmq1NFC93t-d0UG2xqw_UIQvVYrQ';
+
+const supabaseUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) || ((globalThis as any).process?.env?.VITE_SUPABASE_URL) || DEFAULT_SUPABASE_URL;
+const supabaseAnonKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_ANON_KEY) || ((globalThis as any).process?.env?.VITE_SUPABASE_ANON_KEY) || DEFAULT_SUPABASE_ANON_KEY;
 
 // Dual storage adapter: Instant synchronous localStorage + background Capacitor Preferences backup
 const hybridStorage = {

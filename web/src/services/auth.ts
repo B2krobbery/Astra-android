@@ -67,7 +67,8 @@ export const AuthService = {
     return supabase.auth.verifyOtp({ phone, token, type: 'sms' });
   },
   async signInWithGoogleNative(): Promise<GoogleAuthResult> {
-    const clientId = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GOOGLE_CLIENT_ID) || ((globalThis as any).process?.env?.VITE_GOOGLE_CLIENT_ID) || '';
+    const DEFAULT_GOOGLE_CLIENT_ID = '1054258418962-2l08d7jnvieses73gmh61og76lrrnqcl.apps.googleusercontent.com';
+    const clientId = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GOOGLE_CLIENT_ID) || ((globalThis as any).process?.env?.VITE_GOOGLE_CLIENT_ID) || DEFAULT_GOOGLE_CLIENT_ID;
 
     if (Capacitor.isNativePlatform()) {
       if (!clientId) {
