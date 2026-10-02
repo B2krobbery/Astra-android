@@ -127,28 +127,30 @@ export const DiscoverFeedPage: React.FC = () => {
           }}
         >
           {/* Logo & Mode Pill */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Sparkles size={18} color="var(--accent-amber)" className="spin-slow" />
-            <h1 className="heading-font" style={{ fontSize: '1.18rem', fontWeight: 800, color: 'var(--accent-amber-light)', margin: 0, letterSpacing: '-0.3px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, flexShrink: 1 }}>
+            <Sparkles size={17} color="var(--accent-amber)" className="spin-slow" style={{ flexShrink: 0 }} />
+            <h1 className="heading-font" style={{ fontSize: '1.12rem', fontWeight: 800, color: 'var(--accent-amber-light)', margin: 0, letterSpacing: '-0.3px', whiteSpace: 'nowrap' }}>
               {t('app_name')}
             </h1>
             <span
               style={{
-                fontSize: '0.65rem',
+                fontSize: '0.62rem',
                 fontWeight: 700,
-                padding: '2px 8px',
+                padding: '2px 7px',
                 borderRadius: '9999px',
                 background: isDatingMode ? 'rgba(236, 72, 153, 0.15)' : 'rgba(212, 175, 55, 0.15)',
                 color: isDatingMode ? '#F472B6' : 'var(--accent-amber-light)',
-                border: isDatingMode ? '1px solid rgba(236, 72, 153, 0.3)' : '1px solid rgba(212, 175, 55, 0.3)'
+                border: isDatingMode ? '1px solid rgba(236, 72, 153, 0.3)' : '1px solid rgba(212, 175, 55, 0.3)',
+                whiteSpace: 'nowrap',
+                flexShrink: 0
               }}
             >
               {isDatingMode ? 'Dating' : 'Matrimony'}
             </span>
           </div>
 
-          {/* Quick Actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {/* Quick Actions: Streak & Filter Toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
             {/* Streak Pill */}
             <div
               style={{
@@ -161,7 +163,8 @@ export const DiscoverFeedPage: React.FC = () => {
                 border: '1px solid rgba(245, 158, 11, 0.3)',
                 color: 'var(--accent-amber-light)',
                 fontSize: '0.68rem',
-                fontWeight: 800
+                fontWeight: 800,
+                whiteSpace: 'nowrap'
               }}
               title="7-Day Streak"
             >
@@ -172,81 +175,25 @@ export const DiscoverFeedPage: React.FC = () => {
             <button
               onClick={() => setShowFilters(!showFilters)}
               style={{
-                padding: '5px 9px',
+                padding: '5px 10px',
                 borderRadius: '9999px',
                 background: showFilters || isNearbyOnly ? 'rgba(245, 158, 11, 0.25)' : 'rgba(255, 255, 255, 0.08)',
                 border: showFilters || isNearbyOnly ? '1px solid var(--accent-amber)' : '1px solid var(--border-color)',
                 color: showFilters || isNearbyOnly ? 'var(--accent-amber-light)' : 'var(--text-primary)',
-                fontSize: '0.7rem',
+                fontSize: '0.72rem',
                 fontWeight: 700,
                 display: 'flex',
                 alignItems: 'center',
-                gap: '4px',
+                gap: '5px',
                 cursor: 'pointer',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
+                whiteSpace: 'nowrap'
               }}
               title="Preferences & Filters"
             >
-              <SlidersHorizontal size={12} />
+              <SlidersHorizontal size={13} />
               <span>Filters</span>
-              {showFilters ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
-            </button>
-
-            {/* Referral Modal Button */}
-            <button
-              onClick={openReferralModal}
-              title="Invite Friends"
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: '50%',
-                background: 'rgba(245, 158, 11, 0.12)',
-                border: '1px solid var(--accent-amber)',
-                color: 'var(--accent-amber-light)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                flexShrink: 0
-              }}
-            >
-              <Share2 size={13} />
-            </button>
-
-            {/* Language Switcher */}
-            <button
-              onClick={toggleLanguage}
-              style={{
-                padding: '4px 7px',
-                borderRadius: '9999px',
-                background: 'rgba(255, 255, 255, 0.08)',
-                border: '1px solid var(--border-color)',
-                color: 'var(--text-muted)',
-                fontSize: '0.68rem',
-                fontWeight: 700,
-                cursor: 'pointer'
-              }}
-            >
-              <Globe size={11} />
-            </button>
-
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              style={{
-                background: 'rgba(255, 255, 255, 0.08)',
-                border: '1px solid var(--border-color)',
-                borderRadius: '50%',
-                width: 28,
-                height: 28,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--text-primary)',
-                cursor: 'pointer'
-              }}
-            >
-              {themeMode === 'DARK' ? <Sun size={12} color="var(--accent-amber)" /> : <Moon size={12} />}
+              {showFilters ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
             </button>
           </div>
         </header>
@@ -255,7 +202,7 @@ export const DiscoverFeedPage: React.FC = () => {
         {showFilters && (
           <div
             style={{
-              padding: '10px 16px 14px',
+              padding: '12px 16px 14px',
               borderTop: '1px solid rgba(255, 255, 255, 0.08)',
               background: themeMode === 'LIGHT' ? 'rgba(255, 250, 251, 0.96)' : 'rgba(15, 12, 24, 0.96)',
               display: 'flex',
@@ -263,6 +210,70 @@ export const DiscoverFeedPage: React.FC = () => {
               gap: '10px'
             }}
           >
+            {/* Quick Actions: Share, Language, Theme */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+              <button
+                onClick={openReferralModal}
+                style={{
+                  flex: 1.2,
+                  padding: '6px 10px',
+                  borderRadius: '9999px',
+                  background: 'rgba(245, 158, 11, 0.12)',
+                  border: '1px solid var(--accent-amber)',
+                  color: 'var(--accent-amber-light)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                <Share2 size={13} />
+                <span>Invite Friends</span>
+              </button>
+
+              <button
+                onClick={toggleLanguage}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '9999px',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid var(--border-color)',
+                  color: 'var(--text-muted)',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  cursor: 'pointer'
+                }}
+              >
+                <Globe size={13} />
+                <span>Lang</span>
+              </button>
+
+              <button
+                onClick={toggleTheme}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '9999px',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid var(--border-color)',
+                  color: 'var(--text-primary)',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  cursor: 'pointer'
+                }}
+              >
+                {themeMode === 'DARK' ? <Sun size={13} color="var(--accent-amber)" /> : <Moon size={13} />}
+                <span>{themeMode === 'DARK' ? 'Light' : 'Dark'}</span>
+              </button>
+            </div>
             {/* Nearby & Strict Toggles */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
               <button
