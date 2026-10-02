@@ -151,6 +151,84 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const sessionUserRef = useRef<any>(null);
   useEffect(() => { sessionUserRef.current = sessionUser; }, [sessionUser]);
 
+  // Candidates & Discovery Filters State
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [isPreferenceStrictFilterOn, setIsPreferenceStrictFilterOn] = useState(false);
+  const strictFilterRef = useRef(false);
+  useEffect(() => { strictFilterRef.current = isPreferenceStrictFilterOn; }, [isPreferenceStrictFilterOn]);
+
+  const [isNearbyOnly, setIsNearbyOnly] = useState(false);
+  const nearbyOnlyRef = useRef(false);
+  useEffect(() => { nearbyOnlyRef.current = isNearbyOnly; }, [isNearbyOnly]);
+
+  const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(() => {
+    const cached = LocationService.getCachedPosition();
+    return cached ? { latitude: cached.latitude, longitude: cached.longitude } : null;
+  });
+  const userCoordsRef = useRef<{ latitude: number; longitude: number } | null>(userCoords);
+  useEffect(() => { userCoordsRef.current = userCoords; }, [userCoords]);
+
+  const buildDiscoveryFilters = (
+    strict: boolean,
+    nearby: boolean,
+    coords: { latitude: number; longitude: number } | null,
+    prefsData?: any
+  ) => {
+    const filters: Record<string, any> = {};
+
+    if (nearby && coords) {
+      filters['radius_km'] = 25;
+      filters['latitude'] = coords.latitude;
+      filters['longitude'] = coords.longitude;
+      filters['nearby'] = true;
+    }
+
+    const prefReligion = prefsData?.preferred_religion || prefsData?.preferredReligion;
+    const prefCaste = prefsData?.preferred_caste || prefsData?.preferredCaste;
+    const prefSubCaste = prefsData?.preferred_sub_caste || prefsData?.preferredSubCaste;
+    const prefGotra = prefsData?.preferred_gotra || prefsData?.preferredGotra;
+
+    const tReligion = prefsData?.tier_religion || prefsData?.tierReligion;
+    const tCaste = prefsData?.tier_caste || prefsData?.tierCaste;
+    const tSubCaste = prefsData?.tier_sub_caste || prefsData?.tierSubCaste;
+    const tGotra = prefsData?.tier_gotra || prefsData?.tierGotra;
+
+    // Preferred ranking (always passed so Postgres sorts preferred candidates to top)
+    const preferred: Record<string, string> = {};
+    if (prefReligion && prefReligion !== 'Any') preferred['religion'] = prefReligion;
+    if (prefCaste && prefCaste !== 'Any') preferred['caste'] = prefCaste;
+    if (Object.keys(preferred).length > 0) filters['preferred'] = preferred;
+
+    // Deal breakers always apply (hard exclusions)
+    const dealBreaker: Record<string, string> = {};
+    if (tReligion === 'DEAL_BREAKER' && prefReligion && prefReligion !== 'Any') dealBreaker['religion'] = prefReligion;
+    if (tCaste === 'DEAL_BREAKER' && prefCaste && prefCaste !== 'Any') dealBreaker['caste'] = prefCaste;
+    if (tSubCaste === 'DEAL_BREAKER' && prefSubCaste && prefSubCaste !== 'Any') dealBreaker['sub_caste'] = prefSubCaste;
+    if (tGotra === 'DEAL_BREAKER' && prefGotra && prefGotra !== 'Any') dealBreaker['gotra'] = prefGotra;
+    if (Object.keys(dealBreaker).length > 0) filters['deal_breaker'] = dealBreaker;
+
+    // Must-have: ONLY applied when strict is true!
+    // When strict is true, any preference marked as MUST_HAVE or PREFERRED with a specific value is strictly required!
+    if (strict) {
+      const mustHave: Record<string, string> = {};
+      if ((tReligion === 'MUST_HAVE' || tReligion === 'PREFERRED') && prefReligion && prefReligion !== 'Any') {
+        mustHave['religion'] = prefReligion;
+      }
+      if ((tCaste === 'MUST_HAVE' || tCaste === 'PREFERRED') && prefCaste && prefCaste !== 'Any') {
+        mustHave['caste'] = prefCaste;
+      }
+      if (tSubCaste === 'MUST_HAVE' && prefSubCaste && prefSubCaste !== 'Any') {
+        mustHave['sub_caste'] = prefSubCaste;
+      }
+      if (tGotra === 'MUST_HAVE' && prefGotra && prefGotra !== 'Any') {
+        mustHave['gotra'] = prefGotra;
+      }
+      if (Object.keys(mustHave).length > 0) filters['must_have'] = mustHave;
+    }
+
+    return filters;
+  };
+
   const loadBackendData = useCallback(async () => {
     const currentUser = sessionUserRef.current;
     if (!currentUser) return;
@@ -268,21 +346,22 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
            }
          } as any));
 
-          // Load discovery candidates — pass must_have / deal_breaker tiers to the RPC
-          const initFilters: Record<string, any> = {};
-          const mustHave: Record<string, string> = {};
-          const dealBreaker: Record<string, string> = {};
-          if (preferencesData?.tier_religion === 'MUST_HAVE' && preferencesData?.preferred_religion) mustHave['religion'] = preferencesData.preferred_religion;
-          if (preferencesData?.tier_caste === 'MUST_HAVE' && preferencesData?.preferred_caste) mustHave['caste'] = preferencesData.preferred_caste;
-          if (preferencesData?.tier_sub_caste === 'MUST_HAVE' && preferencesData?.preferred_sub_caste) mustHave['sub_caste'] = preferencesData.preferred_sub_caste;
-          if (preferencesData?.tier_gotra === 'MUST_HAVE' && preferencesData?.preferred_gotra) mustHave['gotra'] = preferencesData.preferred_gotra;
-          if (preferencesData?.tier_religion === 'DEAL_BREAKER' && preferencesData?.preferred_religion) dealBreaker['religion'] = preferencesData.preferred_religion;
-          if (preferencesData?.tier_caste === 'DEAL_BREAKER' && preferencesData?.preferred_caste) dealBreaker['caste'] = preferencesData.preferred_caste;
-          if (preferencesData?.tier_sub_caste === 'DEAL_BREAKER' && preferencesData?.preferred_sub_caste) dealBreaker['sub_caste'] = preferencesData.preferred_sub_caste;
-          if (preferencesData?.tier_gotra === 'DEAL_BREAKER' && preferencesData?.preferred_gotra) dealBreaker['gotra'] = preferencesData.preferred_gotra;
-          if (Object.keys(mustHave).length > 0) initFilters['must_have'] = mustHave;
-          if (Object.keys(dealBreaker).length > 0) initFilters['deal_breaker'] = dealBreaker;
-          let dbCandidates = await DiscoveryService.getCandidates(initFilters);
+          // If the user explicitly configured MUST_HAVE or PREFERRED with a specific caste/religion, default strict filter to true!
+          const hasStrictPref = !!(
+            preferencesData?.tier_caste === 'MUST_HAVE' ||
+            preferencesData?.tier_religion === 'MUST_HAVE'
+          );
+          const activeStrict = hasStrictPref ? true : strictFilterRef.current;
+          setIsPreferenceStrictFilterOn(activeStrict);
+          strictFilterRef.current = activeStrict;
+
+          const initFilters = buildDiscoveryFilters(
+            activeStrict,
+            nearbyOnlyRef.current,
+            userCoordsRef.current,
+            preferencesData
+          );
+          const dbCandidates = await DiscoveryService.getCandidates(initFilters);
           setCandidates((dbCandidates as any) || []);
       }
       
@@ -503,7 +582,6 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Candidates & Regional Filtering
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [passedCandidatesHistory, setPassedCandidatesHistory] = useState<Candidate[]>([]);
   const [pendingRequests, setPendingRequests] = useState<Candidate[]>([]);
   const [incomingPhotoRequests, setIncomingPhotoRequests] = useState<PhotoRequestRecord[]>([]);
@@ -513,12 +591,24 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [lastMatchedCandidate, setLastMatchedCandidate] = useState<Candidate | null>(null);
 
-  const [isPreferenceStrictFilterOn, setIsPreferenceStrictFilterOn] = useState(false);
-  const [isNearbyOnly, setIsNearbyOnly] = useState(false);
-  const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(() => {
-    const cached = LocationService.getCachedPosition();
-    return cached ? { latitude: cached.latitude, longitude: cached.longitude } : null;
-  });
+  const setPreferenceStrictFilter = async (val: boolean) => {
+    setIsPreferenceStrictFilterOn(val);
+    strictFilterRef.current = val;
+    try {
+      const filters = buildDiscoveryFilters(
+        val,
+        nearbyOnlyRef.current,
+        userCoordsRef.current,
+        userProfile.partnerPreferences
+      );
+      const updated = await DiscoveryService.getCandidates(filters);
+      if (updated) {
+        setCandidates(updated);
+      }
+    } catch (err) {
+      console.error('Failed to reload candidates on strict filter change:', err);
+    }
+  };
 
   const enableNearbyDiscovery = async (radiusKm: number = 25): Promise<boolean> => {
     try {
@@ -531,17 +621,15 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return { latitude: coords.latitude, longitude: coords.longitude };
       });
       setIsNearbyOnly(true);
+      nearbyOnlyRef.current = true;
+      userCoordsRef.current = { latitude: coords.latitude, longitude: coords.longitude };
 
       // 2. Background non-blocking sync to Supabase
       LocationService.syncUserLocation(coords).catch(() => {});
 
       // 3. Fetch candidates
-      const nearbyCandidates = await DiscoveryService.getCandidates({
-        radius_km: radiusKm,
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        nearby: true
-      });
+      const filters = buildDiscoveryFilters(strictFilterRef.current, true, coords, userProfile.partnerPreferences);
+      const nearbyCandidates = await DiscoveryService.getCandidates(filters);
       if (nearbyCandidates && nearbyCandidates.length > 0) {
         setCandidates(nearbyCandidates);
       }
@@ -554,7 +642,9 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const disableNearbyDiscovery = async () => {
     setIsNearbyOnly(false);
-    const regularCandidates = await DiscoveryService.getCandidates();
+    nearbyOnlyRef.current = false;
+    const filters = buildDiscoveryFilters(strictFilterRef.current, false, null, userProfile.partnerPreferences);
+    const regularCandidates = await DiscoveryService.getCandidates(filters);
     if (regularCandidates) {
       setCandidates(regularCandidates);
     }
@@ -570,16 +660,52 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Filter by Intent strictly
       if (userProfile.intent && c.intent && userProfile.intent !== c.intent) return false;
 
-      // Strict Partner Preferences — honour tiers (MUST_HAVE = hard filter, DEAL_BREAKER = hard exclude)
+      // Deal breakers always apply (hard exclusions)
+      if (userProfile.partnerPreferences) {
+        const prefs = userProfile.partnerPreferences;
+        if (prefs.tierReligion === 'DEAL_BREAKER' && prefs.preferredReligion && prefs.preferredReligion !== 'Any') {
+          if (c.religion && c.religion.toLowerCase().includes(prefs.preferredReligion.toLowerCase())) return false;
+        }
+        if (prefs.tierCaste === 'DEAL_BREAKER' && prefs.preferredCaste && prefs.preferredCaste !== 'Any') {
+          if (c.caste && c.caste.toLowerCase().includes(prefs.preferredCaste.toLowerCase())) return false;
+        }
+        if (prefs.tierSubCaste === 'DEAL_BREAKER' && prefs.preferredSubCaste && prefs.preferredSubCaste !== 'Any') {
+          if (c.subCaste && c.subCaste.toLowerCase().includes(prefs.preferredSubCaste.toLowerCase())) return false;
+        }
+        if (prefs.tierGotra === 'DEAL_BREAKER' && prefs.preferredGotra && prefs.preferredGotra !== 'Any') {
+          const userGotras = [
+            userProfile.gotra,
+            userProfile.fatherMotherGotra,
+            userProfile.motherFatherGotra,
+            userProfile.motherMotherGotra,
+          ].filter((g): g is string => Boolean(g && g.trim())).map(g => g.trim().toLowerCase());
+
+          const candidateGotras = [
+            c.gotra,
+            c.fatherMotherGotra,
+            c.motherFatherGotra,
+            c.motherMotherGotra,
+          ].filter((g): g is string => Boolean(g && g.trim())).map(g => g.trim().toLowerCase());
+
+          if (prefs.preferredGotra === 'Any (Except My Own)') {
+            if (userGotras.some(ug => candidateGotras.includes(ug))) return false;
+          } else {
+            const target = prefs.preferredGotra.trim().toLowerCase();
+            if (candidateGotras.some(cg => cg.includes(target))) return false;
+          }
+        }
+      }
+
+      // Strict Partner Preferences — honour tiers when strict filter is ON
       if (isPreferenceStrictFilterOn && userProfile.partnerPreferences) {
         const prefs = userProfile.partnerPreferences;
 
         if (userProfile.intent === 'Marriage') {
-          // MUST_HAVE: hard include filters
-          if (prefs.tierReligion === 'MUST_HAVE' && prefs.preferredReligion && prefs.preferredReligion !== 'Any') {
+          // MUST_HAVE / PREFERRED: hard include filters
+          if ((prefs.tierReligion === 'MUST_HAVE' || prefs.tierReligion === 'PREFERRED') && prefs.preferredReligion && prefs.preferredReligion !== 'Any') {
             if (!c.religion || !c.religion.toLowerCase().includes(prefs.preferredReligion.toLowerCase())) return false;
           }
-          if (prefs.tierCaste === 'MUST_HAVE' && prefs.preferredCaste && prefs.preferredCaste !== 'Any') {
+          if ((prefs.tierCaste === 'MUST_HAVE' || prefs.tierCaste === 'PREFERRED') && prefs.preferredCaste && prefs.preferredCaste !== 'Any') {
             if (!c.caste || !c.caste.toLowerCase().includes(prefs.preferredCaste.toLowerCase())) return false;
           }
           if (prefs.tierSubCaste === 'MUST_HAVE' && prefs.preferredSubCaste && prefs.preferredSubCaste !== 'Any') {
@@ -606,25 +732,6 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             } else {
               const target = prefs.preferredGotra.trim().toLowerCase();
               if (!candidateGotras.some(cg => cg.includes(target))) return false;
-            }
-          }
-
-          // DEAL_BREAKER: hard exclude filters
-          if (prefs.tierReligion === 'DEAL_BREAKER' && prefs.preferredReligion && prefs.preferredReligion !== 'Any') {
-            if (c.religion && c.religion.toLowerCase().includes(prefs.preferredReligion.toLowerCase())) return false;
-          }
-          if (prefs.tierCaste === 'DEAL_BREAKER' && prefs.preferredCaste && prefs.preferredCaste !== 'Any') {
-            if (c.caste && c.caste.toLowerCase().includes(prefs.preferredCaste.toLowerCase())) return false;
-          }
-          if (prefs.tierSubCaste === 'DEAL_BREAKER' && prefs.preferredSubCaste && prefs.preferredSubCaste !== 'Any') {
-            if (c.subCaste && c.subCaste.toLowerCase().includes(prefs.preferredSubCaste.toLowerCase())) return false;
-          }
-          if (prefs.tierGotra === 'DEAL_BREAKER' && prefs.preferredGotra && prefs.preferredGotra !== 'Any') {
-            if (prefs.preferredGotra === 'Any (Except My Own)') {
-              if (userGotras.some(ug => candidateGotras.includes(ug))) return false;
-            } else {
-              const target = prefs.preferredGotra.trim().toLowerCase();
-              if (candidateGotras.some(cg => cg.includes(target))) return false;
             }
           }
         } else {
@@ -882,9 +989,15 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Always wait a moment for the DB to settle, then refresh all data
       setTimeout(async () => {
         try {
+          const filters = buildDiscoveryFilters(
+            strictFilterRef.current,
+            nearbyOnlyRef.current,
+            userCoordsRef.current,
+            userProfile.partnerPreferences
+          );
           const [dbConversations, dbCandidates, dbPending, dbSent] = await Promise.all([
             ChatService.getConversations(currentUserId),
-            DiscoveryService.getCandidates(),
+            DiscoveryService.getCandidates(filters),
             DiscoveryService.getPendingRequests(currentUserId),
             DiscoveryService.getSentRequests(currentUserId)
           ]);
@@ -1203,7 +1316,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         updatePartnerPreferences,
         updateDatingPreferences,
         isPreferenceStrictFilterOn,
-        setIsPreferenceStrictFilterOn,
+        setIsPreferenceStrictFilterOn: setPreferenceStrictFilter,
         profilePhotos,
         uploadUserProfilePhoto,
         uploadUserProfilePhotos,

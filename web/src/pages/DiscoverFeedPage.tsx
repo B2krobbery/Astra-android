@@ -33,7 +33,8 @@ export const DiscoverFeedPage: React.FC = () => {
     passedCandidatesHistory,
     rewindCandidate,
     resetFeed,
-    candidates
+    candidates,
+    filteredCandidates
   } = useAstra();
 
   const isDatingMode = userProfile.intent === 'Dating';
@@ -71,9 +72,9 @@ export const DiscoverFeedPage: React.FC = () => {
 
   // Preload upcoming candidate images in the background so swipes render instantly (0ms)
   React.useEffect(() => {
-    if (candidates && candidates.length > 0) {
+    if (filteredCandidates && filteredCandidates.length > 0) {
       const upcomingPhotos: string[] = [];
-      candidates.slice(0, 4).forEach(c => {
+      filteredCandidates.slice(0, 4).forEach(c => {
         if (c.photoUrls && c.photoUrls.length > 0) {
           upcomingPhotos.push(...c.photoUrls);
         }
@@ -82,7 +83,7 @@ export const DiscoverFeedPage: React.FC = () => {
         preloadImages(upcomingPhotos);
       }
     }
-  }, [candidates]);
+  }, [filteredCandidates]);
 
   return (
     <div
@@ -446,7 +447,7 @@ export const DiscoverFeedPage: React.FC = () => {
             {/* Card Deck Viewport */}
             <div style={{ position: 'relative', width: '100%', flex: 1, minHeight: 0, borderRadius: '24px' }}>
               {/* Background Card 3 (Bottom of deck) */}
-              {candidates[2] && (
+              {filteredCandidates[2] && (
                 <div
                   style={{
                     position: 'absolute',
@@ -463,7 +464,7 @@ export const DiscoverFeedPage: React.FC = () => {
                   }}
                 >
                   <CandidateCardView
-                    candidate={candidates[2]}
+                    candidate={filteredCandidates[2]}
                     isStaticPreview={true}
                     onCardClick={() => {}}
                     onLikeClick={() => {}}
@@ -474,7 +475,7 @@ export const DiscoverFeedPage: React.FC = () => {
               )}
 
               {/* Background Card 2 (Middle of deck) */}
-              {candidates[1] && (
+              {filteredCandidates[1] && (
                 <div
                   style={{
                     position: 'absolute',
@@ -491,7 +492,7 @@ export const DiscoverFeedPage: React.FC = () => {
                   }}
                 >
                   <CandidateCardView
-                    candidate={candidates[1]}
+                    candidate={filteredCandidates[1]}
                     isStaticPreview={true}
                     onCardClick={() => {}}
                     onLikeClick={() => {}}
