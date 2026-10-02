@@ -93,6 +93,7 @@ interface AstraContextType {
   passedCandidatesHistory: Candidate[];
   pendingRequests: Candidate[];
   sentRequests: Candidate[];
+  cancelLike: (candidate: Candidate) => Promise<void>;
   rewindCandidate: () => void;
   resetFeed: () => Promise<void>;
   refreshData: () => Promise<void>;
@@ -1090,6 +1091,27 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   };
 
+  const cancelLike = async (candidate: Candidate) => {
+    const currentUserId = sessionUser?.id;
+    
+    // Optimistically remove from sentRequests and add back to discover feed
+    setSentRequests((prev: any) => prev.filter((c: any) => c.id !== candidate.id));
+    setCandidates((prev: any) => {
+      if (prev.some((c: any) => c.id === candidate.id)) return prev;
+      return [candidate, ...prev];
+    });
+
+    try {
+      // Overwrite the LIKE with a PASS on the backend to withdraw the interest
+      await DiscoveryService.interact(candidate.id, 'PASS', currentUserId);
+    } catch (e) {
+      console.error('Failed to cancel like:', e);
+      // Revert on failure — re-add to sentRequests
+      setSentRequests((prev: any) => [candidate, ...prev.filter((c: any) => c.id !== candidate.id)]);
+      setCandidates((prev: any) => prev.filter((c: any) => c.id !== candidate.id));
+    }
+  };
+
   const rewindCandidate = () => {
     setPassedCandidatesHistory(prev => {
       if (prev.length === 0) return prev;
@@ -1391,6 +1413,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         passedCandidatesHistory,
         pendingRequests,
         sentRequests,
+        cancelLike,
         rewindCandidate,
         resetFeed,
         refreshData: loadBackendData,

@@ -33,6 +33,7 @@ export const DiscoverFeedPage: React.FC = () => {
     disableNearbyDiscovery,
     passedCandidatesHistory,
     rewindCandidate,
+    cancelLike,
     resetFeed,
     candidates,
     filteredCandidates
@@ -86,12 +87,53 @@ export const DiscoverFeedPage: React.FC = () => {
     }
   }, [filteredCandidates]);
 
-  // Desktop Keyboard Shortcuts (Arrow Left = Pass, Arrow Right = Like, Space/Up = Detail, K = Kundali)
+  const [undoLikeCandidate, setUndoLikeCandidate] = React.useState<any>(null);
+  const undoTimerRef = React.useRef<any>(null);
+
+  const handleLikeCandidate = (cand: any) => {
+    if (!cand) return;
+    likeCandidate(
+      cand,
+      () => {
+        setUndoLikeCandidate(null);
+        navigate('/match-celebration');
+      },
+      () => {
+        // Not a mutual match yet — candidate placed in sent requests
+        setUndoLikeCandidate(cand);
+        if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+        undoTimerRef.current = setTimeout(() => {
+          setUndoLikeCandidate(null);
+        }, 7000);
+      }
+    );
+  };
+
+  const handleUndoLike = async () => {
+    if (!undoLikeCandidate) return;
+    const target = undoLikeCandidate;
+    setUndoLikeCandidate(null);
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    await cancelLike(target);
+  };
+
+  // Desktop Keyboard Shortcuts (Arrow Left = Pass, Arrow Right = Like, Space/Up = Detail, K = Kundali, Z = Rewind / Undo)
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) {
         return;
       }
+
+      if (e.key === 'z' || e.key === 'Z') {
+        e.preventDefault();
+        if (undoLikeCandidate) {
+          handleUndoLike();
+        } else {
+          rewindCandidate();
+        }
+        return;
+      }
+
       if (!currentCandidate) return;
 
       if (e.key === 'ArrowLeft') {
@@ -99,7 +141,7 @@ export const DiscoverFeedPage: React.FC = () => {
         passCandidate(currentCandidate);
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
-        likeCandidate(currentCandidate, () => navigate('/match-celebration'));
+        handleLikeCandidate(currentCandidate);
       } else if (e.key === ' ' || e.key === 'ArrowUp') {
         e.preventDefault();
         selectCandidate(currentCandidate);
@@ -107,15 +149,12 @@ export const DiscoverFeedPage: React.FC = () => {
       } else if (e.key === 'k' || e.key === 'K') {
         e.preventDefault();
         checkCompatibility(currentCandidate, () => navigate('/horoscope-compatibility'));
-      } else if (e.key === 'z' || e.key === 'Z') {
-        e.preventDefault();
-        rewindCandidate();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentCandidate, passCandidate, likeCandidate, selectCandidate, checkCompatibility, rewindCandidate, navigate]);
+  }, [currentCandidate, passCandidate, selectCandidate, checkCompatibility, rewindCandidate, undoLikeCandidate, navigate]);
 
   return (
     <div
@@ -564,7 +603,7 @@ export const DiscoverFeedPage: React.FC = () => {
                     selectCandidate(currentCandidate);
                     navigate('/candidate-detail');
                   }}
-                  onLikeClick={() => likeCandidate(currentCandidate, () => navigate('/match-celebration'))}
+                  onLikeClick={() => handleLikeCandidate(currentCandidate)}
                   onPassClick={() => passCandidate(currentCandidate)}
                   onCheckCompatibility={() =>
                     checkCompatibility(currentCandidate, () => navigate('/horoscope-compatibility'))
@@ -585,27 +624,37 @@ export const DiscoverFeedPage: React.FC = () => {
                 zIndex: 20
               }}
             >
-              {/* Rewind Button */}
+              {/* Rewind / Undo Button */}
               <button
-                onClick={rewindCandidate}
-                disabled={passedCandidatesHistory.length === 0}
+                onClick={() => {
+                  if (undoLikeCandidate) {
+                    handleUndoLike();
+                  } else {
+                    rewindCandidate();
+                  }
+                }}
+                disabled={passedCandidatesHistory.length === 0 && !undoLikeCandidate}
                 style={{
                   width: 44,
                   height: 44,
                   borderRadius: '50%',
-                  background: 'rgba(255, 255, 255, 0.08)',
+                  background: undoLikeCandidate
+                    ? 'rgba(245, 158, 11, 0.22)'
+                    : 'rgba(255, 255, 255, 0.08)',
                   backdropFilter: 'blur(12px)',
-                  border: '1px solid rgba(245, 158, 11, 0.35)',
-                  color: passedCandidatesHistory.length > 0 ? 'var(--accent-amber)' : 'rgba(255, 255, 255, 0.25)',
+                  border: undoLikeCandidate
+                    ? '1.5px solid var(--accent-amber)'
+                    : '1px solid rgba(245, 158, 11, 0.35)',
+                  color: (passedCandidatesHistory.length > 0 || undoLikeCandidate) ? 'var(--accent-amber)' : 'rgba(255, 255, 255, 0.25)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  cursor: passedCandidatesHistory.length > 0 ? 'pointer' : 'default',
-                  boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2)',
+                  cursor: (passedCandidatesHistory.length > 0 || undoLikeCandidate) ? 'pointer' : 'default',
+                  boxShadow: undoLikeCandidate ? '0 0 16px rgba(245, 158, 11, 0.4)' : '0 4px 14px rgba(0, 0, 0, 0.2)',
                   transition: 'all 0.2s ease',
-                  opacity: passedCandidatesHistory.length > 0 ? 1 : 0.4
+                  opacity: (passedCandidatesHistory.length > 0 || undoLikeCandidate) ? 1 : 0.4
                 }}
-                title="Rewind last pass"
+                title={undoLikeCandidate ? `Undo like for ${undoLikeCandidate.name}` : "Rewind last pass"}
               >
                 <RotateCcw size={18} />
               </button>
@@ -660,9 +709,7 @@ export const DiscoverFeedPage: React.FC = () => {
 
               {/* Like Button */}
               <button
-                onClick={() =>
-                  likeCandidate(currentCandidate, () => navigate('/match-celebration'))
-                }
+                onClick={() => handleLikeCandidate(currentCandidate)}
                 style={{
                   width: 62,
                   height: 62,
@@ -764,7 +811,85 @@ export const DiscoverFeedPage: React.FC = () => {
             </button>
           </div>
         )}
-</main>
+      </main>
+
+      {/* FLOATING UNDO LIKE TOAST */}
+      {undoLikeCandidate && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '84px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 90,
+            background: 'rgba(20, 16, 32, 0.95)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(245, 158, 11, 0.45)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(245, 158, 11, 0.2)',
+            borderRadius: '9999px',
+            padding: '6px 14px 6px 8px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            maxWidth: '92vw'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+            {undoLikeCandidate.photoUrls?.[0] ? (
+              <img
+                src={undoLikeCandidate.photoUrls[0]}
+                alt={undoLikeCandidate.name}
+                style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+              />
+            ) : (
+              <Heart size={16} color="var(--accent-amber)" fill="var(--accent-amber)" style={{ flexShrink: 0 }} />
+            )}
+            <span style={{ fontSize: '0.8rem', color: '#FFF', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              Interest sent to <span style={{ color: 'var(--accent-amber-light)' }}>{undoLikeCandidate.name}</span>
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+            <button
+              onClick={handleUndoLike}
+              style={{
+                padding: '5px 12px',
+                borderRadius: '9999px',
+                background: 'linear-gradient(135deg, var(--accent-amber) 0%, #D97706 100%)',
+                border: 'none',
+                color: '#0B0B0E',
+                fontSize: '0.78rem',
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                boxShadow: '0 2px 8px rgba(245, 158, 11, 0.35)'
+              }}
+            >
+              <RotateCcw size={12} strokeWidth={2.5} />
+              <span>Undo</span>
+            </button>
+
+            <button
+              onClick={() => setUndoLikeCandidate(null)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-muted)',
+                padding: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+              title="Dismiss"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* FIXED BOTTOM NAVIGATION BAR */}
       <AstraBottomNavigation />

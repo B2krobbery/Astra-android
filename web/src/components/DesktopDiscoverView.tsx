@@ -49,7 +49,8 @@ export const DesktopDiscoverView: React.FC = () => {
     conversations,
     openConversationForCandidate,
     pendingRequests,
-    sentRequests
+    sentRequests,
+    cancelLike
   } = useAstra();
 
   // Search & Sorting States
@@ -1217,83 +1218,143 @@ export const DesktopDiscoverView: React.FC = () => {
 
                     {/* Action Buttons (Send Interest, Skip Profile) */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '14px' }}>
-                      {/* Send Interest (Like) Button */}
-                      <button
-                        onClick={() => handleLike(candidate)}
-                        disabled={isLiked}
-                        style={{
-                          width: '100%',
-                          padding: '11px 16px',
-                          borderRadius: '12px',
-                          background: isLiked
-                            ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                            : isPendingIncoming
-                            ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
-                            : 'linear-gradient(135deg, var(--accent-amber), #D97706)',
-                          border: 'none',
-                          color: (isLiked || isPendingIncoming) ? '#FFF' : '#0B0B0E',
-                          fontWeight: 800,
-                          fontSize: '0.85rem',
-                          cursor: isLiked ? 'default' : 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '7px',
-                          boxShadow: (isLiked || isPendingIncoming)
-                            ? '0 6px 20px rgba(16, 185, 129, 0.35)'
-                            : '0 6px 20px rgba(212, 175, 55, 0.35)',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        {isLiked ? (
-                          <>
+                      {isLiked ? (
+                        /* Interest Already Sent — show status + withdraw */
+                        <>
+                          <div
+                            style={{
+                              width: '100%',
+                              padding: '11px 16px',
+                              borderRadius: '12px',
+                              background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                              border: 'none',
+                              color: '#FFF',
+                              fontWeight: 800,
+                              fontSize: '0.85rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '7px',
+                              boxShadow: '0 6px 20px rgba(16, 185, 129, 0.35)'
+                            }}
+                          >
                             <Check size={16} strokeWidth={3} />
                             <span>Interest Sent ✓</span>
-                          </>
-                        ) : isPendingIncoming ? (
-                          <>
-                            <CheckCircle2 size={16} />
-                            <span>Accept Match Request</span>
-                          </>
-                        ) : (
-                          <>
-                            <Heart size={16} fill="#0B0B0E" />
-                            <span>Send Interest</span>
-                          </>
-                        )}
-                      </button>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setLikedCandidateIds(prev => {
+                                const next = new Set(prev);
+                                next.delete(candidate.id);
+                                return next;
+                              });
+                              cancelLike(candidate);
+                            }}
+                            style={{
+                              width: '100%',
+                              padding: '9px 16px',
+                              borderRadius: '12px',
+                              background: 'rgba(245, 158, 11, 0.08)',
+                              border: '1px solid rgba(245, 158, 11, 0.3)',
+                              color: 'var(--accent-amber-light)',
+                              fontWeight: 700,
+                              fontSize: '0.78rem',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '6px',
+                              transition: 'all 0.15s ease'
+                            }}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.6)';
+                              e.currentTarget.style.color = '#F87171';
+                              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+                              e.currentTarget.style.color = 'var(--accent-amber-light)';
+                              e.currentTarget.style.background = 'rgba(245, 158, 11, 0.08)';
+                            }}
+                          >
+                            <X size={14} />
+                            <span>Withdraw Interest</span>
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          {/* Send Interest (Like) Button */}
+                          <button
+                            onClick={() => handleLike(candidate)}
+                            style={{
+                              width: '100%',
+                              padding: '11px 16px',
+                              borderRadius: '12px',
+                              background: isPendingIncoming
+                                ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                                : 'linear-gradient(135deg, var(--accent-amber), #D97706)',
+                              border: 'none',
+                              color: isPendingIncoming ? '#FFF' : '#0B0B0E',
+                              fontWeight: 800,
+                              fontSize: '0.85rem',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '7px',
+                              boxShadow: isPendingIncoming
+                                ? '0 6px 20px rgba(16, 185, 129, 0.35)'
+                                : '0 6px 20px rgba(212, 175, 55, 0.35)',
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            {isPendingIncoming ? (
+                              <>
+                                <CheckCircle2 size={16} />
+                                <span>Accept Match Request</span>
+                              </>
+                            ) : (
+                              <>
+                                <Heart size={16} fill="#0B0B0E" />
+                                <span>Send Interest</span>
+                              </>
+                            )}
+                          </button>
 
-                      {/* Skip / Pass Button */}
-                      <button
-                        onClick={() => handlePass(candidate)}
-                        style={{
-                          width: '100%',
-                          padding: '9px 16px',
-                          borderRadius: '12px',
-                          background: 'rgba(255, 255, 255, 0.05)',
-                          border: '1px solid var(--border-color)',
-                          color: 'var(--text-muted)',
-                          fontWeight: 600,
-                          fontSize: '0.78rem',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '6px',
-                          transition: 'all 0.15s ease'
-                        }}
-                        onMouseEnter={e => {
-                          e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.5)';
-                          e.currentTarget.style.color = '#F87171';
-                        }}
-                        onMouseLeave={e => {
-                          e.currentTarget.style.borderColor = 'var(--border-color)';
-                          e.currentTarget.style.color = 'var(--text-muted)';
-                        }}
-                      >
-                        <X size={14} />
-                        <span>Skip Profile</span>
-                      </button>
+                          {/* Skip / Pass Button */}
+                          <button
+                            onClick={() => handlePass(candidate)}
+                            style={{
+                              width: '100%',
+                              padding: '9px 16px',
+                              borderRadius: '12px',
+                              background: 'rgba(255, 255, 255, 0.05)',
+                              border: '1px solid var(--border-color)',
+                              color: 'var(--text-muted)',
+                              fontWeight: 600,
+                              fontSize: '0.78rem',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '6px',
+                              transition: 'all 0.15s ease'
+                            }}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+                              e.currentTarget.style.color = '#F87171';
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.borderColor = 'var(--border-color)';
+                              e.currentTarget.style.color = 'var(--text-muted)';
+                            }}
+                          >
+                            <X size={14} />
+                            <span>Skip Profile</span>
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

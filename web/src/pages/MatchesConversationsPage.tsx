@@ -28,6 +28,7 @@ export const MatchesConversationsPage: React.FC = () => {
     likeCandidate,
     passCandidate,
     checkCompatibility,
+    cancelLike,
     t
   } = useAstra();
 
@@ -570,23 +571,58 @@ export const MatchesConversationsPage: React.FC = () => {
                         </div>
                       </div>
 
-                      <span
-                        style={{
-                          fontSize: '0.68rem',
-                          fontWeight: 700,
-                          padding: '4px 8px',
-                          borderRadius: '9999px',
-                          background: 'rgba(245, 158, 11, 0.12)',
-                          border: '1px solid rgba(245, 158, 11, 0.3)',
-                          color: 'var(--accent-amber-light)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          flexShrink: 0
-                        }}
-                      >
-                        <Clock size={11} /> Sent
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                        <span
+                          style={{
+                            fontSize: '0.68rem',
+                            fontWeight: 700,
+                            padding: '4px 8px',
+                            borderRadius: '9999px',
+                            background: 'rgba(245, 158, 11, 0.12)',
+                            border: '1px solid rgba(245, 158, 11, 0.3)',
+                            color: 'var(--accent-amber-light)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          <Clock size={11} /> Sent
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (selectedRequestCandidate?.id === cand.id) {
+                              setSelectedRequestCandidate(null);
+                            }
+                            cancelLike(cand);
+                          }}
+                          title="Withdraw Interest"
+                          style={{
+                            width: '28px',
+                            height: '28px',
+                            borderRadius: '50%',
+                            background: 'rgba(239, 68, 68, 0.08)',
+                            border: '1px solid rgba(239, 68, 68, 0.25)',
+                            color: '#F87171',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: 0,
+                            transition: 'all 0.15s ease'
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
+                            e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)';
+                            e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.25)';
+                          }}
+                        >
+                          <X size={13} />
+                        </button>
+                      </div>
                     </div>
                   );
                 })
@@ -1158,6 +1194,28 @@ export const MatchesConversationsPage: React.FC = () => {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <button
+                    onClick={() => {
+                      const cand = selectedRequestCandidate;
+                      setSelectedRequestCandidate(null);
+                      cancelLike(cand);
+                    }}
+                    style={{
+                      padding: '9px 18px',
+                      borderRadius: '9999px',
+                      background: 'rgba(239, 68, 68, 0.08)',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      color: '#F87171',
+                      fontSize: '0.82rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <X size={14} /> Withdraw
+                  </button>
                   <button
                     onClick={() => {
                       selectCandidate(selectedRequestCandidate);

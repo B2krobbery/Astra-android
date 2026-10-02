@@ -22,6 +22,7 @@ export const CandidateDetailPage: React.FC = () => {
     openConversationForCandidate,
     pendingRequests,
     sentRequests,
+    cancelLike,
     t
   } = useAstra();
   const [showUnfriendModal, setShowUnfriendModal] = useState(false);
@@ -708,22 +709,47 @@ export const CandidateDetailPage: React.FC = () => {
                 </div>
               </div>
             ) : isSentRequest ? (
-              <div
-                style={{
-                  padding: '14px 20px',
-                  borderRadius: '16px',
-                  background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(217, 119, 6, 0.05) 100%)',
-                  border: '1px solid rgba(245, 158, 11, 0.35)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  color: 'var(--accent-amber-light)',
-                  fontWeight: 700,
-                  fontSize: '0.9rem'
-                }}
-              >
-                <CheckCircle2 size={18} color="var(--accent-amber)" /> Interest Sent · Pending Response
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div
+                  style={{
+                    padding: '14px 20px',
+                    borderRadius: '16px',
+                    background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(217, 119, 6, 0.05) 100%)',
+                    border: '1px solid rgba(245, 158, 11, 0.35)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    color: 'var(--accent-amber-light)',
+                    fontWeight: 700,
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  <CheckCircle2 size={18} color="var(--accent-amber)" /> Interest Sent · Pending Response
+                </div>
+                <button
+                  onClick={() => {
+                    cancelLike(candidate);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '11px 20px',
+                    borderRadius: '9999px',
+                    background: 'rgba(239, 68, 68, 0.08)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: '#F87171',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <X size={16} /> Withdraw Interest
+                </button>
               </div>
             ) : (
               <div style={{ display: 'flex', gap: '12px' }}>
@@ -1232,6 +1258,7 @@ export const CandidateDetailPage: React.FC = () => {
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
+              gap: '12px',
               zIndex: 40
             }}
           >
@@ -1249,8 +1276,26 @@ export const CandidateDetailPage: React.FC = () => {
                 gap: '8px'
               }}
             >
-              <CheckCircle2 size={16} /> Interest Sent · Pending
+              <CheckCircle2 size={16} /> Interest Sent
             </div>
+            <button
+              onClick={() => cancelLike(candidate)}
+              style={{
+                padding: '10px 20px',
+                borderRadius: '9999px',
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.4)',
+                color: '#F87171',
+                fontSize: '0.85rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <X size={14} /> Withdraw
+            </button>
           </div>
         ) : (
           <div
