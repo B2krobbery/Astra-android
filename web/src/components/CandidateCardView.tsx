@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Candidate } from '../types';
 import { Sparkles, MapPin, Briefcase, GraduationCap, ShieldCheck, ChevronRight } from 'lucide-react';
 import { VerificationBadge } from './VerificationBadge';
 import { VerificationType } from '../types';
 import { VoiceIntroCard } from './VoiceIntroCard';
-import { preloadImages } from '../utils/imagePreloader';
+import { preloadImages, isImagePreloaded, markImageAsLoaded } from '../utils/imagePreloader';
 
 interface CandidateCardViewProps {
   candidate: Candidate;
@@ -24,7 +24,14 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
   isStaticPreview = false
 }) => {
   const [photoIndex, setPhotoIndex] = useState(0);
-  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const currentPhotoSrc = candidate?.photoUrls?.[photoIndex] || candidate?.photoUrls?.[0] || '';
+
+  const imgRef = useRef<HTMLImageElement | null>(null);
+
+  // Initialize as loaded if already in browser cache / preloaded
+  const [isImageLoaded, setIsImageLoaded] = useState(() =>
+    isImagePreloaded(currentPhotoSrc)
+  );
   const [isImageError, setIsImageError] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -32,19 +39,51 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
   const [dragStartY, setDragStartY] = useState(0);
   const [exitDirection, setExitDirection] = useState<'LIKE' | 'PASS' | null>(null);
 
-  // Preload all candidate photos immediately on mount / photoIndex change
+  // Preload all candidate photos immediately on mount / candidate change
   useEffect(() => {
-    if (candidate?.photoUrls) {
+    if (candidate?.photoUrls && candidate.photoUrls.length > 0) {
       preloadImages(candidate.photoUrls);
     }
   }, [candidate]);
 
+  // Synchronize load state whenever candidate or active photo changes
   useEffect(() => {
-    setIsImageLoaded(false);
-    setIsImageError(false);
-  }, [photoIndex, candidate?.id]);
+    const isPreloaded = isImagePreloaded(currentPhotoSrc);
+    const isComplete = !!(imgRef.current && imgRef.current.complete && imgRef.current.naturalWidth > 0);
 
-  const currentPhotoSrc = candidate.photoUrls?.[photoIndex] || candidate.photoUrls?.[0];
+    if (isPreloaded || isComplete) {
+      setIsImageLoaded(true);
+      if (currentPhotoSrc) markImageAsLoaded(currentPhotoSrc);
+    } else {
+      setIsImageLoaded(false);
+    }
+    setIsImageError(false);
+  }, [currentPhotoSrc, candidate?.id, photoIndex]);
+
+  const handleImageLoad = useCallback(() => {
+    setIsImageLoaded(true);
+    setIsImageError(false);
+    if (currentPhotoSrc) {
+      markImageAsLoaded(currentPhotoSrc);
+    }
+  }, [currentPhotoSrc]);
+
+  const handleImageError = useCallback(() => {
+    setIsImageLoaded(false);
+    setIsImageError(true);
+  }, []);
+
+  // Callback ref executes synchronously upon DOM node creation and insertion
+  const imageRefCallback = useCallback((node: HTMLImageElement | null) => {
+    imgRef.current = node;
+    if (node && node.complete && node.naturalWidth > 0) {
+      setIsImageLoaded(true);
+      setIsImageError(false);
+      if (currentPhotoSrc) {
+        markImageAsLoaded(currentPhotoSrc);
+      }
+    }
+  }, [currentPhotoSrc]);
   const isFallbackAvatar =
     !currentPhotoSrc ||
     currentPhotoSrc.includes('ui-avatars.com') ||
@@ -300,11 +339,11 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
         </div>
       ) : (
         <img
+          ref={imageRefCallback}
           src={currentPhotoSrc}
           alt={candidate.name}
-          onLoad={() => setIsImageLoaded(true)}
-          onError={() => setIsImageError(true)}
-          decoding="async"
+          onLoad={handleImageLoad}
+          onError={handleImageError}
           loading="eager"
           style={{
             width: '100%',
@@ -312,7 +351,7 @@ export const CandidateCardView: React.FC<CandidateCardViewProps> = ({
             objectFit: 'cover',
             pointerEvents: 'none',
             opacity: isImageLoaded ? 1 : 0,
-            transition: 'opacity 0.28s ease-in-out',
+            transition: 'opacity 0.2s ease-in-out',
             position: 'relative',
             zIndex: 2
           }}
