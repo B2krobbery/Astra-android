@@ -108,6 +108,20 @@ export const ChatService = {
       .single();
 
     if (error) throw error;
+
+    // Trigger push notification dispatch for background/closed devices
+    if (data) {
+      supabase.functions.invoke('push_notifications', {
+        body: {
+          type: 'INSERT',
+          table: 'messages',
+          record: data
+        }
+      }).catch(err => {
+        console.warn('[ChatService] Push notification dispatch warning:', err);
+      });
+    }
+
     return data;
   },
 

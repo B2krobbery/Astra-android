@@ -16,28 +16,46 @@ async function getAccessToken(clientEmail: string, privateKey: string): Promise<
   return tokens.token as string;
 }
 
-async function sendPushNotification(token: string, title: string, body: string, projectId: string, accessToken: string, imageUrl?: string) {
+async function sendPushNotification(
+  token: string,
+  title: string,
+  body: string,
+  projectId: string,
+  accessToken: string,
+  imageUrl?: string,
+  dataPayload?: Record<string, string>
+) {
   const message: any = {
     token: token,
-    notification: { title, body }
-  };
-  
-  if (imageUrl) {
-    message.notification.image = imageUrl;
-    message.android = {
+    notification: { title, body },
+    android: {
+      priority: "high",
       notification: {
-        image: imageUrl
+        channelId: "chat_messages",
+        sound: "default",
+        defaultSound: true,
+        defaultVibrateTimings: true
       }
-    };
-    message.apns = {
+    },
+    apns: {
       payload: {
         aps: {
-          'mutable-content': 1
+          sound: "default"
         }
-      },
-      fcm_options: {
-        image: imageUrl
       }
+    }
+  };
+  
+  if (dataPayload) {
+    message.data = dataPayload;
+  }
+
+  if (imageUrl) {
+    message.notification.image = imageUrl;
+    message.android.notification.image = imageUrl;
+    message.apns.payload.aps['mutable-content'] = 1;
+    message.apns.fcm_options = {
+      image: imageUrl
     };
   }
 
@@ -128,7 +146,11 @@ serve(async (req) => {
               `${sourceProfile.display_name} just swiped right on you.`, 
               serviceAccount.project_id, 
               accessToken,
-              sourceImageUrl
+              sourceImageUrl,
+              {
+                type: 'like',
+                source_user_id: String(sourceUserId)
+              }
             );
             console.log("Push result:", pushResult);
           }
@@ -189,6 +211,106 @@ serve(async (req) => {
          }
        }
        return new Response(JSON.stringify({ success: true, message: "Daily reminders dispatched." }), { headers: { "Content-Type": "application/json" } });
+    }
+
+    // ==========================================
+    // TRIGGER 3: NEW CHAT MESSAGE
+    // ==========================================
+    if ((payload.type === 'INSERT' && payload.table === 'messages') || payload.action === 'send_chat_message') {
+      const message = payload.record;
+      if (!message) {
+        return new Response(JSON.stringify({ error: "Missing message record" }), { status: 400, headers: { "Content-Type": "application/json" } });
+      }
+
+      const conversationId = message.conversation_id;
+      const senderId = message.sender_id;
+      const content = message.content || "";
+
+      // 1. Identify recipient(s) in this conversation
+      const { data: participants, error: partsErr } = await supabase
+        .from('conversation_participants')
+        .select('user_id')
+        .eq('conversation_id', conversationId)
+        .neq('user_id', senderId);
+
+      if (partsErr || !participants || participants.length === 0) {
+        return new Response(JSON.stringify({ message: "No recipient found in conversation" }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      // 2. Fetch sender profile details (name and avatar)
+      const { data: senderProfile } = await supabase
+        .from('profiles')
+        .select('id, display_name, photo_url, avatar_url, avatar_storage_path')
+        .eq('id', senderId)
+        .maybeSingle();
+
+      const senderName = senderProfile?.display_name || "New Message";
+
+      let senderImageUrl = senderProfile?.photo_url || senderProfile?.avatar_url;
+      if (!senderImageUrl) {
+        const { data: primaryPhoto } = await supabase
+          .from('profile_photos')
+          .select('storage_path')
+          .eq('user_id', senderId)
+          .eq('is_primary', true)
+          .maybeSingle();
+
+        const storagePath = primaryPhoto?.storage_path || senderProfile?.avatar_storage_path;
+        if (storagePath) {
+          if (storagePath.startsWith('http')) {
+            senderImageUrl = storagePath;
+          } else {
+            const { data: urlData } = await supabase.storage.from('avatars').createSignedUrl(storagePath, 3600);
+            if (urlData?.signedUrl) {
+              senderImageUrl = urlData.signedUrl;
+            }
+          }
+        }
+      }
+
+      // Prepare preview text
+      const previewText = content.length > 100 ? `${content.substring(0, 97)}...` : (content || "Sent you a message");
+
+      // 3. For each recipient, dispatch push notification to their registered devices
+      let totalDispatched = 0;
+      if (FIREBASE_SA) {
+        try {
+          const serviceAccount = JSON.parse(FIREBASE_SA);
+          const accessToken = await getAccessToken(serviceAccount.client_email, serviceAccount.private_key);
+
+          for (const recipient of participants) {
+            const { data: pushTokens } = await supabase
+              .from('push_tokens')
+              .select('token')
+              .eq('user_id', recipient.user_id);
+
+            if (pushTokens && pushTokens.length > 0) {
+              for (const pt of pushTokens) {
+                const pushResult = await sendPushNotification(
+                  pt.token,
+                  senderName,
+                  previewText,
+                  serviceAccount.project_id,
+                  accessToken,
+                  senderImageUrl,
+                  {
+                    type: 'chat_message',
+                    conversation_id: String(conversationId),
+                    sender_id: String(senderId),
+                    sender_name: senderName
+                  }
+                );
+                console.log("Chat push result:", pushResult);
+                totalDispatched++;
+              }
+            }
+          }
+        } catch (pushErr) {
+          console.error("Failed to send chat push:", pushErr);
+        }
+      }
+
+      return new Response(JSON.stringify({ success: true, message: `Dispatched ${totalDispatched} push notification(s) for chat.` }), { headers: { "Content-Type": "application/json" } });
     }
 
     return new Response(JSON.stringify({ message: "Unknown payload format" }), { headers: { "Content-Type": "application/json" } });

@@ -30,10 +30,46 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { supabase } from './lib/supabase';
 
 const AppRoutes: React.FC = () => {
-  const { isChaanbeanOpen, chaanbeanTarget, closeChaanbean } = useAstra();
+  const { isChaanbeanOpen, chaanbeanTarget, closeChaanbean, openConversationById, activeConversation } = useAstra();
   const navigate = useNavigate();
+  const [inAppToast, setInAppToast] = React.useState<{ title: string; body: string; image?: string; conversationId?: string; senderId?: string } | null>(null);
+  const toastTimerRef = React.useRef<any>(null);
 
   React.useEffect(() => {
+    // 1. Handle notification tap deep-linking (background / closed state)
+    const handleOpenConvo = async (e: any) => {
+      const { conversationId, senderId } = e.detail || {};
+      if (conversationId || senderId) {
+        await openConversationById(conversationId, senderId);
+        navigate('/chat-detail');
+      }
+    };
+    window.addEventListener('astra:open_conversation', handleOpenConvo);
+
+    // 2. Handle foreground push notification (app open)
+    const handlePushReceived = (e: any) => {
+      const { notification, data } = e.detail || {};
+      const convoId = data?.conversation_id;
+      // If user is currently in /chat-detail for this conversation, suppress in-app banner
+      if (window.location.pathname === '/chat-detail' && activeConversation?.id === convoId) {
+        return;
+      }
+
+      setInAppToast({
+        title: notification?.title || 'New Message',
+        body: notification?.body || '',
+        image: notification?.image || notification?.largeBody,
+        conversationId: convoId,
+        senderId: data?.sender_id
+      });
+
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      toastTimerRef.current = setTimeout(() => {
+        setInAppToast(null);
+      }, 5500);
+    };
+    window.addEventListener('astra:push_received', handlePushReceived);
+
     CapacitorApp.addListener('appUrlOpen', (event) => {
       const url = new URL(event.url);
       if (url.protocol === 'astra:') {
@@ -84,10 +120,74 @@ const AppRoutes: React.FC = () => {
         }
       });
     }
-  }, [navigate]);
+
+    return () => {
+      window.removeEventListener('astra:open_conversation', handleOpenConvo);
+      window.removeEventListener('astra:push_received', handlePushReceived);
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, [navigate, openConversationById, activeConversation]);
 
   return (
     <div className="app-container">
+      {/* Foreground In-App Push Notification Banner */}
+      {inAppToast && (
+        <div
+          onClick={async () => {
+            const { conversationId, senderId } = inAppToast;
+            setInAppToast(null);
+            if (conversationId || senderId) {
+              await openConversationById(conversationId || '', senderId);
+              navigate('/chat-detail');
+            }
+          }}
+          style={{
+            position: 'fixed',
+            top: 'calc(12px + env(safe-area-inset-top, 0px))',
+            left: '16px',
+            right: '16px',
+            maxWidth: '420px',
+            margin: '0 auto',
+            zIndex: 9999,
+            padding: '12px 16px',
+            borderRadius: '18px',
+            background: 'rgba(15, 12, 24, 0.95)',
+            border: '1.5px solid var(--accent-amber)',
+            boxShadow: '0 12px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(212, 175, 55, 0.25)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            cursor: 'pointer',
+            animation: 'fadeInOut 0.3s ease-out'
+          }}
+        >
+          {inAppToast.image ? (
+            <img
+              src={inAppToast.image}
+              alt=""
+              style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: '1.5px solid var(--accent-amber)', flexShrink: 0 }}
+            />
+          ) : (
+            <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(245, 158, 11, 0.2)', border: '1.5px solid var(--accent-amber)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: 'var(--accent-amber-light)', fontWeight: 800 }}>
+              ✨
+            </div>
+          )}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--accent-amber-light)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {inAppToast.title}
+            </div>
+            <div style={{ fontSize: '0.78rem', color: '#E2E8F0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '2px' }}>
+              {inAppToast.body}
+            </div>
+          </div>
+          <span style={{ fontSize: '0.7rem', color: 'var(--accent-amber)', fontWeight: 700, flexShrink: 0 }}>
+            Reply &gt;
+          </span>
+        </div>
+      )}
+
       {/* Animated Celestial Splash Screen Overlay on Initial App Load */}
       <SplashScreenOverlay />
 

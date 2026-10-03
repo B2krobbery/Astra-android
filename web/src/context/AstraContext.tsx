@@ -108,6 +108,7 @@ interface AstraContextType {
   isSyncingMatches: boolean;
   activeConversation: MatchConversation | null;
   openConversationForCandidate: (candidate: Candidate) => void;
+  openConversationById: (conversationId: string, senderId?: string) => Promise<any>;
   sendChatMessage: (text: string) => void;
   isChatTyping: boolean;
 
@@ -1298,6 +1299,25 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const openConversationById = async (conversationId: string, senderId?: string) => {
+    try {
+      const dbConversations = await ChatService.getConversations();
+      if (dbConversations && dbConversations.length > 0) {
+        setConversations(dbConversations as any);
+        const targetConvo = dbConversations.find(
+          c => c.id === conversationId || (senderId && c.candidate?.id === senderId)
+        );
+        if (targetConvo) {
+          await openConversationForCandidate(targetConvo.candidate);
+          return targetConvo;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to open conversation by ID:', e);
+    }
+    return null;
+  };
+
   const sendChatMessage = async (text: string) => {
     if (!activeConversation || !text.trim()) return;
 
@@ -1528,6 +1548,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         isSyncingMatches,
         activeConversation,
         openConversationForCandidate,
+        openConversationById,
         sendChatMessage,
         isChatTyping,
         astroAiMessages,
