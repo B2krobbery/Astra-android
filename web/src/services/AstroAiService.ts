@@ -2,6 +2,7 @@ import { CompatibilityResult } from '../data/AshtakootaEngine';
 import { VedicChart } from '../data/VedicAstrologyEngine';
 import { NumerologyReport } from '../data/NumerologyEngine';
 import { ChemistryReport } from '../data/ChemistryEngine';
+import { supabase } from '../lib/supabase';
 
 export interface StructuredSynergyContext {
   seekerName: string;
@@ -15,12 +16,46 @@ export interface StructuredSynergyContext {
 
 export class AstroAiService {
   /**
-   * Generates a grounded, authentic Vedic interpretation using Gemini API
+   * Generates a grounded, authentic Vedic interpretation using Supabase Edge Function & Gemini API
    */
   static async interpretSynergy(
     question: string,
     context: StructuredSynergyContext
   ): Promise<{ response: string; isLiveAi: boolean; modelUsed: string }> {
+    // 1. Detect casual greetings immediately for instant, warm response
+    const cleanQuestion = question.trim().toLowerCase().replace(/[!.?,]/g, '');
+    const isGreeting = /^(hi|hello|hey|namaste|vanakkam|pranam|good\s*(morning|afternoon|evening)|hola)$/i.test(cleanQuestion);
+
+    if (isGreeting) {
+      const seeker = context.seekerName ? ` ${context.seekerName}` : '';
+      const matchContext = context.candidateName ? ` and explore your compatibility with ${context.candidateName}` : '';
+      return {
+        response: `Namaste${seeker}! I am your Astra Vedic astrology counselor. How may I guide your matrimonial journey today? Feel free to ask about your Guna Milan, Nakshatras, planetary harmonies${matchContext}, or auspicious timings ✨`,
+        isLiveAi: true,
+        modelUsed: 'Astra Greeting Guide'
+      };
+    }
+
+    // 2. Primary: Invoke secure Supabase Edge Function (API key kept in Vault)
+    try {
+      const { data, error } = await supabase.functions.invoke('astro_ai', {
+        body: { question, context }
+      });
+      if (!error && data?.response) {
+        return {
+          response: data.response,
+          isLiveAi: data.isLiveAi ?? true,
+          modelUsed: `Supabase Edge: ${data.modelUsed || 'Gemini Flash Lite'}`
+        };
+      }
+      if (error) {
+        console.warn('Supabase Edge Function returned error, trying client fallback:', error);
+      }
+    } catch (edgeErr) {
+      console.warn('Supabase Edge Function invoke failed, trying client fallback:', edgeErr);
+    }
+
+    // 3. Secondary: Direct client-side call if Edge function is unreachable
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY || (window as any)?.__ASTRA_AI_KEY__ || '';
 
     // Construct grounded prompt from genuine structured data
@@ -68,53 +103,67 @@ User Inquiry: "${question}"
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-      const systemInstruction = `You are a respectful Vedic matrimonial counselor.
+      const systemInstruction = `You are Astra, a warm Vedic matrimonial counselor in the Astra app.
 CRITICAL RULES:
 1. Interpret ONLY the structured data provided.
 2. NEVER invent, modify, or estimate Guna points, Nakshatras, or planetary positions.
-3. Frame your insights as traditional cultural wisdom and guidelines, NEVER as infallible scientific fact or absolute guarantees about marriage outcomes.
-4. Keep the response supportive, articulate, and under 180 words.`;
+3. Frame your insights as traditional cultural wisdom and guidelines, NEVER as infallible scientific fact, fear language, or absolute guarantees about marriage outcomes.
+4. Keep the response warm, encouraging, articulate, and under 160 words.`;
 
-      const model = import.meta.env.VITE_GEMINI_MODEL || 'gemini-flash-latest';
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          signal: controller.signal,
-          body: JSON.stringify({
-            contents: [
-              {
-                role: 'user',
-                parts: [
-                  { text: `${systemInstruction}\n\n${structuredSummary}` }
-                ]
-              }
-            ],
-            generationConfig: {
-              temperature: 0.3,
-              maxOutputTokens: 1000
+      const primaryModel = import.meta.env.VITE_GEMINI_MODEL || 'gemini-flash-lite-latest';
+      const modelsToTry = [primaryModel, 'gemini-3.5-flash-lite', 'gemini-flash-latest'];
+      
+      let text = '';
+      let usedModel = primaryModel;
+
+      for (const m of modelsToTry) {
+        try {
+          const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              signal: controller.signal,
+              body: JSON.stringify({
+                contents: [
+                  {
+                    role: 'user',
+                    parts: [{ text: `${systemInstruction}\n\n${structuredSummary}` }]
+                  }
+                ],
+                generationConfig: {
+                  temperature: 0.3,
+                  maxOutputTokens: 800
+                }
+              })
             }
-          })
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            const candidateText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (candidateText) {
+              text = candidateText.trim();
+              usedModel = m;
+              break;
+            }
+          }
+        } catch (innerErr) {
+          console.warn(`Model ${m} attempt failed:`, innerErr);
         }
-      );
+      }
 
       clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        throw new Error(`Gemini API error ${response.status}`);
+      if (text) {
+        return {
+          response: text,
+          isLiveAi: true,
+          modelUsed: usedModel
+        };
       }
 
-      const data = await response.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      if (!text) throw new Error('Empty response from AI model');
-
-      return {
-        response: text.trim(),
-        isLiveAi: true,
-        modelUsed: model
-      };
+      throw new Error('All AI models failed or exceeded quota');
     } catch (err) {
       console.warn('Live AI call failed, providing deterministic synthesis:', err);
       return {
@@ -129,6 +178,14 @@ CRITICAL RULES:
    * Deterministic, explainable synthesis when LLM API is unavailable
    */
   private static generateGroundedFallback(context: StructuredSynergyContext, question: string): string {
+    const clean = question.trim().toLowerCase().replace(/[!.?,]/g, '');
+    const isGreeting = /^(hi|hello|hey|namaste|vanakkam|pranam|good\s*(morning|afternoon|evening)|hola)$/i.test(clean);
+    
+    if (isGreeting) {
+      const name = context.seekerName ? ` ${context.seekerName}` : '';
+      return `Namaste${name}! I am your Astra Vedic astrology counselor. How can I guide you today? Feel free to ask about Guna Milan, Nakshatras, or your compatibility with ${context.candidateName || 'your matches'}.`;
+    }
+
     const gunaTotal = context.ashtakoota?.totalScore ?? 25;
     const verdict = context.ashtakoota?.verdict ?? 'Favorable Match';
     const sNak = context.seekerChart?.nakshatraName || 'Your Moon Star';
@@ -136,10 +193,10 @@ CRITICAL RULES:
 
     let advice = '';
     if (context.ashtakoota?.isNadiDosha) {
-      advice += ' Notice: Nadi Dosha is present in this combination, meaning traditional elders recommend consulting an experienced pandit regarding gene-pool balance.';
+      advice += ' Traditional elders suggest consulting with an experienced pandit regarding gene-pool balance.';
     }
     if (context.ashtakoota?.isBhakootDosha) {
-      advice += ' Bhakoot Dosha indicates potential differences in emotional processing, which mindful communication can harmoniously overcome.';
+      advice += ' Bhakoot alignment indicates opportunities to cultivate emotional empathy and open communication.';
     }
     if (!context.ashtakoota?.isNadiDosha && !context.ashtakoota?.isBhakootDosha) {
       advice += ' Both Nadi and Bhakoot are unblemished, signifying auspicious traditional vitality for marital harmony.';

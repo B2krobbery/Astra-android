@@ -859,6 +859,23 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isAstroAiDrawerOpen, setIsAstroAiDrawerOpen] = useState(false);
   const toggleAstroAiDrawer = () => setIsAstroAiDrawerOpen(prev => !prev);
 
+  // Synchronize dynamic user name into initial Astro AI welcome message
+  useEffect(() => {
+    if (userProfile?.name) {
+      setAstroAiMessages(prev => {
+        if (prev.length === 1 && prev[0].id === '1') {
+          return [
+            {
+              ...prev[0],
+              message: `Namaste ${userProfile.name}! I am your Astro AI Assistant. Ask me anything about Guna Milan, Nakshatra compatibility, or planetary transits ✨`
+            }
+          ];
+        }
+        return prev;
+      });
+    }
+  }, [userProfile?.name]);
+
   // Verification Modal
   const [isChaanbeanOpen, setIsChaanbeanOpen] = useState(false);
   const [chaanbeanTarget, setChaanbeanTarget] = useState<Candidate | null>(null);

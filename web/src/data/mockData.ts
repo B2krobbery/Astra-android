@@ -205,7 +205,7 @@ export const initialConversations: MatchConversation[] = [
     timestamp: '1h ago',
     unreadCount: 1,
     messages: [
-      { id: '1', senderName: 'Sneha', message: 'Hey Aarav! Love your taste in design and coffee brewing.', timestamp: '09:00 AM', isFromUser: false },
+      { id: '1', senderName: 'Sneha', message: 'Hey! Love your taste in design and coffee brewing.', timestamp: '09:00 AM', isFromUser: false },
       { id: '2', senderName: 'User', message: 'Thanks Sneha! Always great to connect with fellow design minds.', timestamp: '09:15 AM', isFromUser: true },
       { id: '3', senderName: 'Sneha', message: 'What does your Nakshatra say about our match?', timestamp: '09:30 AM', isFromUser: false }
     ]
@@ -347,15 +347,17 @@ export const initialAiAgents: AiAgent[] = [
   }
 ];
 
-export const initialAiMessages: ChatMessage[] = [
+export const getInitialAiMessages = (name?: string): ChatMessage[] => [
   {
     id: '1',
     senderName: 'Astro AI Guide',
-    message: 'Namaste Aarav! I am your Astro AI Assistant. Ask me anything about Guna Milan, Nakshatra compatibility, or planetary transits ✨',
+    message: `Namaste${name ? ` ${name}` : ''}! I am your Astro AI Assistant. Ask me anything about Guna Milan, Nakshatra compatibility, or planetary transits ✨`,
     timestamp: '10:00 AM',
     isFromUser: false
   }
 ];
+
+export const initialAiMessages: ChatMessage[] = getInitialAiMessages();
 
 export const initialAdminMetrics: AdminMetrics = {
   totalUsers: 24890,
@@ -391,7 +393,7 @@ export const initialMarketingCampaigns: MarketingCampaign[] = [
 ];
 
 export const initialReferralData: ReferralData = {
-  referralCode: 'ASTRA-AARAV-98',
+  referralCode: 'ASTRA-MATCH-98',
   totalInvitesSent: 3,
   successfulSignups: 1,
   goldenBadgeUnlocked: false,
