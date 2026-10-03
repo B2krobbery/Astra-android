@@ -66,7 +66,7 @@ User Inquiry: "${question}"
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
 
       const systemInstruction = `You are a respectful Vedic matrimonial counselor.
 CRITICAL RULES:
@@ -75,8 +75,9 @@ CRITICAL RULES:
 3. Frame your insights as traditional cultural wisdom and guidelines, NEVER as infallible scientific fact or absolute guarantees about marriage outcomes.
 4. Keep the response supportive, articulate, and under 180 words.`;
 
+      const model = import.meta.env.VITE_GEMINI_MODEL || 'gemini-flash-latest';
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -92,7 +93,7 @@ CRITICAL RULES:
             ],
             generationConfig: {
               temperature: 0.3,
-              maxOutputTokens: 350
+              maxOutputTokens: 1000
             }
           })
         }
@@ -112,7 +113,7 @@ CRITICAL RULES:
       return {
         response: text.trim(),
         isLiveAi: true,
-        modelUsed: 'gemini-1.5-flash'
+        modelUsed: model
       };
     } catch (err) {
       console.warn('Live AI call failed, providing deterministic synthesis:', err);
