@@ -6,6 +6,19 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const FROM_EMAIL = "onboarding@resend.dev"; 
 const FIREBASE_SA = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+};
+
+function jsonResponse(data: any, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" }
+  });
+}
+
 async function getAccessToken(clientEmail: string, privateKey: string): Promise<string> {
   const jwtClient = new JWT({
     email: clientEmail,
@@ -31,16 +44,16 @@ async function sendPushNotification(
     android: {
       priority: "high",
       notification: {
-        channelId: "chat_messages",
         sound: "default",
-        defaultSound: true,
-        defaultVibrateTimings: true
+        default_sound: true,
+        default_vibrate_timings: true
       }
     },
     apns: {
       payload: {
         aps: {
-          sound: "default"
+          sound: "default",
+          badge: 1
         }
       }
     }
@@ -71,6 +84,10 @@ async function sendPushNotification(
 }
 
 serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
   try {
     const payload = await req.json();
 
@@ -85,7 +102,7 @@ serve(async (req) => {
       const interaction = payload.record;
       const actionType = interaction.action_type || interaction.type;
       if (actionType !== 'LIKE') {
-         return new Response(JSON.stringify({ message: "Ignored non-like" }), { headers: { "Content-Type": "application/json" } });
+         return jsonResponse({ message: "Ignored non-like" });
       }
 
       const targetUserId = interaction.target_id || interaction.target_user_id;
@@ -152,14 +169,23 @@ serve(async (req) => {
                 source_user_id: String(sourceUserId)
               }
             );
-            console.log("Push result:", pushResult);
+            console.log(`[LikePush] Push result for token ${pt.token.substring(0, 15)}...:`, JSON.stringify(pushResult));
+
+            // Clean up unregistered tokens
+            const isUnregistered = pushResult?.error?.status === 'NOT_FOUND' || 
+              pushResult?.error?.message === 'NotRegistered' || 
+              pushResult?.error?.details?.[0]?.errorCode === 'UNREGISTERED';
+            if (isUnregistered) {
+              console.log(`[LikePush] Removing unregistered token ${pt.token.substring(0, 15)}...`);
+              await supabase.from('push_tokens').delete().eq('user_id', targetUserId).eq('token', pt.token);
+            }
           }
         } catch (pushErr) {
           console.error("Failed to send push:", pushErr);
         }
       }
 
-      return new Response(JSON.stringify({ success: true, message: "Notifications dispatched." }), { headers: { "Content-Type": "application/json" } });
+      return jsonResponse({ success: true, message: "Notifications dispatched." });
     }
 
     // ==========================================
@@ -210,7 +236,7 @@ serve(async (req) => {
            }
          }
        }
-       return new Response(JSON.stringify({ success: true, message: "Daily reminders dispatched." }), { headers: { "Content-Type": "application/json" } });
+       return jsonResponse({ success: true, message: "Daily reminders dispatched." });
     }
 
     // ==========================================
@@ -219,7 +245,7 @@ serve(async (req) => {
     if ((payload.type === 'INSERT' && payload.table === 'messages') || payload.action === 'send_chat_message') {
       const message = payload.record;
       if (!message) {
-        return new Response(JSON.stringify({ error: "Missing message record" }), { status: 400, headers: { "Content-Type": "application/json" } });
+        return jsonResponse({ error: "Missing message record" }, 400);
       }
 
       const conversationId = message.conversation_id;
@@ -234,7 +260,8 @@ serve(async (req) => {
         .neq('user_id', senderId);
 
       if (partsErr || !participants || participants.length === 0) {
-        return new Response(JSON.stringify({ message: "No recipient found in conversation" }), { headers: { "Content-Type": "application/json" } });
+        console.log(`[ChatPush] No recipient found in conversation ${conversationId} for sender ${senderId}`);
+        return jsonResponse({ message: "No recipient found in conversation" });
       }
 
       // 2. Fetch sender profile details (name and avatar)
@@ -269,7 +296,16 @@ serve(async (req) => {
       }
 
       // Prepare preview text
-      const previewText = content.length > 100 ? `${content.substring(0, 97)}...` : (content || "Sent you a message");
+      let previewText = content;
+      if (content.startsWith('http') && (content.includes('.mp3') || content.includes('.m4a') || content.includes('.webm') || content.includes('.wav'))) {
+        previewText = '🎤 Voice note';
+      } else if (content.startsWith('http') && (content.includes('.jpg') || content.includes('.png') || content.includes('.webp') || content.includes('.jpeg'))) {
+        previewText = '📷 Photo';
+      } else if (content.length > 100) {
+        previewText = `${content.substring(0, 97)}...`;
+      } else if (!content.trim()) {
+        previewText = "Sent you a message";
+      }
 
       // 3. For each recipient, dispatch push notification to their registered devices
       let totalDispatched = 0;
@@ -300,8 +336,18 @@ serve(async (req) => {
                     sender_name: senderName
                   }
                 );
-                console.log("Chat push result:", pushResult);
-                totalDispatched++;
+                console.log(`[ChatPush] Push result for token ${pt.token.substring(0, 15)}...:`, JSON.stringify(pushResult));
+
+                // Clean up unregistered tokens
+                const isUnregistered = pushResult?.error?.status === 'NOT_FOUND' || 
+                  pushResult?.error?.message === 'NotRegistered' || 
+                  pushResult?.error?.details?.[0]?.errorCode === 'UNREGISTERED';
+                if (isUnregistered) {
+                  console.log(`[ChatPush] Removing unregistered token ${pt.token.substring(0, 15)}...`);
+                  await supabase.from('push_tokens').delete().eq('user_id', recipient.user_id).eq('token', pt.token);
+                } else if (pushResult?.name) {
+                  totalDispatched++;
+                }
               }
             }
           }
@@ -310,12 +356,12 @@ serve(async (req) => {
         }
       }
 
-      return new Response(JSON.stringify({ success: true, message: `Dispatched ${totalDispatched} push notification(s) for chat.` }), { headers: { "Content-Type": "application/json" } });
+      return jsonResponse({ success: true, message: `Dispatched ${totalDispatched} push notification(s) for chat.` });
     }
 
-    return new Response(JSON.stringify({ message: "Unknown payload format" }), { headers: { "Content-Type": "application/json" } });
+    return jsonResponse({ message: "Unknown payload format" });
   } catch (err: any) {
     console.error("Function Error:", err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { "Content-Type": "application/json" } });
+    return jsonResponse({ error: err.message }, 500);
   }
 });

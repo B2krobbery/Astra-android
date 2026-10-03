@@ -1312,6 +1312,13 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           return targetConvo;
         }
       }
+      if (senderId) {
+        const profile = await ProfileService.getProfile(senderId);
+        if (profile) {
+          await openConversationForCandidate(profile as any);
+          return profile;
+        }
+      }
     } catch (e) {
       console.error('Failed to open conversation by ID:', e);
     }

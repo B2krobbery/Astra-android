@@ -38,24 +38,32 @@ export const PushNotificationService = {
         console.warn('Notification channel creation notice:', channelErr);
       }
 
-      await PushNotifications.register();
-
-      // We only attach listeners once so we don't duplicate them
+      // 1. Remove previous listeners to avoid duplicates
       await PushNotifications.removeAllListeners();
 
+      // 2. Attach listeners BEFORE calling register()
       PushNotifications.addListener('registration', async (token) => {
-        console.log('Push registration success, token: ' + token.value);
-        // Save the token to Supabase push_tokens table
-        await supabase
-          .from('push_tokens')
-          .upsert(
-            { user_id: userId, token: token.value, platform: Capacitor.getPlatform() },
-            { onConflict: 'user_id, token' }
-          );
+        console.log('[PushNotificationService] Push registration success, token:', token.value);
+        if (!token?.value) return;
+        try {
+          const { error: upsertErr } = await supabase
+            .from('push_tokens')
+            .upsert(
+              { user_id: userId, token: token.value, platform: Capacitor.getPlatform() },
+              { onConflict: 'user_id, token' }
+            );
+          if (upsertErr) {
+            console.error('[PushNotificationService] Failed to upsert token:', upsertErr);
+          } else {
+            console.log('[PushNotificationService] Token saved to Supabase for user:', userId);
+          }
+        } catch (dbErr) {
+          console.error('[PushNotificationService] DB save error:', dbErr);
+        }
       });
 
       PushNotifications.addListener('registrationError', (error: any) => {
-        console.error('Error on registration: ' + JSON.stringify(error));
+        console.error('[PushNotificationService] Error on registration:', JSON.stringify(error));
       });
 
       // App is in Foreground: notification received
@@ -82,6 +90,9 @@ export const PushNotificationService = {
           );
         }
       });
+
+      // 3. Register with FCM after all listeners are safely mounted
+      await PushNotifications.register();
 
     } catch (e) {
       console.error('PushNotificationService init error:', e);
