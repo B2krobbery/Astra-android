@@ -212,14 +212,14 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (tGotra === 'DEAL_BREAKER' && prefGotra && prefGotra !== 'Any') dealBreaker['gotra'] = prefGotra;
     if (Object.keys(dealBreaker).length > 0) filters['deal_breaker'] = dealBreaker;
 
-    // Must-have: ONLY applied when strict is true!
-    // When strict is true, any preference marked as MUST_HAVE or PREFERRED with a specific value is strictly required!
+    // Must-have: ONLY applied when strict is true and tier is explicitly MUST_HAVE!
+    // PREFERRED preferences are used for soft ranking/priority, NOT hard exclusions.
     if (strict) {
       const mustHave: Record<string, string> = {};
-      if ((tReligion === 'MUST_HAVE' || tReligion === 'PREFERRED') && prefReligion && prefReligion !== 'Any') {
+      if (tReligion === 'MUST_HAVE' && prefReligion && prefReligion !== 'Any') {
         mustHave['religion'] = prefReligion;
       }
-      if ((tCaste === 'MUST_HAVE' || tCaste === 'PREFERRED') && prefCaste && prefCaste !== 'Any') {
+      if (tCaste === 'MUST_HAVE' && prefCaste && prefCaste !== 'Any') {
         mustHave['caste'] = prefCaste;
       }
       if (tSubCaste === 'MUST_HAVE' && prefSubCaste && prefSubCaste !== 'Any') {
@@ -664,7 +664,7 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const filteredCandidates = useMemo(() => {
-    return candidates.filter((c: any) => {
+    const filteredList = candidates.filter((c: any) => {
       // Nearby radius filter
       if (isNearbyOnly && c.distanceKm !== undefined && c.distanceKm > 25) {
         return false;
@@ -714,11 +714,11 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const prefs = userProfile.partnerPreferences;
 
         if (userProfile.intent === 'Marriage') {
-          // MUST_HAVE / PREFERRED: hard include filters
-          if ((prefs.tierReligion === 'MUST_HAVE' || prefs.tierReligion === 'PREFERRED') && prefs.preferredReligion && prefs.preferredReligion !== 'Any') {
+          // MUST_HAVE: hard include filters (ONLY for MUST_HAVE, NOT for PREFERRED)
+          if (prefs.tierReligion === 'MUST_HAVE' && prefs.preferredReligion && prefs.preferredReligion !== 'Any') {
             if (!c.religion || !c.religion.toLowerCase().includes(prefs.preferredReligion.toLowerCase())) return false;
           }
-          if ((prefs.tierCaste === 'MUST_HAVE' || prefs.tierCaste === 'PREFERRED') && prefs.preferredCaste && prefs.preferredCaste !== 'Any') {
+          if (prefs.tierCaste === 'MUST_HAVE' && prefs.preferredCaste && prefs.preferredCaste !== 'Any') {
             if (!c.caste || !c.caste.toLowerCase().includes(prefs.preferredCaste.toLowerCase())) return false;
           }
           if (prefs.tierSubCaste === 'MUST_HAVE' && prefs.preferredSubCaste && prefs.preferredSubCaste !== 'Any') {
@@ -779,6 +779,51 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
       return c.regionalCategory === mappedPref || c.regionalCategory === 'ALL';
     });
+
+    // Rank candidates: Candidates matching PREFERRED criteria are prioritized to the top!
+    const prefs = userProfile.partnerPreferences;
+    if (prefs) {
+      return [...filteredList].sort((a: any, b: any) => {
+        let scoreA = 0;
+        let scoreB = 0;
+
+        // Preferred Caste boost
+        if (prefs.preferredCaste && prefs.preferredCaste !== 'Any') {
+          const target = prefs.preferredCaste.toLowerCase();
+          if (a.caste && a.caste.toLowerCase().includes(target)) scoreA += 100;
+          if (b.caste && b.caste.toLowerCase().includes(target)) scoreB += 100;
+        }
+
+        // Preferred Religion boost
+        if (prefs.preferredReligion && prefs.preferredReligion !== 'Any') {
+          const target = prefs.preferredReligion.toLowerCase();
+          if (a.religion && a.religion.toLowerCase().includes(target)) scoreA += 50;
+          if (b.religion && b.religion.toLowerCase().includes(target)) scoreB += 50;
+        }
+
+        // Preferred Location boost
+        if (prefs.preferredLocation && prefs.preferredLocation !== 'Any') {
+          const target = prefs.preferredLocation.toLowerCase();
+          if (a.location && a.location.toLowerCase().includes(target)) scoreA += 30;
+          if (b.location && b.location.toLowerCase().includes(target)) scoreB += 30;
+        }
+
+        // Preferred Education boost
+        if (prefs.preferredEducation && prefs.preferredEducation !== 'Any') {
+          const target = prefs.preferredEducation.toLowerCase();
+          if (a.education && a.education.toLowerCase().includes(target)) scoreA += 20;
+          if (b.education && b.education.toLowerCase().includes(target)) scoreB += 20;
+        }
+
+        if (scoreA !== scoreB) {
+          return scoreB - scoreA;
+        }
+
+        return (b.compatibilityScore || 0) - (a.compatibilityScore || 0);
+      });
+    }
+
+    return filteredList;
   }, [
     candidates,
     isNearbyOnly,
