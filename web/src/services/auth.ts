@@ -166,7 +166,18 @@ export const AuthService = {
     return this.signInWithGoogleNative();
   },
   async signOut() {
-    return supabase.auth.signOut();
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.warn('Supabase remote signOut warning, forcing local session purge:', error);
+        await supabase.auth.signOut({ scope: 'local' });
+      }
+    } catch (err) {
+      console.warn('Network error during signOut, forcing local session purge:', err);
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch (_) {}
+    }
   },
   async getSession() {
     return supabase.auth.getSession();

@@ -71,6 +71,7 @@ export const UserProfilePage: React.FC = () => {
     deleteProfilePhoto,
     updateProfileInfo,
     deleteAccount,
+    signOut,
     language,
     setLanguage,
     t
@@ -151,12 +152,13 @@ export const UserProfilePage: React.FC = () => {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      await supabase.auth.signOut();
-      await new Promise(res => setTimeout(res, 700));
-    } catch (e) {
+      await signOut();
+      await new Promise(res => setTimeout(res, 600));
+      navigate('/', { replace: true });
+    } catch (e: any) {
       console.error("Sign out error:", e);
-    } finally {
-      navigate('/splash');
+      alert(e?.message || "Sign out failed. Please try again.");
+      setIsLoggingOut(false);
     }
   };
 

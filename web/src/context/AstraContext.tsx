@@ -1371,9 +1371,49 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   };
 
+  const signOut = async () => {
+    try {
+      await AuthService.signOut();
+    } catch (e: any) {
+      console.error('[AstraContext] signOut error:', e);
+      throw e;
+    } finally {
+      // 1. Immediately reset React auth and profile state
+      setSessionUser(null);
+      setUserProfile({} as UserProfile);
+      setProfilePhotos([]);
+      setConversations([]);
+      setPendingRequests([]);
+      setSentRequests([]);
+      setActiveConversation(null);
+      setSelectedCandidate(null);
+      setLastMatchedCandidate(null);
+      setPassedCandidatesHistory([]);
+      setIsAstroAiDrawerOpen(false);
+
+      // 2. Clear all cached auth / session items in localStorage
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          localStorage.removeItem('pendingIntent');
+          localStorage.removeItem('astra_geo_position');
+          const keysToRemove: string[] = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.startsWith('sb-') || key.includes('supabase.auth'))) {
+              keysToRemove.push(key);
+            }
+          }
+          keysToRemove.forEach(k => localStorage.removeItem(k));
+        }
+      } catch (err) {
+        console.warn('[AstraContext] Local storage cleanup warning:', err);
+      }
+    }
+  };
+
   return (
     <AstraContext.Provider
-      value={{sessionUser, signInWithOtp: AuthService.signInWithOtp, verifyOtp: AuthService.verifyOtp, signOut: AuthService.signOut, deleteAccount: AuthService.deleteAccount,
+      value={{sessionUser, signInWithOtp: AuthService.signInWithOtp, verifyOtp: AuthService.verifyOtp, signOut, deleteAccount: AuthService.deleteAccount,
         language,
         setLanguage,
         t,

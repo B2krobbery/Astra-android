@@ -12,6 +12,7 @@ import {
   Sun,
   Moon,
   LogOut,
+  RotateCcw,
   Compass
 } from 'lucide-react';
 
@@ -54,6 +55,21 @@ export const DesktopNavigation: React.FC = () => {
 
   const toggleTheme = () => {
     setThemeMode(themeMode === 'DARK' ? 'LIGHT' : 'DARK');
+  };
+
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    try {
+      await signOut();
+      navigate('/', { replace: true });
+    } catch (err: any) {
+      console.error('Desktop logout failed:', err);
+      alert(err?.message || 'Logout failed. Please check your connection and try again.');
+      setIsLoggingOut(false);
+    }
   };
 
   // Do not show desktop navigation on initial splash or onboarding
@@ -328,21 +344,41 @@ export const DesktopNavigation: React.FC = () => {
 
         {/* Quick Logout */}
         <button
-          onClick={() => signOut()}
+          onClick={handleLogout}
+          disabled={isLoggingOut}
           style={{
-            background: 'none',
+            background: isLoggingOut ? 'rgba(239, 68, 68, 0.15)' : 'none',
             border: 'none',
-            color: 'var(--text-muted)',
-            cursor: 'pointer',
+            color: isLoggingOut ? 'var(--accent-amber)' : 'var(--text-muted)',
+            cursor: isLoggingOut ? 'not-allowed' : 'pointer',
             padding: '6px',
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            transition: 'all 0.2s ease',
+            opacity: isLoggingOut ? 0.7 : 1
           }}
-          title="Sign Out"
+          title={isLoggingOut ? "Signing out..." : "Sign Out"}
+          aria-label="Sign Out"
+          onMouseEnter={e => {
+            if (!isLoggingOut) {
+              e.currentTarget.style.color = '#F87171';
+              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)';
+            }
+          }}
+          onMouseLeave={e => {
+            if (!isLoggingOut) {
+              e.currentTarget.style.color = 'var(--text-muted)';
+              e.currentTarget.style.background = 'none';
+            }
+          }}
         >
-          <LogOut size={15} />
+          {isLoggingOut ? (
+            <RotateCcw size={15} className="spin-slow" color="var(--accent-amber)" />
+          ) : (
+            <LogOut size={15} />
+          )}
         </button>
       </div>
     </header>
