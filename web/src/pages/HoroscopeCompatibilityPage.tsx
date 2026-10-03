@@ -463,16 +463,17 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
                         alignItems: 'center', 
                         padding: '8px 12px', 
                         borderRadius: '10px',
-                        background: 'rgba(255,255,255,0.03)',
+                        background: 'var(--nested-card-bg)',
+                        border: '1px solid var(--nested-card-border)',
                         fontSize: '0.82rem'
                       }}
                     >
                       <div>
-                        <span style={{ fontWeight: 700, color: '#FFF' }}>{guna.name}</span>
+                        <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{guna.name}</span>
                         <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>{guna.categoryMeaning}</span>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <span style={{ fontWeight: 800, color: guna.score === guna.max ? '#4ADE80' : guna.score > 0 ? 'var(--accent-amber-light)' : '#F43F5E' }}>
+                        <span style={{ fontWeight: 800, color: guna.score === guna.max ? 'var(--status-success-text)' : guna.score > 0 ? 'var(--accent-amber-light)' : 'var(--status-detected-text)' }}>
                           {guna.score} / {guna.max} pts
                         </span>
                         <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>{guna.boyValue} • {guna.girlValue}</span>
@@ -507,15 +508,15 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-secondary)' }}>✨ Moon Rashi:</span>
-                  <span style={{ fontWeight: 700, color: '#4ADE80' }}>{userProfile.rashi?.split(' ')[0] || 'Calculated'} & {candidate.rashi?.split(' ')[0] || 'Calculated'}</span>
+                  <span style={{ fontWeight: 700, color: 'var(--status-success-text)' }}>{userProfile.rashi?.split(' ')[0] || 'Calculated'} & {candidate.rashi?.split(' ')[0] || 'Calculated'}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-secondary)' }}>🛡️ Nadi:</span>
                   <span style={{ fontWeight: 700, color: 'var(--accent-amber-light)' }}>{userProfile.nadi || 'Calculated'} & {candidate.nadi || 'Calculated'}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '8px', marginTop: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '4px' }}>
                   <span style={{ color: 'var(--text-secondary)' }}>Kuja / Manglik Status:</span>
-                  <span style={{ fontWeight: 700, color: userProfile.manglik === 'Yes' || candidate.manglik === 'Yes' ? '#FDA4AF' : '#4ADE80' }}>
+                  <span style={{ fontWeight: 700, color: userProfile.manglik === 'Yes' || candidate.manglik === 'Yes' ? 'var(--status-detected-text)' : 'var(--status-success-text)' }}>
                     {userProfile.manglik === 'Yes' && candidate.manglik === 'Yes' 
                       ? 'Both Manglik (Balanced/Cancelled)' 
                       : userProfile.manglik === 'Yes' || candidate.manglik === 'Yes' 
@@ -550,20 +551,20 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <div style={{ padding: '12px', borderRadius: '14px', background: 'rgba(255, 255, 255, 0.05)', textAlign: 'center' }}>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Life Path Alignment</span>
-                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#4ADE80', marginTop: '2px' }}>
+              <div style={{ padding: '12px', borderRadius: '14px', background: 'var(--nested-card-bg)', border: '1px solid var(--nested-card-border)', textAlign: 'center' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Life Path Alignment</span>
+                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--status-success-text)', marginTop: '2px' }}>
                   Path {numerologyReport.lifePathNumber} ({numerologyReport.compatibilityScore}%)
                 </div>
               </div>
-              <div style={{ padding: '12px', borderRadius: '14px', background: 'rgba(255, 255, 255, 0.05)', textAlign: 'center' }}>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Name Destiny Vibration</span>
+              <div style={{ padding: '12px', borderRadius: '14px', background: 'var(--nested-card-bg)', border: '1px solid var(--nested-card-border)', textAlign: 'center' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Name Destiny Vibration</span>
                 <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--accent-amber-light)', marginTop: '2px' }}>
                   Destiny {numerologyReport.destinyNumber}
                 </div>
               </div>
             </div>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0, fontStyle: 'italic' }}>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0, fontStyle: 'italic' }}>
               {numerologyReport.compatibilityVerdict}
             </p>
           </div>
@@ -576,7 +577,7 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
               padding: '20px',
               borderRadius: '24px',
               background: 'var(--bg-card)',
-              border: '1px solid rgba(79, 70, 229, 0.4)',
+              border: '1px solid var(--border-color)',
               display: 'flex',
               flexDirection: 'column',
               gap: '12px'
@@ -589,20 +590,20 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.8rem' }}>
-              <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Interests Overlap:</span>
-                <div style={{ fontWeight: 700, color: '#FFF' }}>{chemistryReport.sharedInterestsScore}%</div>
+              <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'var(--nested-card-bg)', border: '1px solid var(--nested-card-border)' }}>
+                <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Interests Overlap:</span>
+                <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{chemistryReport.sharedInterestsScore}%</div>
               </div>
-              <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Lifestyle Alignment:</span>
-                <div style={{ fontWeight: 700, color: '#FFF' }}>{chemistryReport.lifestyleAlignmentScore}%</div>
+              <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'var(--nested-card-bg)', border: '1px solid var(--nested-card-border)' }}>
+                <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Lifestyle Alignment:</span>
+                <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{chemistryReport.lifestyleAlignmentScore}%</div>
               </div>
             </div>
 
             {chemistryReport.sharedTags.length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
                 {chemistryReport.sharedTags.map(tag => (
-                  <span key={tag} style={{ fontSize: '0.72rem', padding: '4px 10px', borderRadius: '9999px', background: 'rgba(79, 70, 229, 0.15)', color: '#A5B4FC', border: '1px solid rgba(79, 70, 229, 0.3)' }}>
+                  <span key={tag} style={{ fontSize: '0.72rem', padding: '4px 10px', borderRadius: '9999px', background: 'var(--tag-indigo-bg)', color: 'var(--tag-indigo-text)', border: '1px solid var(--tag-indigo-border)', fontWeight: 600 }}>
                     {tag}
                   </span>
                 ))}
@@ -616,8 +617,8 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
           style={{
             padding: '16px 20px',
             borderRadius: '20px',
-            background: 'rgba(255, 255, 255, 0.03)',
-            border: '1px dashed rgba(245, 158, 11, 0.3)',
+            background: 'var(--nested-card-bg)',
+            border: '1px dashed var(--accent-amber)',
             display: 'flex',
             alignItems: 'center',
             gap: '12px'
@@ -625,8 +626,8 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
         >
           <ScrollText size={22} color="var(--accent-amber-light)" />
           <div>
-            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#FFF' }}>Nadi Shastra Palm Leaf Archive</div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)' }}>Nadi Shastra Palm Leaf Archive</div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
               Pending digitized Vaitheeswaran Koil manuscript registry access (un-fabricated by policy).
             </div>
           </div>
@@ -638,17 +639,17 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
             style={{
               padding: '20px',
               borderRadius: '24px',
-              background: 'linear-gradient(135deg, rgba(42, 14, 26, 0.9) 0%, rgba(30, 24, 54, 0.9) 100%)',
+              background: 'var(--remedies-card-bg)',
               border: '1.5px solid var(--accent-rose)',
               display: 'flex',
               flexDirection: 'column',
               gap: '12px',
-              boxShadow: 'var(--shadow-cosmic)'
+              boxShadow: 'var(--shadow-card)'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Flame size={20} color="#F43F5E" />
-              <h3 className="heading-font" style={{ fontSize: '1rem', fontWeight: 800, color: '#FDA4AF' }}>
+              <Flame size={20} color="var(--accent-rose)" />
+              <h3 className="heading-font" style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--remedies-card-title)' }}>
                 Automated Remedies & Recommended Pujas 🪔
               </h3>
             </div>
@@ -656,20 +657,20 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {doshasList.some(d => d.status === 'DETECTED' && d.remedy) ? (
                 doshasList.filter(d => d.status === 'DETECTED' && d.remedy).map(d => (
-                  <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderRadius: '14px', background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.3)' }}>
-                    <AlertTriangle size={16} color="#F43F5E" style={{ flexShrink: 0 }} />
+                  <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderRadius: '14px', background: 'var(--remedies-item-bg)', border: '1px solid var(--remedies-item-border)' }}>
+                    <AlertTriangle size={16} color="var(--accent-rose)" style={{ flexShrink: 0 }} />
                     <div>
-                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#FFF' }}>{d.name} Remedy</div>
-                      <div style={{ fontSize: '0.72rem', color: '#FDA4AF', marginTop: '2px' }}>{d.remedy}</div>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--remedies-item-title)' }}>{d.name} Remedy</div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--remedies-item-desc)', marginTop: '2px', fontWeight: 500 }}>{d.remedy}</div>
                     </div>
                   </div>
                 ))
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderRadius: '14px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-                  <CheckCircle2 size={16} color="#10B981" style={{ flexShrink: 0 }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderRadius: '14px', background: 'var(--remedies-clear-bg)', border: '1px solid var(--remedies-clear-border)' }}>
+                  <CheckCircle2 size={16} color="var(--status-success-text)" style={{ flexShrink: 0 }} />
                   <div>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#FFF' }}>No Major Doshas Detected</div>
-                    <div style={{ fontSize: '0.72rem', color: '#6EE7B7' }}>Planetary positions show favorable foundational harmony for marital harmony.</div>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--remedies-clear-title)' }}>No Major Doshas Detected</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--remedies-clear-desc)', fontWeight: 500 }}>Planetary positions show favorable foundational harmony for marital harmony.</div>
                   </div>
                 </div>
               )}
@@ -703,7 +704,7 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
               </span>
             </div>
 
-            <p style={{ fontSize: '0.76rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.4 }}>
+            <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4 }}>
               Comprehensive Vedic evaluation covering Kuja (Manglik), Nadi, Bhakoot, Gana, and Kalathra afflictions with authentic Parashari cancellation rules.
             </p>
 
@@ -713,28 +714,28 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
                 const isNeutralized = dosha.status === 'NEUTRALIZED';
 
                 const badgeBg = isDetected
-                  ? 'rgba(244, 63, 94, 0.15)'
+                  ? 'var(--badge-detected-bg)'
                   : isNeutralized
-                  ? 'rgba(245, 158, 11, 0.15)'
-                  : 'rgba(34, 197, 94, 0.15)';
+                  ? 'var(--badge-neutralized-bg)'
+                  : 'var(--badge-clear-bg)';
 
                 const badgeBorder = isDetected
-                  ? 'rgba(244, 63, 94, 0.35)'
+                  ? 'var(--badge-detected-border)'
                   : isNeutralized
-                  ? 'rgba(245, 158, 11, 0.35)'
-                  : 'rgba(34, 197, 94, 0.35)';
+                  ? 'var(--badge-neutralized-border)'
+                  : 'var(--badge-clear-border)';
 
                 const badgeText = isDetected
-                  ? '#FDA4AF'
+                  ? 'var(--badge-detected-text)'
                   : isNeutralized
-                  ? '#FDE047'
-                  : '#86EFAC';
+                  ? 'var(--badge-neutralized-text)'
+                  : 'var(--badge-clear-text)';
 
                 const cardBorder = isDetected
-                  ? '1px solid rgba(244, 63, 94, 0.25)'
+                  ? '1px solid var(--badge-detected-border)'
                   : isNeutralized
-                  ? '1px solid rgba(245, 158, 11, 0.2)'
-                  : '1px solid rgba(255, 255, 255, 0.08)';
+                  ? '1px solid var(--badge-neutralized-border)'
+                  : '1px solid var(--nested-card-border)';
 
                 return (
                   <div
@@ -742,7 +743,7 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
                     style={{
                       padding: '12px 14px',
                       borderRadius: '16px',
-                      background: 'rgba(255, 255, 255, 0.025)',
+                      background: 'var(--nested-card-bg)',
                       border: cardBorder,
                       display: 'flex',
                       flexDirection: 'column',
@@ -750,7 +751,7 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontWeight: 700, fontSize: '0.86rem', color: '#FFF' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.86rem', color: 'var(--text-primary)' }}>
                         {dosha.name}
                       </span>
                       <span
@@ -778,13 +779,13 @@ export const HoroscopeCompatibilityPage: React.FC = () => {
                       {dosha.details}
                     </p>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '3px', paddingTop: '6px', borderTop: '1px solid rgba(255, 255, 255, 0.06)', fontSize: '0.71rem' }}>
-                      <span style={{ color: 'var(--text-muted)' }}>Energy Influence:</span>
-                      <span style={{ color: isDetected ? '#FDA4AF' : 'var(--text-secondary)', fontWeight: 600 }}>{dosha.impact}</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '3px', paddingTop: '6px', borderTop: '1px solid var(--border-color)', fontSize: '0.71rem' }}>
+                      <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Energy Influence:</span>
+                      <span style={{ color: isDetected ? 'var(--status-detected-text)' : 'var(--text-primary)', fontWeight: 600 }}>{dosha.impact}</span>
                     </div>
 
                     {isDetected && dosha.remedy && (
-                      <div style={{ marginTop: '2px', padding: '6px 10px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.08)', border: '1px dashed rgba(244, 63, 94, 0.25)', fontSize: '0.71rem', color: '#FECDD3', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ marginTop: '2px', padding: '6px 10px', borderRadius: '10px', background: 'var(--remedy-box-bg)', border: '1px dashed var(--remedy-box-border)', fontSize: '0.71rem', color: 'var(--remedy-box-text)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span>🪔</span>
                         <span><strong>Remedy:</strong> {dosha.remedy}</span>
                       </div>

@@ -28,12 +28,12 @@ export const KootaBreakdownWheel: React.FC<{ totalScore?: number }> = ({ totalSc
       style={{
         padding: '20px',
         borderRadius: '24px',
-        background: 'linear-gradient(135deg, rgba(30, 24, 54, 0.9) 0%, rgba(42, 14, 26, 0.9) 100%)',
-        border: '1px solid var(--border-glow)',
+        background: 'var(--koota-wheel-bg)',
+        border: '1px solid var(--border-color)',
         display: 'flex',
         flexDirection: 'column',
         gap: '16px',
-        boxShadow: 'var(--shadow-cosmic)'
+        boxShadow: 'var(--shadow-card)'
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -49,7 +49,7 @@ export const KootaBreakdownWheel: React.FC<{ totalScore?: number }> = ({ totalSc
           style={{
             padding: '6px 14px',
             borderRadius: '9999px',
-            background: 'rgba(245, 158, 11, 0.2)',
+            background: 'rgba(245, 158, 11, 0.15)',
             border: '1px solid var(--accent-amber)',
             color: 'var(--accent-amber-light)',
             fontWeight: 800,
@@ -71,8 +71,8 @@ export const KootaBreakdownWheel: React.FC<{ totalScore?: number }> = ({ totalSc
               style={{
                 padding: '10px 6px',
                 borderRadius: '14px',
-                background: isSelected ? 'rgba(245, 158, 11, 0.25)' : 'rgba(255, 255, 255, 0.05)',
-                border: isSelected ? '1.5px solid var(--accent-amber)' : '1px solid var(--border-color)',
+                background: isSelected ? 'rgba(245, 158, 11, 0.2)' : 'var(--nested-card-bg)',
+                border: isSelected ? '1.5px solid var(--accent-amber)' : '1px solid var(--nested-card-border)',
                 textAlign: 'center',
                 cursor: 'pointer',
                 transition: 'all 0.15s ease'
@@ -95,8 +95,8 @@ export const KootaBreakdownWheel: React.FC<{ totalScore?: number }> = ({ totalSc
           style={{
             padding: '14px',
             borderRadius: '16px',
-            background: 'rgba(0, 0, 0, 0.4)',
-            border: '1px solid rgba(245, 158, 11, 0.3)',
+            background: 'var(--koota-detail-bg)',
+            border: '1px solid var(--koota-detail-border)',
             display: 'flex',
             flexDirection: 'column',
             gap: '6px'
@@ -106,7 +106,7 @@ export const KootaBreakdownWheel: React.FC<{ totalScore?: number }> = ({ totalSc
             <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--accent-amber-light)' }}>
               ✨ {selectedKoota.name} Koota ({selectedKoota.score} of {selectedKoota.maxScore} Points)
             </span>
-            <span style={{ fontSize: '0.7rem', color: '#4ADE80', fontWeight: 700 }}>Optimal Match</span>
+            <span style={{ fontSize: '0.7rem', color: 'var(--status-success-text)', fontWeight: 700 }}>Optimal Match</span>
           </div>
 
           <p style={{ fontSize: '0.8rem', color: 'var(--text-primary)', lineHeight: 1.4 }}>
