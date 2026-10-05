@@ -16,7 +16,9 @@ import {
   AiAgent,
   AdminMetrics,
   MarketingCampaign,
-  ReferralData
+  ReferralData,
+  FamilyMarriageContributions,
+  GroomMarriageBudgetPreferences
 } from '../types';
 
 import { getVerificationDetail, initialAiAgents, initialAdminMetrics, initialMarketingCampaigns, initialReferralData, astroAiKnowledge, suggestedQuestions, initialAiMessages, mockCandidates } from '../data/mockData';
@@ -62,6 +64,8 @@ interface AstraContextType {
   updateBirthDetails: (dob: string, birthTime: string, birthCity: string, manglik?: string, nadi?: string) => void;
   updatePartnerPreferences: (religion: string, caste: string) => void;
   updateDatingPreferences: (education: string, location: string) => void;
+  updateFamilyContributions: (contributions: FamilyMarriageContributions) => Promise<void>;
+  updateGroomBudgetPreferences: (prefs: GroomMarriageBudgetPreferences) => Promise<void>;
   isPreferenceStrictFilterOn: boolean;
   setIsPreferenceStrictFilterOn: (val: boolean) => void;
   profilePhotos: ProfilePhoto[];
@@ -336,6 +340,8 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
            voiceNoteUrl: dbProfile.voice_note_url,
            voiceNotePrompt: dbProfile.voice_note_prompt,
            marriageQuestionnaire: dbProfile.marriage_questionnaire,
+           familyContributions: dbProfile.marriage_questionnaire?.family_contributions || (dbProfile as any).family_contributions,
+           groomBudgetPreferences: dbProfile.marriage_questionnaire?.groom_budget_preferences || (dbProfile as any).groom_budget_preferences,
            chemistryAnswers: dbProfile.chemistry_answers || dbProfile.marriage_questionnaire?.chemistryAnswers,
            completionPercentage,
            partnerPreferences: {
@@ -1031,6 +1037,58 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const updateFamilyContributions = async (contributions: FamilyMarriageContributions) => {
+    setUserProfile((prev: any) => ({
+      ...prev,
+      familyContributions: contributions,
+      marriageQuestionnaire: {
+        ...(prev.marriageQuestionnaire || {}),
+        family_contributions: contributions
+      }
+    }));
+
+    if (sessionUser) {
+      try {
+        const currentQ = userProfile.marriageQuestionnaire || {};
+        await supabase.from('profiles').update({
+          marriage_questionnaire: {
+            ...currentQ,
+            family_contributions: contributions
+          },
+          updated_at: new Date().toISOString()
+        }).eq('id', sessionUser.id);
+      } catch (e) {
+        console.error('Failed to update family contributions:', e);
+      }
+    }
+  };
+
+  const updateGroomBudgetPreferences = async (prefs: GroomMarriageBudgetPreferences) => {
+    setUserProfile((prev: any) => ({
+      ...prev,
+      groomBudgetPreferences: prefs,
+      marriageQuestionnaire: {
+        ...(prev.marriageQuestionnaire || {}),
+        groom_budget_preferences: prefs
+      }
+    }));
+
+    if (sessionUser) {
+      try {
+        const currentQ = userProfile.marriageQuestionnaire || {};
+        await supabase.from('profiles').update({
+          marriage_questionnaire: {
+            ...currentQ,
+            groom_budget_preferences: prefs
+          },
+          updated_at: new Date().toISOString()
+        }).eq('id', sessionUser.id);
+      } catch (e) {
+        console.error('Failed to update groom budget preferences:', e);
+      }
+    }
+  };
+
   const selectCandidate = (candidate: Candidate) => {
     setSelectedCandidate(candidate);
     setCurrentCompatibility(AstrologyEngine.calculateCompatibility(userProfile, candidate));
@@ -1516,6 +1574,8 @@ export const AstraProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         updateBirthDetails,
         updatePartnerPreferences,
         updateDatingPreferences,
+        updateFamilyContributions,
+        updateGroomBudgetPreferences,
         isPreferenceStrictFilterOn,
         setIsPreferenceStrictFilterOn: setPreferenceStrictFilter,
         profilePhotos,

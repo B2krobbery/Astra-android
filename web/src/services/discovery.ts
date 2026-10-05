@@ -183,6 +183,8 @@ export const DiscoveryService = {
         education: p.higher_education || p.education || 'Graduate',
         compatibilityScore: 0, // Handled dynamically
         marriageQuestionnaire: p.marriage_questionnaire,
+        familyContributions: p.marriage_questionnaire?.family_contributions || p.family_contributions,
+        groomBudgetPreferences: p.marriage_questionnaire?.groom_budget_preferences || (p as any).groom_budget_preferences,
         chemistryAnswers: p.chemistry_answers || p.marriage_questionnaire,
         nakshatra: p.nakshatra,
         rashi: p.rashi,

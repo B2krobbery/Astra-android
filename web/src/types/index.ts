@@ -45,6 +45,63 @@ export interface PartnerPreferences {
   tiers?: PreferenceTier[];
 }
 
+export interface FamilyMarriageContributions {
+  contributions: string[];
+  notes?: string;
+  privacy: 'MATCHES_ONLY' | 'PUBLIC' | 'PRIVATE';
+}
+
+export const FAMILY_CONTRIBUTION_OPTIONS = [
+  'Wedding expenses',
+  'Venue / hall',
+  'Catering',
+  'Wedding attire & jewellery',
+  'Photography / videography',
+  'Travel/accommodation for guests',
+  'Household setup after marriage',
+  'Other contribution',
+  'No specific contribution / Prefer to discuss'
+];
+
+export interface GroomMarriageBudgetPreferences {
+  expectedBudget?: string;
+  expenseCoveredBy?: string;
+  weddingArrangementsExpected?: string[];
+  familyExpectationsNotes?: string;
+  financialExpectationsOtherFamily?: string;
+  privacy: 'MATCHES_ONLY' | 'PUBLIC' | 'PRIVATE';
+}
+
+export const GROOM_MARRIAGE_BUDGET_RANGES = [
+  'Under ₹2 lakh',
+  '₹2–5 lakh',
+  '₹5–10 lakh',
+  '₹10–20 lakh',
+  '₹20–50 lakh',
+  '₹50 lakh+',
+  'Prefer to discuss privately'
+];
+
+export const WEDDING_EXPENSE_COVERAGE_OPTIONS = [
+  "Groom's family",
+  "Bride's family",
+  'Both families jointly',
+  'Couple themselves',
+  'Prefer to discuss'
+];
+
+export const WEDDING_ARRANGEMENTS_EXPECTED_OPTIONS = [
+  'Venue / hall',
+  'Catering',
+  'Accommodation for guests',
+  'Travel logistics',
+  'Photography & videography',
+  'Attire & styling',
+  'Jewellery',
+  'Other arrangements',
+  'Open to discuss mutually'
+];
+
 export interface Candidate {
   id: string;
   intent?: 'Dating' | 'Marriage';
@@ -88,6 +145,8 @@ export interface Candidate {
   compatibilityNote?: string;
   matchReasons?: string[];
   marriageQuestionnaire?: Record<string, string>;
+  familyContributions?: FamilyMarriageContributions;
+  groomBudgetPreferences?: GroomMarriageBudgetPreferences;
   voiceNoteUrl?: string;
   voiceNotePrompt?: string;
   healthCondition?: string;
@@ -163,6 +222,8 @@ export interface UserProfile {
   manglik?: string;
   partnerPreferences?: PartnerPreferences;
   marriageQuestionnaire?: Record<string, string>;
+  familyContributions?: FamilyMarriageContributions;
+  groomBudgetPreferences?: GroomMarriageBudgetPreferences;
 }
 
 export interface AstrologyCompatibility {

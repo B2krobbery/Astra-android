@@ -1,11 +1,19 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, ChevronLeft, ChevronRight, CheckCircle, Flame, Moon, MapPin, Search, Sparkles, AlertCircle, Landmark, Trash2 } from 'lucide-react';
+import { Camera, ChevronLeft, ChevronRight, CheckCircle, Flame, Moon, MapPin, Search, Sparkles, AlertCircle, Landmark, Trash2, Gift, Lock, Globe, EyeOff, Wallet } from 'lucide-react';
 import { useAstra } from '../context/AstraContext';
 import { PrimaryButton, SecondaryOutlineButton } from '../components/AstraButtons';
 import { supabase } from '../lib/supabase';
 import { calculateMarriageReadiness } from '../utils/profileReadiness';
 import { AstrologyEngine } from '../data/astrologyEngine';
+import {
+  FamilyMarriageContributions,
+  FAMILY_CONTRIBUTION_OPTIONS,
+  GroomMarriageBudgetPreferences,
+  GROOM_MARRIAGE_BUDGET_RANGES,
+  WEDDING_EXPENSE_COVERAGE_OPTIONS,
+  WEDDING_ARRANGEMENTS_EXPECTED_OPTIONS
+} from '../types';
 
 import { indianReligions } from '../data/indianCastes';
 import { commonGotras } from '../data/indianSubcastesGotras';
@@ -285,6 +293,21 @@ export const MarriageOnboardingPage: React.FC = () => {
   
   // Family & Marriage
   const [maritalStatus, setMaritalStatus] = useState(userProfile.maritalStatus || 'Never Married');
+  const [familyContributions, setFamilyContributions] = useState<FamilyMarriageContributions>(() => {
+    const existing = (userProfile.marriageQuestionnaire as any)?.family_contributions || userProfile.familyContributions;
+    return existing || { contributions: [], notes: '', privacy: 'MATCHES_ONLY' };
+  });
+  const [groomBudgetPreferences, setGroomBudgetPreferences] = useState<GroomMarriageBudgetPreferences>(() => {
+    const existing = (userProfile.marriageQuestionnaire as any)?.groom_budget_preferences || userProfile.groomBudgetPreferences;
+    return existing || {
+      expectedBudget: '',
+      expenseCoveredBy: '',
+      weddingArrangementsExpected: [],
+      familyExpectationsNotes: '',
+      financialExpectationsOtherFamily: '',
+      privacy: 'MATCHES_ONLY'
+    };
+  });
   
   // Astro
   const [birthTime, setBirthTime] = useState(userProfile.birthTime || '');
@@ -360,6 +383,14 @@ export const MarriageOnboardingPage: React.FC = () => {
       setHealthCondition((userProfile as any).healthCondition || (userProfile as any).pre_existing_conditions || '');
       
       setMaritalStatus(userProfile.maritalStatus || 'Never Married');
+      const existingFC = (userProfile.marriageQuestionnaire as any)?.family_contributions || userProfile.familyContributions;
+      if (existingFC) {
+        setFamilyContributions(existingFC);
+      }
+      const existingGB = (userProfile.marriageQuestionnaire as any)?.groom_budget_preferences || userProfile.groomBudgetPreferences;
+      if (existingGB) {
+        setGroomBudgetPreferences(existingGB);
+      }
       
       setBirthTime(userProfile.birthTime || '');
       setBirthCity(userProfile.birthCity || userProfile.birthLocation || (userProfile as any).birth_location || '');
@@ -518,7 +549,11 @@ export const MarriageOnboardingPage: React.FC = () => {
         nakshatra_pada: pada,
         onboarding_completed: isCompleted,
         intent: 'Marriage',
-        marriage_questionnaire: questionnaire,
+        marriage_questionnaire: {
+          ...questionnaire,
+          ...(gender === 'Female' ? { family_contributions: familyContributions } : {}),
+          ...(gender === 'Male' ? { groom_budget_preferences: groomBudgetPreferences } : {})
+        },
         chemistry_answers: {
           sports: sportsInput.split(',').map((s: string) => s.trim()).filter(Boolean),
           movies: moviesInput.split(',').map((s: string) => s.trim()).filter(Boolean),
@@ -728,6 +763,431 @@ export const MarriageOnboardingPage: React.FC = () => {
           <div>
             <h4 style={{ color: 'white', marginBottom: '24px' }}>Family & Marriage</h4>
             {renderSelect('Marital Status', maritalStatus, setMaritalStatus, ['Never Married', 'Divorced', 'Separated', 'Annulled', 'Widowed', 'Awaiting Divorce'])}
+
+            {gender === 'Female' && (
+              <div style={{
+                marginTop: '28px',
+                padding: '20px',
+                borderRadius: '16px',
+                background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(20, 20, 28, 0.6) 100%)',
+                border: '1px solid rgba(212, 175, 55, 0.25)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                  <div style={{
+                    width: '34px',
+                    height: '34px',
+                    borderRadius: '50%',
+                    background: 'rgba(212, 175, 55, 0.15)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--accent-gold, #D4AF37)',
+                    border: '1px solid rgba(212, 175, 55, 0.3)',
+                    flexShrink: 0
+                  }}>
+                    <Gift size={18} />
+                  </div>
+                  <div>
+                    <h5 style={{ color: '#FFF', fontSize: '1rem', fontWeight: 600, margin: 0 }}>
+                      Family Marriage Contributions
+                    </h5>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--accent-gold, #D4AF37)', fontWeight: 500 }}>
+                      Optional &amp; Respectful Communication
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{
+                  color: '#94A3B8',
+                  fontSize: '0.8rem',
+                  lineHeight: '1.5',
+                  marginBottom: '18px',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  padding: '12px 14px',
+                  borderRadius: '10px',
+                  borderLeft: '3px solid var(--accent-gold, #D4AF37)'
+                }}>
+                  Marriage is a sacred union between two families. This optional section allows the bride&apos;s family to communicate any wedding logistics, arrangements, or gifts they voluntarily wish to contribute, setting clear expectations with mutual respect and dignity.
+                  <div style={{ color: '#E2E8F0', marginTop: '6px', fontWeight: 500 }}>
+                    ✨ This is strictly voluntary to align family expectations smoothly, and is never a financial demand or dowry.
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '18px' }}>
+                  <label style={{ display: 'block', color: '#E2E8F0', fontSize: '0.85rem', fontWeight: 600, marginBottom: '8px' }}>
+                    Select Contributions Your Family Wishes to Share (Optional)
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {FAMILY_CONTRIBUTION_OPTIONS.map((opt) => {
+                      const isSelected = familyContributions.contributions.includes(opt);
+                      return (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => {
+                            let next: string[];
+                            if (opt === 'No specific contribution / Prefer to discuss') {
+                              next = isSelected ? [] : ['No specific contribution / Prefer to discuss'];
+                            } else {
+                              const withoutNone = familyContributions.contributions.filter(x => x !== 'No specific contribution / Prefer to discuss');
+                              next = isSelected ? withoutNone.filter(x => x !== opt) : [...withoutNone, opt];
+                            }
+                            setFamilyContributions(prev => ({ ...prev, contributions: next }));
+                          }}
+                          style={{
+                            padding: '8px 14px',
+                            borderRadius: '20px',
+                            fontSize: '0.82rem',
+                            fontWeight: isSelected ? 600 : 400,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            background: isSelected
+                              ? 'linear-gradient(135deg, rgba(212, 175, 55, 0.35) 0%, rgba(245, 158, 11, 0.25) 100%)'
+                              : 'rgba(255, 255, 255, 0.05)',
+                            color: isSelected ? '#FDE047' : '#94A3B8',
+                            border: isSelected
+                              ? '1px solid rgba(212, 175, 55, 0.6)'
+                              : '1px solid rgba(255, 255, 255, 0.12)',
+                            boxShadow: isSelected ? '0 0 10px rgba(212, 175, 55, 0.2)' : 'none'
+                          }}
+                        >
+                          {isSelected ? '✓ ' : '+ '}{opt}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '18px' }}>
+                  <label style={{ display: 'block', color: '#E2E8F0', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>
+                    Family Notes &amp; Expectations (Optional)
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="e.g., We would love to host a warm traditional wedding reception and welcome discussing event arrangements mutually with the groom's family."
+                    value={familyContributions.notes || ''}
+                    onChange={e => setFamilyContributions(prev => ({ ...prev, notes: e.target.value }))}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '12px',
+                      background: 'rgba(0, 0, 0, 0.4)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      color: '#FFF',
+                      fontSize: '0.85rem',
+                      lineHeight: '1.4',
+                      resize: 'vertical',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', color: '#E2E8F0', fontSize: '0.85rem', fontWeight: 600, marginBottom: '8px' }}>
+                    Privacy Controls
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
+                    {[
+                      { key: 'MATCHES_ONLY', label: 'Matches Only', desc: 'Visible after mutual match', icon: Lock },
+                      { key: 'PUBLIC', label: 'All Candidates', desc: 'Visible on profile view', icon: Globe },
+                      { key: 'PRIVATE', label: 'Private to Me', desc: 'Only visible to you', icon: EyeOff },
+                    ].map(item => {
+                      const isChosen = (familyContributions.privacy || 'MATCHES_ONLY') === item.key;
+                      const IconComp = item.icon;
+                      return (
+                        <button
+                          key={item.key}
+                          type="button"
+                          onClick={() => setFamilyContributions(prev => ({ ...prev, privacy: item.key as any }))}
+                          style={{
+                            padding: '10px',
+                            borderRadius: '12px',
+                            background: isChosen ? 'rgba(212, 175, 55, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                            border: isChosen ? '1px solid rgba(212, 175, 55, 0.6)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: isChosen ? '#FDE047' : '#E2E8F0', fontSize: '0.85rem', fontWeight: 600, marginBottom: '2px' }}>
+                            <IconComp size={14} />
+                            <span>{item.label}</span>
+                          </div>
+                          <div style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{item.desc}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {gender === 'Male' && (
+              <div style={{
+                marginTop: '28px',
+                padding: '20px',
+                borderRadius: '16px',
+                background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(20, 20, 28, 0.6) 100%)',
+                border: '1px solid rgba(212, 175, 55, 0.25)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                  <div style={{
+                    width: '34px',
+                    height: '34px',
+                    borderRadius: '50%',
+                    background: 'rgba(212, 175, 55, 0.15)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--accent-gold, #D4AF37)',
+                    border: '1px solid rgba(212, 175, 55, 0.3)',
+                    flexShrink: 0
+                  }}>
+                    <Wallet size={18} />
+                  </div>
+                  <div>
+                    <h5 style={{ color: '#FFF', fontSize: '1rem', fontWeight: 600, margin: 0 }}>
+                      Marriage Budget &amp; Family Preferences
+                    </h5>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--accent-gold, #D4AF37)', fontWeight: 500 }}>
+                      Optional &amp; Respectful Communication
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{
+                  color: '#94A3B8',
+                  fontSize: '0.8rem',
+                  lineHeight: '1.5',
+                  marginBottom: '18px',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  padding: '12px 14px',
+                  borderRadius: '10px',
+                  borderLeft: '3px solid var(--accent-gold, #D4AF37)'
+                }}>
+                  Marriage is a sacred union between two families. This optional section helps clarify overall wedding budget expectations and celebration arrangements with mutual respect and transparency.
+                  <div style={{ color: '#E2E8F0', marginTop: '6px', fontWeight: 500 }}>
+                    ✨ Strictly voluntary to align family expectations smoothly. Astra promotes dignified unions free of financial coercion or dowry.
+                  </div>
+                </div>
+
+                {/* Expected Marriage Budget */}
+                <div style={{ marginBottom: '18px' }}>
+                  <label style={{ display: 'block', color: '#E2E8F0', fontSize: '0.85rem', fontWeight: 600, marginBottom: '8px' }}>
+                    Expected Marriage Budget (Optional)
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {GROOM_MARRIAGE_BUDGET_RANGES.map((b) => {
+                      const isSelected = groomBudgetPreferences.expectedBudget === b;
+                      return (
+                        <button
+                          key={b}
+                          type="button"
+                          onClick={() => setGroomBudgetPreferences(prev => ({
+                            ...prev,
+                            expectedBudget: isSelected ? '' : b
+                          }))}
+                          style={{
+                            padding: '8px 14px',
+                            borderRadius: '20px',
+                            fontSize: '0.82rem',
+                            fontWeight: isSelected ? 600 : 400,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            background: isSelected
+                              ? 'linear-gradient(135deg, rgba(212, 175, 55, 0.35) 0%, rgba(245, 158, 11, 0.25) 100%)'
+                              : 'rgba(255, 255, 255, 0.05)',
+                            color: isSelected ? '#FDE047' : '#94A3B8',
+                            border: isSelected
+                              ? '1px solid rgba(212, 175, 55, 0.6)'
+                              : '1px solid rgba(255, 255, 255, 0.12)',
+                            boxShadow: isSelected ? '0 0 10px rgba(212, 175, 55, 0.2)' : 'none'
+                          }}
+                        >
+                          {isSelected ? '✓ ' : ''}{b}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Who will primarily cover wedding expenses */}
+                <div style={{ marginBottom: '18px' }}>
+                  <label style={{ display: 'block', color: '#E2E8F0', fontSize: '0.85rem', fontWeight: 600, marginBottom: '8px' }}>
+                    Who Will Primarily Cover Wedding Expenses? (Optional)
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {WEDDING_EXPENSE_COVERAGE_OPTIONS.map((cov) => {
+                      const isSelected = groomBudgetPreferences.expenseCoveredBy === cov;
+                      return (
+                        <button
+                          key={cov}
+                          type="button"
+                          onClick={() => setGroomBudgetPreferences(prev => ({
+                            ...prev,
+                            expenseCoveredBy: isSelected ? '' : cov
+                          }))}
+                          style={{
+                            padding: '8px 14px',
+                            borderRadius: '20px',
+                            fontSize: '0.82rem',
+                            fontWeight: isSelected ? 600 : 400,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            background: isSelected
+                              ? 'linear-gradient(135deg, rgba(212, 175, 55, 0.35) 0%, rgba(245, 158, 11, 0.25) 100%)'
+                              : 'rgba(255, 255, 255, 0.05)',
+                            color: isSelected ? '#FDE047' : '#94A3B8',
+                            border: isSelected
+                              ? '1px solid rgba(212, 175, 55, 0.6)'
+                              : '1px solid rgba(255, 255, 255, 0.12)',
+                            boxShadow: isSelected ? '0 0 10px rgba(212, 175, 55, 0.2)' : 'none'
+                          }}
+                        >
+                          {isSelected ? '✓ ' : ''}{cov}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Wedding arrangements expected */}
+                <div style={{ marginBottom: '18px' }}>
+                  <label style={{ display: 'block', color: '#E2E8F0', fontSize: '0.85rem', fontWeight: 600, marginBottom: '8px' }}>
+                    Wedding Arrangements Expected (Select all that apply)
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {WEDDING_ARRANGEMENTS_EXPECTED_OPTIONS.map((arr) => {
+                      const isSelected = groomBudgetPreferences.weddingArrangementsExpected?.includes(arr);
+                      return (
+                        <button
+                          key={arr}
+                          type="button"
+                          onClick={() => {
+                            let next: string[];
+                            const current = groomBudgetPreferences.weddingArrangementsExpected || [];
+                            if (arr === 'Open to discuss mutually') {
+                              next = isSelected ? [] : ['Open to discuss mutually'];
+                            } else {
+                              const withoutOpen = current.filter(x => x !== 'Open to discuss mutually');
+                              next = isSelected ? withoutOpen.filter(x => x !== arr) : [...withoutOpen, arr];
+                            }
+                            setGroomBudgetPreferences(prev => ({ ...prev, weddingArrangementsExpected: next }));
+                          }}
+                          style={{
+                            padding: '8px 14px',
+                            borderRadius: '20px',
+                            fontSize: '0.82rem',
+                            fontWeight: isSelected ? 600 : 400,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            background: isSelected
+                              ? 'linear-gradient(135deg, rgba(212, 175, 55, 0.35) 0%, rgba(245, 158, 11, 0.25) 100%)'
+                              : 'rgba(255, 255, 255, 0.05)',
+                            color: isSelected ? '#FDE047' : '#94A3B8',
+                            border: isSelected
+                              ? '1px solid rgba(212, 175, 55, 0.6)'
+                              : '1px solid rgba(255, 255, 255, 0.12)',
+                            boxShadow: isSelected ? '0 0 10px rgba(212, 175, 55, 0.2)' : 'none'
+                          }}
+                        >
+                          {isSelected ? '✓ ' : '+ '}{arr}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Family expectations / preferences */}
+                <div style={{ marginBottom: '18px' }}>
+                  <label style={{ display: 'block', color: '#E2E8F0', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>
+                    Family Expectations &amp; Preferences (Optional)
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="e.g., We value a warm, intimate ceremony celebrating cultural traditions with mutual simplicity and happiness."
+                    value={groomBudgetPreferences.familyExpectationsNotes || ''}
+                    onChange={e => setGroomBudgetPreferences(prev => ({ ...prev, familyExpectationsNotes: e.target.value }))}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '12px',
+                      background: 'rgba(0, 0, 0, 0.4)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      color: '#FFF',
+                      fontSize: '0.85rem',
+                      lineHeight: '1.4',
+                      resize: 'vertical',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                {/* Financial expectations from the other family */}
+                <div style={{ marginBottom: '18px' }}>
+                  <label style={{ display: 'block', color: '#E2E8F0', fontSize: '0.85rem', fontWeight: 600, marginBottom: '6px' }}>
+                    Financial Expectations from the Other Family (Optional)
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="e.g., We expect zero dowry or mandatory gifts. Any sharing of venue or celebration expenses is strictly voluntary."
+                    value={groomBudgetPreferences.financialExpectationsOtherFamily || ''}
+                    onChange={e => setGroomBudgetPreferences(prev => ({ ...prev, financialExpectationsOtherFamily: e.target.value }))}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '12px',
+                      background: 'rgba(0, 0, 0, 0.4)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      color: '#FFF',
+                      fontSize: '0.85rem',
+                      lineHeight: '1.4',
+                      resize: 'vertical',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                {/* Privacy Controls */}
+                <div>
+                  <label style={{ display: 'block', color: '#E2E8F0', fontSize: '0.85rem', fontWeight: 600, marginBottom: '8px' }}>
+                    Privacy Controls
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
+                    {[
+                      { key: 'MATCHES_ONLY', label: 'Matches Only', desc: 'Visible after mutual match', icon: Lock },
+                      { key: 'PUBLIC', label: 'All Candidates', desc: 'Visible on profile view', icon: Globe },
+                      { key: 'PRIVATE', label: 'Private to Me', desc: 'Only visible to you', icon: EyeOff },
+                    ].map(item => {
+                      const isChosen = (groomBudgetPreferences.privacy || 'MATCHES_ONLY') === item.key;
+                      const IconComp = item.icon;
+                      return (
+                        <button
+                          key={item.key}
+                          type="button"
+                          onClick={() => setGroomBudgetPreferences(prev => ({ ...prev, privacy: item.key as any }))}
+                          style={{
+                            padding: '10px',
+                            borderRadius: '12px',
+                            background: isChosen ? 'rgba(212, 175, 55, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                            border: isChosen ? '1px solid rgba(212, 175, 55, 0.6)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: isChosen ? '#FDE047' : '#E2E8F0', fontSize: '0.85rem', fontWeight: 600, marginBottom: '2px' }}>
+                            <IconComp size={14} />
+                            <span>{item.label}</span>
+                          </div>
+                          <div style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{item.desc}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       case 6: // Astrology & Birth

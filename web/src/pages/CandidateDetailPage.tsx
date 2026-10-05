@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAstra } from '../context/AstraContext';
-import { ArrowLeft, ChevronLeft, ChevronRight, Sparkles, MapPin, Briefcase, GraduationCap, ShieldCheck, CheckCircle2, Globe, UserX, AlertTriangle, Landmark, Activity, Utensils, Wine, Cigarette, Lock, ShieldAlert, MessageCircle, Heart, X } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Sparkles, MapPin, Briefcase, GraduationCap, ShieldCheck, CheckCircle2, Globe, UserX, AlertTriangle, Landmark, Activity, Utensils, Wine, Cigarette, Lock, ShieldAlert, MessageCircle, Heart, X, Gift, Wallet } from 'lucide-react';
 import { VerificationBadge } from '../components/VerificationBadge';
 import { VerificationType } from '../types';
 import { PassCircleButton, LikeCircleButton, CosmicCheckButton } from '../components/AstraButtons';
@@ -402,6 +402,394 @@ export const CandidateDetailPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Family Marriage Contributions (Bride Only) */}
+      {(() => {
+        if (candidate.gender !== 'Female') return null;
+        const fc = candidate.familyContributions || (candidate.marriageQuestionnaire as any)?.family_contributions;
+        if (!fc) return null;
+        const hasData = (fc.contributions && fc.contributions.length > 0) || (fc.notes && fc.notes.trim().length > 0);
+        if (!hasData) return null;
+
+        const privacy = fc.privacy || 'MATCHES_ONLY';
+
+        if (privacy === 'PRIVATE') return null;
+
+        if (privacy === 'MATCHES_ONLY' && !isFriend) {
+          return (
+            <div
+              style={{
+                padding: '16px',
+                borderRadius: '16px',
+                background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, rgba(20, 20, 28, 0.5) 100%)',
+                border: '1px dashed rgba(212, 175, 55, 0.3)',
+                marginBottom: '24px'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-gold, #D4AF37)', marginBottom: '6px' }}>
+                <Lock size={15} />
+                <h3 className="heading-font" style={{ fontSize: '0.88rem', fontWeight: 700, margin: 0 }}>
+                  Family Marriage Contributions
+                </h3>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#94A3B8', margin: 0, lineHeight: 1.4 }}>
+                The bride&apos;s family has shared voluntary wedding contribution preferences. This section will unlock and be visible once you become mutual matches.
+              </p>
+            </div>
+          );
+        }
+
+        // Visible (either PUBLIC or MATCHES_ONLY with isFriend)
+        return (
+          <div
+            style={{
+              padding: '18px',
+              borderRadius: '20px',
+              background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(20, 20, 28, 0.6) 100%)',
+              border: '1px solid rgba(212, 175, 55, 0.35)',
+              marginBottom: '24px'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: 'rgba(212, 175, 55, 0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--accent-gold, #D4AF37)',
+                  border: '1px solid rgba(212, 175, 55, 0.3)',
+                  flexShrink: 0
+                }}>
+                  <Gift size={16} />
+                </div>
+                <div>
+                  <h3 className="heading-font" style={{ fontSize: '0.92rem', fontWeight: 700, margin: 0, color: '#FFF' }}>
+                    Family Marriage Contributions
+                  </h3>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--accent-gold, #D4AF37)' }}>
+                    Optional &amp; Respectful Communication
+                  </span>
+                </div>
+              </div>
+
+              {privacy === 'MATCHES_ONLY' ? (
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                  padding: '3px 8px',
+                  borderRadius: '8px',
+                  background: 'rgba(212, 175, 55, 0.15)',
+                  color: 'var(--accent-gold, #D4AF37)',
+                  border: '1px solid rgba(212, 175, 55, 0.3)'
+                }}>
+                  <Lock size={11} /> Match Only
+                </span>
+              ) : (
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                  padding: '3px 8px',
+                  borderRadius: '8px',
+                  background: 'rgba(59, 130, 246, 0.15)',
+                  color: '#60A5FA',
+                  border: '1px solid rgba(59, 130, 246, 0.3)'
+                }}>
+                  <Globe size={11} /> Public
+                </span>
+              )}
+            </div>
+
+            <p style={{
+              fontSize: '0.78rem',
+              color: '#94A3B8',
+              lineHeight: 1.45,
+              marginBottom: '14px',
+              background: 'rgba(255, 255, 255, 0.03)',
+              padding: '10px 12px',
+              borderRadius: '8px',
+              borderLeft: '3px solid var(--accent-gold, #D4AF37)'
+            }}>
+              Marriage brings two families together. The bride&apos;s family has shared voluntary preferences and wedding contributions to facilitate mutual understanding:
+            </p>
+
+            {fc.contributions && fc.contributions.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '14px' }}>
+                {fc.contributions.map((c: string) => (
+                  <span
+                    key={c}
+                    style={{
+                      fontSize: '0.78rem',
+                      padding: '5px 12px',
+                      borderRadius: '16px',
+                      background: 'rgba(212, 175, 55, 0.12)',
+                      color: '#FDE047',
+                      border: '1px solid rgba(212, 175, 55, 0.3)',
+                      fontWeight: 500
+                    }}
+                  >
+                    ✓ {c}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {fc.notes && (
+              <div style={{
+                padding: '12px 14px',
+                borderRadius: '10px',
+                background: 'rgba(0, 0, 0, 0.3)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                marginBottom: '12px'
+              }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--accent-gold, #D4AF37)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
+                  Family Notes &amp; Thoughts:
+                </span>
+                <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.45, whiteSpace: 'pre-wrap' }}>
+                  {fc.notes}
+                </p>
+              </div>
+            )}
+
+            <p style={{ fontSize: '0.7rem', color: '#64748B', margin: 0, lineHeight: 1.4 }}>
+              ✨ Voluntary family communication for event planning and logistics. Never a financial demand or dowry.
+            </p>
+          </div>
+        );
+      })()}
+
+      {/* Marriage Budget & Family Preferences (Groom Only) */}
+      {(() => {
+        if (candidate.gender !== 'Male') return null;
+        const gb = candidate.groomBudgetPreferences || (candidate.marriageQuestionnaire as any)?.groom_budget_preferences;
+        if (!gb) return null;
+        const hasData = gb.expectedBudget || gb.expenseCoveredBy || (gb.weddingArrangementsExpected && gb.weddingArrangementsExpected.length > 0) || (gb.familyExpectationsNotes && gb.familyExpectationsNotes.trim().length > 0) || (gb.financialExpectationsOtherFamily && gb.financialExpectationsOtherFamily.trim().length > 0);
+        if (!hasData) return null;
+
+        const privacy = gb.privacy || 'MATCHES_ONLY';
+
+        if (privacy === 'PRIVATE') return null;
+
+        if (privacy === 'MATCHES_ONLY' && !isFriend) {
+          return (
+            <div
+              style={{
+                padding: '16px',
+                borderRadius: '16px',
+                background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, rgba(20, 20, 28, 0.5) 100%)',
+                border: '1px dashed rgba(212, 175, 55, 0.3)',
+                marginBottom: '24px'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-gold, #D4AF37)', marginBottom: '6px' }}>
+                <Lock size={15} />
+                <h3 className="heading-font" style={{ fontSize: '0.88rem', fontWeight: 700, margin: 0 }}>
+                  Marriage Budget &amp; Family Preferences
+                </h3>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#94A3B8', margin: 0, lineHeight: 1.4 }}>
+                The groom&apos;s family has shared voluntary marriage budget and celebration preferences. This section will unlock and be visible once you become mutual matches.
+              </p>
+            </div>
+          );
+        }
+
+        // Visible (either PUBLIC or MATCHES_ONLY with isFriend)
+        return (
+          <div
+            style={{
+              padding: '18px',
+              borderRadius: '20px',
+              background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(20, 20, 28, 0.6) 100%)',
+              border: '1px solid rgba(212, 175, 55, 0.35)',
+              marginBottom: '24px'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: 'rgba(212, 175, 55, 0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--accent-gold, #D4AF37)',
+                  border: '1px solid rgba(212, 175, 55, 0.3)',
+                  flexShrink: 0
+                }}>
+                  <Wallet size={16} />
+                </div>
+                <div>
+                  <h3 className="heading-font" style={{ fontSize: '0.92rem', fontWeight: 700, margin: 0, color: '#FFF' }}>
+                    Marriage Budget &amp; Family Preferences
+                  </h3>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--accent-gold, #D4AF37)' }}>
+                    Optional &amp; Respectful Communication
+                  </span>
+                </div>
+              </div>
+
+              {privacy === 'MATCHES_ONLY' ? (
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                  padding: '3px 8px',
+                  borderRadius: '8px',
+                  background: 'rgba(212, 175, 55, 0.15)',
+                  color: 'var(--accent-gold, #D4AF37)',
+                  border: '1px solid rgba(212, 175, 55, 0.3)'
+                }}>
+                  <Lock size={11} /> Match Only
+                </span>
+              ) : (
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                  padding: '3px 8px',
+                  borderRadius: '8px',
+                  background: 'rgba(59, 130, 246, 0.15)',
+                  color: '#60A5FA',
+                  border: '1px solid rgba(59, 130, 246, 0.3)'
+                }}>
+                  <Globe size={11} /> Public
+                </span>
+              )}
+            </div>
+
+            <p style={{
+              fontSize: '0.78rem',
+              color: '#94A3B8',
+              lineHeight: 1.45,
+              marginBottom: '14px',
+              background: 'rgba(255, 255, 255, 0.03)',
+              padding: '10px 12px',
+              borderRadius: '8px',
+              borderLeft: '3px solid var(--accent-gold, #D4AF37)'
+            }}>
+              Marriage brings two families together. The groom&apos;s family has shared the following voluntary budget expectations and celebration preferences:
+            </p>
+
+            {/* Key Summary Cards: Budget & Expense Coverage */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px', marginBottom: '14px' }}>
+              {gb.expectedBudget && (
+                <div style={{
+                  padding: '10px 12px',
+                  borderRadius: '12px',
+                  background: 'rgba(0, 0, 0, 0.25)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)'
+                }}>
+                  <span style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '3px' }}>
+                    Expected Budget
+                  </span>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#FDE047' }}>
+                    {gb.expectedBudget}
+                  </span>
+                </div>
+              )}
+
+              {gb.expenseCoveredBy && (
+                <div style={{
+                  padding: '10px 12px',
+                  borderRadius: '12px',
+                  background: 'rgba(0, 0, 0, 0.25)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)'
+                }}>
+                  <span style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '3px' }}>
+                    Expense Coverage
+                  </span>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#E2E8F0' }}>
+                    {gb.expenseCoveredBy}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Arrangements expected */}
+            {gb.weddingArrangementsExpected && gb.weddingArrangementsExpected.length > 0 && (
+              <div style={{ marginBottom: '14px' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--accent-gold, #D4AF37)', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
+                  Arrangements Expected:
+                </span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {gb.weddingArrangementsExpected.map((arr: string) => (
+                    <span
+                      key={arr}
+                      style={{
+                        fontSize: '0.78rem',
+                        padding: '5px 12px',
+                        borderRadius: '16px',
+                        background: 'rgba(212, 175, 55, 0.12)',
+                        color: '#FDE047',
+                        border: '1px solid rgba(212, 175, 55, 0.3)',
+                        fontWeight: 500
+                      }}
+                    >
+                      ✓ {arr}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Family Notes */}
+            {gb.familyExpectationsNotes && (
+              <div style={{
+                padding: '12px 14px',
+                borderRadius: '10px',
+                background: 'rgba(0, 0, 0, 0.3)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                marginBottom: '12px'
+              }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--accent-gold, #D4AF37)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
+                  Family Expectations &amp; Preferences:
+                </span>
+                <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.45, whiteSpace: 'pre-wrap' }}>
+                  {gb.familyExpectationsNotes}
+                </p>
+              </div>
+            )}
+
+            {/* Financial Expectations from other family */}
+            {gb.financialExpectationsOtherFamily && (
+              <div style={{
+                padding: '12px 14px',
+                borderRadius: '10px',
+                background: 'rgba(0, 0, 0, 0.3)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                marginBottom: '12px'
+              }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--accent-gold, #D4AF37)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
+                  Expectations from the Other Family:
+                </span>
+                <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.45, whiteSpace: 'pre-wrap' }}>
+                  {gb.financialExpectationsOtherFamily}
+                </p>
+              </div>
+            )}
+
+            <p style={{ fontSize: '0.7rem', color: '#64748B', margin: 0, lineHeight: 1.4 }}>
+              ✨ Strictly voluntary communication for event planning and logistics. Astra promotes dignified unions free of financial coercion or dowry.
+            </p>
+          </div>
+        );
+      })()}
     </>
   );
 

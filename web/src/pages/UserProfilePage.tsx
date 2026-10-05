@@ -5,8 +5,18 @@ import { supabase } from '../lib/supabase';
 import { AstraBottomNavigation } from '../components/AstraBottomNavigation';
 import { CandidateAvatar } from '../components/CandidateAvatar';
 import { VerificationBadge } from '../components/VerificationBadge';
-import { VerificationType, ThemeMode, AppLanguage } from '../types';
-import { Edit, Moon, Sun, Monitor, ShieldCheck, Sparkles, LogOut, Share2, Bot, Camera, Globe, Landmark, Activity, Utensils, Wine, Cigarette, Lock, ShieldAlert, Trash2, AlertCircle } from 'lucide-react';
+import {
+  VerificationType,
+  ThemeMode,
+  AppLanguage,
+  FamilyMarriageContributions,
+  FAMILY_CONTRIBUTION_OPTIONS,
+  GroomMarriageBudgetPreferences,
+  GROOM_MARRIAGE_BUDGET_RANGES,
+  WEDDING_EXPENSE_COVERAGE_OPTIONS,
+  WEDDING_ARRANGEMENTS_EXPECTED_OPTIONS
+} from '../types';
+import { Edit, Moon, Sun, Monitor, ShieldCheck, Sparkles, LogOut, Share2, Bot, Camera, Globe, Landmark, Activity, Utensils, Wine, Cigarette, Lock, ShieldAlert, Trash2, AlertCircle, Gift, EyeOff, Check, X, Wallet } from 'lucide-react';
 
 import { UserVoiceRecorderCard } from '../components/UserVoiceRecorderCard';
 
@@ -70,6 +80,8 @@ export const UserProfilePage: React.FC = () => {
     setPrimaryProfilePhoto,
     deleteProfilePhoto,
     updateProfileInfo,
+    updateFamilyContributions,
+    updateGroomBudgetPreferences,
     deleteAccount,
     signOut,
     language,
@@ -86,6 +98,65 @@ export const UserProfilePage: React.FC = () => {
   const [editedEducation, setEditedEducation] = React.useState(userProfile.higherEducation || userProfile.education);
   const [editedLocation, setEditedLocation] = React.useState(userProfile.location);
   const [editedBio, setEditedBio] = React.useState(userProfile.bio || '');
+
+  const [isEditingContributions, setIsEditingContributions] = React.useState(false);
+  const [tempContributions, setTempContributions] = React.useState<FamilyMarriageContributions>(() => {
+    const fc = userProfile.familyContributions || (userProfile.marriageQuestionnaire as any)?.family_contributions;
+    return fc || { contributions: [], notes: '', privacy: 'MATCHES_ONLY' };
+  });
+  const [isSavingContributions, setIsSavingContributions] = React.useState(false);
+
+  React.useEffect(() => {
+    const fc = userProfile.familyContributions || (userProfile.marriageQuestionnaire as any)?.family_contributions;
+    if (fc) {
+      setTempContributions(fc);
+    }
+  }, [userProfile.familyContributions, userProfile.marriageQuestionnaire]);
+
+  const handleSaveContributions = async () => {
+    setIsSavingContributions(true);
+    try {
+      await updateFamilyContributions(tempContributions);
+      setIsEditingContributions(false);
+    } catch (err) {
+      console.error('Failed to update contributions:', err);
+    } finally {
+      setIsSavingContributions(false);
+    }
+  };
+
+  const [isEditingGroomBudget, setIsEditingGroomBudget] = React.useState(false);
+  const [tempGroomBudget, setTempGroomBudget] = React.useState<GroomMarriageBudgetPreferences>(() => {
+    const gb = userProfile.groomBudgetPreferences || (userProfile.marriageQuestionnaire as any)?.groom_budget_preferences;
+    return gb || {
+      expectedBudget: '',
+      expenseCoveredBy: '',
+      weddingArrangementsExpected: [],
+      familyExpectationsNotes: '',
+      financialExpectationsOtherFamily: '',
+      privacy: 'MATCHES_ONLY'
+    };
+  });
+  const [isSavingGroomBudget, setIsSavingGroomBudget] = React.useState(false);
+
+  React.useEffect(() => {
+    const gb = userProfile.groomBudgetPreferences || (userProfile.marriageQuestionnaire as any)?.groom_budget_preferences;
+    if (gb) {
+      setTempGroomBudget(gb);
+    }
+  }, [userProfile.groomBudgetPreferences, userProfile.marriageQuestionnaire]);
+
+  const handleSaveGroomBudget = async () => {
+    setIsSavingGroomBudget(true);
+    try {
+      await updateGroomBudgetPreferences(tempGroomBudget);
+      setIsEditingGroomBudget(false);
+    } catch (err) {
+      console.error('Failed to update groom budget preferences:', err);
+    } finally {
+      setIsSavingGroomBudget(false);
+    }
+  };
 
   // Optional fields the user hasn't filled yet (intent-aware)
   const OPTIONAL_PROFILE_FIELDS = userProfile.intent === 'Marriage' ? [
@@ -977,6 +1048,779 @@ export const UserProfilePage: React.FC = () => {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* Family Marriage Contributions (Bride Only) */}
+        {userProfile.gender === 'Female' && (
+          <div
+            style={{
+              padding: '18px',
+              borderRadius: '20px',
+              background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, var(--bg-card) 100%)',
+              border: '1px solid rgba(212, 175, 55, 0.3)',
+              marginBottom: '16px'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: 'rgba(212, 175, 55, 0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--accent-gold, #D4AF37)',
+                  border: '1px solid rgba(212, 175, 55, 0.3)'
+                }}>
+                  <Gift size={16} />
+                </div>
+                <div>
+                  <h3 className="heading-font" style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0, color: '#FFF' }}>
+                    Family Marriage Contributions
+                  </h3>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--accent-gold, #D4AF37)' }}>
+                    Optional &amp; Respectful Communication
+                  </span>
+                </div>
+              </div>
+
+              {!isEditingContributions ? (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingContributions(true)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '6px 12px',
+                    borderRadius: '12px',
+                    background: 'rgba(212, 175, 55, 0.15)',
+                    border: '1px solid rgba(212, 175, 55, 0.35)',
+                    color: 'var(--accent-gold, #D4AF37)',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Edit size={12} /> Edit
+                </button>
+              ) : (
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const fc = userProfile.familyContributions || (userProfile.marriageQuestionnaire as any)?.family_contributions;
+                      setTempContributions(fc || { contributions: [], notes: '', privacy: 'MATCHES_ONLY' });
+                      setIsEditingContributions(false);
+                    }}
+                    style={{
+                      padding: '6px 10px',
+                      borderRadius: '10px',
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      color: '#94A3B8',
+                      fontSize: '0.75rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveContributions}
+                    disabled={isSavingContributions}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '10px',
+                      background: 'var(--accent-gold, #D4AF37)',
+                      border: 'none',
+                      color: '#0B0B0E',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      cursor: isSavingContributions ? 'wait' : 'pointer'
+                    }}
+                  >
+                    {isSavingContributions ? 'Saving…' : 'Save'}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {!isEditingContributions ? (
+              <div>
+                {/* Privacy Badge */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
+                  {tempContributions.privacy === 'PUBLIC' ? (
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '0.72rem',
+                      fontWeight: 600,
+                      padding: '3px 8px',
+                      borderRadius: '8px',
+                      background: 'rgba(59, 130, 246, 0.15)',
+                      color: '#60A5FA',
+                      border: '1px solid rgba(59, 130, 246, 0.3)'
+                    }}>
+                      <Globe size={11} /> Visible to All Candidates
+                    </span>
+                  ) : tempContributions.privacy === 'PRIVATE' ? (
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '0.72rem',
+                      fontWeight: 600,
+                      padding: '3px 8px',
+                      borderRadius: '8px',
+                      background: 'rgba(148, 163, 184, 0.12)',
+                      color: '#94A3B8',
+                      border: '1px solid rgba(148, 163, 184, 0.25)'
+                    }}>
+                      <EyeOff size={11} /> Private (Only visible to you)
+                    </span>
+                  ) : (
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '0.72rem',
+                      fontWeight: 600,
+                      padding: '3px 8px',
+                      borderRadius: '8px',
+                      background: 'rgba(212, 175, 55, 0.15)',
+                      color: 'var(--accent-gold, #D4AF37)',
+                      border: '1px solid rgba(212, 175, 55, 0.3)'
+                    }}>
+                      <Lock size={11} /> Visible to Mutual Matches Only
+                    </span>
+                  )}
+                </div>
+
+                {/* Selected Contributions */}
+                {tempContributions.contributions && tempContributions.contributions.length > 0 ? (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+                    {tempContributions.contributions.map((c: string) => (
+                      <span
+                        key={c}
+                        style={{
+                          fontSize: '0.78rem',
+                          padding: '5px 10px',
+                          borderRadius: '12px',
+                          background: 'rgba(212, 175, 55, 0.12)',
+                          color: '#FDE047',
+                          border: '1px solid rgba(212, 175, 55, 0.3)'
+                        }}
+                      >
+                        ✓ {c}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ fontSize: '0.8rem', color: '#94A3B8', fontStyle: 'italic', margin: '0 0 10px 0' }}>
+                    No specific contributions selected yet. Tap &apos;Edit&apos; to share your family&apos;s preferences.
+                  </p>
+                )}
+
+                {/* Family Notes */}
+                {tempContributions.notes && (
+                  <div style={{
+                    padding: '10px 12px',
+                    borderRadius: '10px',
+                    background: 'rgba(0, 0, 0, 0.25)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    marginBottom: '10px'
+                  }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--accent-gold, #D4AF37)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
+                      Family Notes:
+                    </span>
+                    <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4, whiteSpace: 'pre-wrap' }}>
+                      {tempContributions.notes}
+                    </p>
+                  </div>
+                )}
+
+                <p style={{ fontSize: '0.7rem', color: '#64748B', margin: 0, lineHeight: 1.4 }}>
+                  ✨ Strictly voluntary communication to align wedding arrangements with mutual respect and transparency. Never a dowry or financial requirement.
+                </p>
+              </div>
+            ) : (
+              /* Inline Edit Mode */
+              <div>
+                <p style={{ fontSize: '0.75rem', color: '#94A3B8', marginBottom: '12px', lineHeight: 1.4 }}>
+                  Select the wedding arrangements or logistics your family is happy to contribute toward:
+                </p>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
+                  {FAMILY_CONTRIBUTION_OPTIONS.map((opt) => {
+                    const isSelected = tempContributions.contributions?.includes(opt);
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => {
+                          let next: string[];
+                          if (opt === 'No specific contribution / Prefer to discuss') {
+                            next = isSelected ? [] : ['No specific contribution / Prefer to discuss'];
+                          } else {
+                            const withoutNone = (tempContributions.contributions || []).filter(x => x !== 'No specific contribution / Prefer to discuss');
+                            next = isSelected ? withoutNone.filter(x => x !== opt) : [...withoutNone, opt];
+                          }
+                          setTempContributions(prev => ({ ...prev, contributions: next }));
+                        }}
+                        style={{
+                          padding: '6px 10px',
+                          borderRadius: '16px',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer',
+                          background: isSelected ? 'rgba(212, 175, 55, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                          color: isSelected ? '#FDE047' : '#94A3B8',
+                          border: isSelected ? '1px solid rgba(212, 175, 55, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        {isSelected ? '✓ ' : '+ '}{opt}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div style={{ marginBottom: '14px' }}>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: '#E2E8F0', fontWeight: 600, marginBottom: '4px' }}>
+                    Family Notes &amp; Expectations (Optional)
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="e.g., We would love to host a warm traditional wedding reception and welcome discussing event arrangements mutually..."
+                    value={tempContributions.notes || ''}
+                    onChange={e => setTempContributions(prev => ({ ...prev, notes: e.target.value }))}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      borderRadius: '10px',
+                      background: 'rgba(0, 0, 0, 0.35)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      color: '#FFF',
+                      fontSize: '0.8rem',
+                      lineHeight: 1.4,
+                      resize: 'vertical',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: '#E2E8F0', fontWeight: 600, marginBottom: '6px' }}>
+                    Privacy Control
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                    {[
+                      { key: 'MATCHES_ONLY', label: 'Matches', icon: Lock },
+                      { key: 'PUBLIC', label: 'Public', icon: Globe },
+                      { key: 'PRIVATE', label: 'Private', icon: EyeOff },
+                    ].map(item => {
+                      const isChosen = (tempContributions.privacy || 'MATCHES_ONLY') === item.key;
+                      const IconComp = item.icon;
+                      return (
+                        <button
+                          key={item.key}
+                          type="button"
+                          onClick={() => setTempContributions(prev => ({ ...prev, privacy: item.key as any }))}
+                          style={{
+                            padding: '8px 6px',
+                            borderRadius: '10px',
+                            background: isChosen ? 'rgba(212, 175, 55, 0.2)' : 'rgba(255, 255, 255, 0.04)',
+                            border: isChosen ? '1px solid rgba(212, 175, 55, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            cursor: 'pointer',
+                            textAlign: 'center',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          <IconComp size={13} color={isChosen ? '#FDE047' : '#94A3B8'} />
+                          <span style={{ fontSize: '0.7rem', color: isChosen ? '#FDE047' : '#E2E8F0', fontWeight: 600 }}>
+                            {item.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Marriage Budget & Family Preferences (Groom Only) */}
+        {userProfile.gender === 'Male' && (
+          <div
+            style={{
+              padding: '18px',
+              borderRadius: '20px',
+              background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, var(--bg-card) 100%)',
+              border: '1px solid rgba(212, 175, 55, 0.3)',
+              marginBottom: '16px'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: 'rgba(212, 175, 55, 0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--accent-gold, #D4AF37)',
+                  border: '1px solid rgba(212, 175, 55, 0.3)'
+                }}>
+                  <Wallet size={16} />
+                </div>
+                <div>
+                  <h3 className="heading-font" style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0, color: '#FFF' }}>
+                    Marriage Budget &amp; Family Preferences
+                  </h3>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--accent-gold, #D4AF37)' }}>
+                    Optional &amp; Respectful Communication
+                  </span>
+                </div>
+              </div>
+
+              {!isEditingGroomBudget ? (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingGroomBudget(true)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '6px 12px',
+                    borderRadius: '12px',
+                    background: 'rgba(212, 175, 55, 0.15)',
+                    border: '1px solid rgba(212, 175, 55, 0.35)',
+                    color: 'var(--accent-gold, #D4AF37)',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Edit size={12} /> Edit
+                </button>
+              ) : (
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const gb = userProfile.groomBudgetPreferences || (userProfile.marriageQuestionnaire as any)?.groom_budget_preferences;
+                      setTempGroomBudget(gb || {
+                        expectedBudget: '',
+                        expenseCoveredBy: '',
+                        weddingArrangementsExpected: [],
+                        familyExpectationsNotes: '',
+                        financialExpectationsOtherFamily: '',
+                        privacy: 'MATCHES_ONLY'
+                      });
+                      setIsEditingGroomBudget(false);
+                    }}
+                    style={{
+                      padding: '6px 10px',
+                      borderRadius: '10px',
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      color: '#94A3B8',
+                      fontSize: '0.75rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveGroomBudget}
+                    disabled={isSavingGroomBudget}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '10px',
+                      background: 'var(--accent-gold, #D4AF37)',
+                      border: 'none',
+                      color: '#0B0B0E',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      cursor: isSavingGroomBudget ? 'wait' : 'pointer'
+                    }}
+                  >
+                    {isSavingGroomBudget ? 'Saving…' : 'Save'}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {!isEditingGroomBudget ? (
+              <div>
+                {/* Privacy Badge */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
+                  {tempGroomBudget.privacy === 'PUBLIC' ? (
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '0.72rem',
+                      fontWeight: 600,
+                      padding: '3px 8px',
+                      borderRadius: '8px',
+                      background: 'rgba(59, 130, 246, 0.15)',
+                      color: '#60A5FA',
+                      border: '1px solid rgba(59, 130, 246, 0.3)'
+                    }}>
+                      <Globe size={11} /> Visible to All Candidates
+                    </span>
+                  ) : tempGroomBudget.privacy === 'PRIVATE' ? (
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '0.72rem',
+                      fontWeight: 600,
+                      padding: '3px 8px',
+                      borderRadius: '8px',
+                      background: 'rgba(148, 163, 184, 0.12)',
+                      color: '#94A3B8',
+                      border: '1px solid rgba(148, 163, 184, 0.25)'
+                    }}>
+                      <EyeOff size={11} /> Private (Only visible to you)
+                    </span>
+                  ) : (
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '0.72rem',
+                      fontWeight: 600,
+                      padding: '3px 8px',
+                      borderRadius: '8px',
+                      background: 'rgba(212, 175, 55, 0.15)',
+                      color: 'var(--accent-gold, #D4AF37)',
+                      border: '1px solid rgba(212, 175, 55, 0.3)'
+                    }}>
+                      <Lock size={11} /> Visible to Mutual Matches Only
+                    </span>
+                  )}
+                </div>
+
+                {/* Key Summary Cards: Budget & Expense Coverage */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px', marginBottom: '12px' }}>
+                  <div style={{
+                    padding: '10px 12px',
+                    borderRadius: '12px',
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)'
+                  }}>
+                    <span style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '3px' }}>
+                      Expected Budget
+                    </span>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: tempGroomBudget.expectedBudget ? '#FDE047' : '#94A3B8' }}>
+                      {tempGroomBudget.expectedBudget || 'Not specified'}
+                    </span>
+                  </div>
+
+                  <div style={{
+                    padding: '10px 12px',
+                    borderRadius: '12px',
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)'
+                  }}>
+                    <span style={{ fontSize: '0.7rem', color: '#94A3B8', display: 'block', marginBottom: '3px' }}>
+                      Expense Coverage
+                    </span>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: tempGroomBudget.expenseCoveredBy ? '#E2E8F0' : '#94A3B8' }}>
+                      {tempGroomBudget.expenseCoveredBy || 'Not specified'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Expected Arrangements */}
+                {tempGroomBudget.weddingArrangementsExpected && tempGroomBudget.weddingArrangementsExpected.length > 0 ? (
+                  <div style={{ marginBottom: '12px' }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--accent-gold, #D4AF37)', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
+                      Arrangements Expected:
+                    </span>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {tempGroomBudget.weddingArrangementsExpected.map((arr: string) => (
+                        <span
+                          key={arr}
+                          style={{
+                            fontSize: '0.78rem',
+                            padding: '4px 10px',
+                            borderRadius: '12px',
+                            background: 'rgba(212, 175, 55, 0.12)',
+                            color: '#FDE047',
+                            border: '1px solid rgba(212, 175, 55, 0.3)'
+                          }}
+                        >
+                          ✓ {arr}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
+                {/* Family Notes */}
+                {tempGroomBudget.familyExpectationsNotes && (
+                  <div style={{
+                    padding: '10px 12px',
+                    borderRadius: '10px',
+                    background: 'rgba(0, 0, 0, 0.25)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    marginBottom: '10px'
+                  }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--accent-gold, #D4AF37)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
+                      Family Expectations &amp; Preferences:
+                    </span>
+                    <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4, whiteSpace: 'pre-wrap' }}>
+                      {tempGroomBudget.familyExpectationsNotes}
+                    </p>
+                  </div>
+                )}
+
+                {/* Financial Expectations from other family */}
+                {tempGroomBudget.financialExpectationsOtherFamily && (
+                  <div style={{
+                    padding: '10px 12px',
+                    borderRadius: '10px',
+                    background: 'rgba(0, 0, 0, 0.25)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    marginBottom: '10px'
+                  }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--accent-gold, #D4AF37)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
+                      Expectations from the Other Family:
+                    </span>
+                    <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4, whiteSpace: 'pre-wrap' }}>
+                      {tempGroomBudget.financialExpectationsOtherFamily}
+                    </p>
+                  </div>
+                )}
+
+                {!tempGroomBudget.expectedBudget && !tempGroomBudget.expenseCoveredBy && (!tempGroomBudget.weddingArrangementsExpected || tempGroomBudget.weddingArrangementsExpected.length === 0) && !tempGroomBudget.familyExpectationsNotes && !tempGroomBudget.financialExpectationsOtherFamily && (
+                  <p style={{ fontSize: '0.8rem', color: '#94A3B8', fontStyle: 'italic', margin: '0 0 10px 0' }}>
+                    No budget preferences set yet. Tap &apos;Edit&apos; to share your wedding preferences.
+                  </p>
+                )}
+
+                <p style={{ fontSize: '0.7rem', color: '#64748B', margin: 0, lineHeight: 1.4 }}>
+                  ✨ Strictly voluntary to align family expectations smoothly. Astra promotes dignified unions free of financial coercion or dowry.
+                </p>
+              </div>
+            ) : (
+              /* Inline Edit Mode */
+              <div>
+                {/* Expected Budget */}
+                <div style={{ marginBottom: '14px' }}>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: '#E2E8F0', fontWeight: 600, marginBottom: '6px' }}>
+                    Expected Marriage Budget (Optional)
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {GROOM_MARRIAGE_BUDGET_RANGES.map((b) => {
+                      const isSelected = tempGroomBudget.expectedBudget === b;
+                      return (
+                        <button
+                          key={b}
+                          type="button"
+                          onClick={() => setTempGroomBudget(prev => ({
+                            ...prev,
+                            expectedBudget: isSelected ? '' : b
+                          }))}
+                          style={{
+                            padding: '6px 10px',
+                            borderRadius: '16px',
+                            fontSize: '0.75rem',
+                            cursor: 'pointer',
+                            background: isSelected ? 'rgba(212, 175, 55, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                            color: isSelected ? '#FDE047' : '#94A3B8',
+                            border: isSelected ? '1px solid rgba(212, 175, 55, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          {isSelected ? '✓ ' : ''}{b}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Who covers expenses */}
+                <div style={{ marginBottom: '14px' }}>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: '#E2E8F0', fontWeight: 600, marginBottom: '6px' }}>
+                    Who Will Primarily Cover Wedding Expenses? (Optional)
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {WEDDING_EXPENSE_COVERAGE_OPTIONS.map((cov) => {
+                      const isSelected = tempGroomBudget.expenseCoveredBy === cov;
+                      return (
+                        <button
+                          key={cov}
+                          type="button"
+                          onClick={() => setTempGroomBudget(prev => ({
+                            ...prev,
+                            expenseCoveredBy: isSelected ? '' : cov
+                          }))}
+                          style={{
+                            padding: '6px 10px',
+                            borderRadius: '16px',
+                            fontSize: '0.75rem',
+                            cursor: 'pointer',
+                            background: isSelected ? 'rgba(212, 175, 55, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                            color: isSelected ? '#FDE047' : '#94A3B8',
+                            border: isSelected ? '1px solid rgba(212, 175, 55, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          {isSelected ? '✓ ' : ''}{cov}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Wedding arrangements expected */}
+                <div style={{ marginBottom: '14px' }}>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: '#E2E8F0', fontWeight: 600, marginBottom: '6px' }}>
+                    Wedding Arrangements Expected (Select all that apply)
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {WEDDING_ARRANGEMENTS_EXPECTED_OPTIONS.map((arr) => {
+                      const isSelected = tempGroomBudget.weddingArrangementsExpected?.includes(arr);
+                      return (
+                        <button
+                          key={arr}
+                          type="button"
+                          onClick={() => {
+                            let next: string[];
+                            const current = tempGroomBudget.weddingArrangementsExpected || [];
+                            if (arr === 'Open to discuss mutually') {
+                              next = isSelected ? [] : ['Open to discuss mutually'];
+                            } else {
+                              const withoutOpen = current.filter(x => x !== 'Open to discuss mutually');
+                              next = isSelected ? withoutOpen.filter(x => x !== arr) : [...withoutOpen, arr];
+                            }
+                            setTempGroomBudget(prev => ({ ...prev, weddingArrangementsExpected: next }));
+                          }}
+                          style={{
+                            padding: '6px 10px',
+                            borderRadius: '16px',
+                            fontSize: '0.75rem',
+                            cursor: 'pointer',
+                            background: isSelected ? 'rgba(212, 175, 55, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                            color: isSelected ? '#FDE047' : '#94A3B8',
+                            border: isSelected ? '1px solid rgba(212, 175, 55, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          {isSelected ? '✓ ' : '+ '}{arr}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Family expectations / preferences */}
+                <div style={{ marginBottom: '14px' }}>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: '#E2E8F0', fontWeight: 600, marginBottom: '4px' }}>
+                    Family Expectations &amp; Preferences (Optional)
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="e.g., We value a warm, intimate ceremony celebrating cultural traditions with mutual simplicity and happiness."
+                    value={tempGroomBudget.familyExpectationsNotes || ''}
+                    onChange={e => setTempGroomBudget(prev => ({ ...prev, familyExpectationsNotes: e.target.value }))}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      borderRadius: '10px',
+                      background: 'rgba(0, 0, 0, 0.35)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      color: '#FFF',
+                      fontSize: '0.8rem',
+                      lineHeight: 1.4,
+                      resize: 'vertical',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                {/* Financial expectations from the other family */}
+                <div style={{ marginBottom: '14px' }}>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: '#E2E8F0', fontWeight: 600, marginBottom: '4px' }}>
+                    Financial Expectations from the Other Family (Optional)
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="e.g., We expect zero dowry or mandatory gifts. Any sharing of venue or celebration expenses is strictly voluntary."
+                    value={tempGroomBudget.financialExpectationsOtherFamily || ''}
+                    onChange={e => setTempGroomBudget(prev => ({ ...prev, financialExpectationsOtherFamily: e.target.value }))}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      borderRadius: '10px',
+                      background: 'rgba(0, 0, 0, 0.35)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      color: '#FFF',
+                      fontSize: '0.8rem',
+                      lineHeight: 1.4,
+                      resize: 'vertical',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                {/* Privacy Control */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', color: '#E2E8F0', fontWeight: 600, marginBottom: '6px' }}>
+                    Privacy Control
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                    {[
+                      { key: 'MATCHES_ONLY', label: 'Matches', icon: Lock },
+                      { key: 'PUBLIC', label: 'Public', icon: Globe },
+                      { key: 'PRIVATE', label: 'Private', icon: EyeOff },
+                    ].map(item => {
+                      const isChosen = (tempGroomBudget.privacy || 'MATCHES_ONLY') === item.key;
+                      const IconComp = item.icon;
+                      return (
+                        <button
+                          key={item.key}
+                          type="button"
+                          onClick={() => setTempGroomBudget(prev => ({ ...prev, privacy: item.key as any }))}
+                          style={{
+                            padding: '8px 6px',
+                            borderRadius: '10px',
+                            background: isChosen ? 'rgba(212, 175, 55, 0.2)' : 'rgba(255, 255, 255, 0.04)',
+                            border: isChosen ? '1px solid rgba(212, 175, 55, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
+                            cursor: 'pointer',
+                            textAlign: 'center',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          <IconComp size={13} color={isChosen ? '#FDE047' : '#94A3B8'} />
+                          <span style={{ fontSize: '0.7rem', color: isChosen ? '#FDE047' : '#E2E8F0', fontWeight: 600 }}>
+                            {item.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
