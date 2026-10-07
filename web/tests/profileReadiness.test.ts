@@ -56,18 +56,18 @@ const nearlyComplete = {
   maritalStatus: 'Never Married',
   birthTime: '14:30',
   birthLocation: 'New Delhi'
-  // photo missing
+  // photo and familyIncome missing
 };
 const nearResult = calculateMarriageReadiness(nearlyComplete);
 assert(!nearResult.isComplete, 'Nearly complete profile should NOT be complete');
 assert(nearResult.percentage >= 90 && nearResult.percentage < 100, `Percentage should be ~93%, got ${nearResult.percentage}%`);
-assert(nearResult.missingFields.includes('Gotra'), 'Should accurately identify Gotra as missing');
+assert(nearResult.missingFields.includes('Family Income'), 'Should accurately identify Family Income as missing');
 assert(nearResult.missingFields.includes('Profile Photo'), 'Should accurately identify Profile Photo as missing');
 
 // Test 4: Fully Complete Profile (100%)
 const fullyComplete = {
   ...nearlyComplete,
-  gotra: 'Vatsa',
+  familyIncome: '₹50 LPA',
   photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d'
 };
 const fullResult = calculateMarriageReadiness(fullyComplete);
